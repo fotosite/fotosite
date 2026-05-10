@@ -87,7 +87,7 @@
         <div x-show="show2fa">
 
             <form x-show="!expired"
-                  method="POST" action="/backstage/verify"
+                  method="POST" action="{{ route('system.login.verify') }}"
                   autocomplete="off">
                 @csrf
 
