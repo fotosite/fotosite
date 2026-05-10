@@ -1,23 +1,24 @@
 <?php
 /**
  * FILE:        app/Extensions/SessionDbSessionHandler.php
- * VERSION:     2.2.0
+ * VERSION:     2.3.0
  *
  * FUNCTIONS:   open(savePath, sessionName) — SessionHandlerInterface-Stub; immer true.
  *              close()                     — SessionHandlerInterface-Stub; immer true.
- *              read(id)                    — Liest payload anhand sess_id; prüft
- *                                           Ablauf via last_activity (Datetime-Vergleich).
- *                                           Reads: sessiondb.session.sess_id,
- *                                                  payload, last_activity
- *              write(id, data)             — Aktualisiert payload + Metadaten (UPDATE)
- *                                           oder legt neue Session an (INSERT).
+ *              read(id)                    — Liest payload via sess_token + expires_at-Prüfung
+ *                                           (DB-seitig, ein Query). Gibt '' zurück wenn
+ *                                           keine gültige Session gefunden.
+ *                                           Reads: sessiondb.session.sess_token,
+ *                                                  expires_at, payload
+ *              write(id, data)             — Aktualisiert payload + Metadaten (UPDATE via
+ *                                           sess_token) oder legt neue Session an (INSERT).
  *                                           sess_token = Session-Key ($id, max 128 Zeichen).
  *                                           payload    = vollständiger Session-Inhalt ($data).
  *                                           INSERT-Fehler werden geloggt (kein stilles Scheitern).
- *                                           Race-Condition-Fallback auf UPDATE.
+ *                                           Race-Condition-Fallback auf UPDATE via sess_token.
  *                                           Writes: sessiondb.session.*
- *              destroy(id)                 — Löscht Session anhand sess_id.
- *                                           Writes: sessiondb.session.sess_id
+ *              destroy(id)                 — Löscht Session anhand sess_token.
+ *                                           Writes: sessiondb.session.sess_token
  *              gc(max_lifetime)            — Löscht abgelaufene Sessions per
  *                                           last_activity-Vergleich (Datetime).
  *                                           Writes: sessiondb.session.last_activity
@@ -73,17 +74,10 @@ class SessionDbSessionHandler implements SessionHandlerInterface
 
     public function read(string $id): string|false
     {
-        $session = $this->db()->where('sess_id', $id)->first();
-
-        if (! $session) {
-            return '';
-        }
-
-        if (Carbon::parse($session->last_activity)->lt(Carbon::now()->subMinutes($this->minutes))) {
-            return '';
-        }
-
-        return $session->payload ?? '';
+        return $this->db()
+            ->where('sess_token', $id)
+            ->where('expires_at', '>', Carbon::now()->toDateTimeString())
+            ->value('payload') ?? '';
     }
 
     public function write(string $id, string $data): bool
@@ -102,17 +96,17 @@ class SessionDbSessionHandler implements SessionHandlerInterface
             )),
         ];
 
-        $exists = $this->db()->where('sess_id', $id)->exists();
+        $exists = $this->db()->where('sess_token', $id)->exists();
 
         if ($exists) {
-            $this->db()->where('sess_id', $id)->update($updatePayload);
+            $this->db()->where('sess_token', $id)->update($updatePayload);
         } else {
             try {
                 $this->db()->insert(array_merge($updatePayload, [
-                    'sess_token'   => substr($id, 0, 128),
-                    'user_type'    => 'anon',
+                    'sess_token'    => substr($id, 0, 128),
+                    'user_type'     => 'anon',
                     'cust_passcode' => 0,
-                    'created_at'   => $now->toDateTimeString(),
+                    'created_at'    => $now->toDateTimeString(),
                 ]));
             } catch (QueryException $e) {
                 Log::error('SessionDbSessionHandler: INSERT fehlgeschlagen', [
@@ -121,7 +115,7 @@ class SessionDbSessionHandler implements SessionHandlerInterface
                     'error'      => $e->getMessage(),
                 ]);
                 // Race-Condition-Fallback: paralleler Request hat bereits eingefügt
-                $this->db()->where('sess_id', $id)->update($updatePayload);
+                $this->db()->where('sess_token', $id)->update($updatePayload);
             }
         }
 
@@ -130,7 +124,7 @@ class SessionDbSessionHandler implements SessionHandlerInterface
 
     public function destroy(string $id): bool
     {
-        $this->db()->where('sess_id', $id)->delete();
+        $this->db()->where('sess_token', $id)->delete();
 
         return true;
     }
