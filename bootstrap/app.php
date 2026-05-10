@@ -25,6 +25,11 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SessionHijackProtection::class,
             \App\Http\Middleware\AnonymousSessionTimeout::class,
         ]);
+
+        // Named middleware aliases
+        $middleware->alias([
+            'syst.auth' => \App\Http\Middleware\SystUserCheck::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

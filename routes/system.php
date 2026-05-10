@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Route;
 |   App\Http\Controllers\FotoBlobDb\— blob/media management
 */
 
-Route::middleware(['web', 'auth'])->prefix('system')->name('system.')->group(function () {
+Route::middleware(['web', 'syst.auth'])->prefix('system')->name('system.')->group(function () {
     Route::get('/dashboard', function () {
         return view('system.dashboard');
     })->name('dashboard');
