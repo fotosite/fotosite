@@ -12,7 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
         then: function () {
             Route::middleware('web')->group(base_path('routes/system.php'));
-            Route::middleware('web')->group(base_path('routes/mandant.php'));
+            Route::middleware(['web', \App\Http\Middleware\MandantActiveCheck::class])->group(base_path('routes/mandant.php'));
             Route::middleware('web')->group(base_path('routes/customer.php'));
         },
     )

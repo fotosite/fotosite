@@ -21,6 +21,13 @@ class MandUser extends UserDbModel
         'mand_company',
         'mand_pw_hash',
         'mand_prefstat',
+        'active',
+        'valid_to',
+    ];
+
+    protected $casts = [
+        'active'   => 'boolean',
+        'valid_to' => 'date',
     ];
 
     protected $hidden = ['mand_pw_hash'];

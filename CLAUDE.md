@@ -129,7 +129,7 @@ Each model extends an abstract base class that sets `$connection`. All models se
 |---|---|---|---|
 | `SystUser` | `syst_user` | `syst_id` | `syst_pw_hash` hidden |
 | `CustUser` | `cust_user` | `cust_id` | `cust_pw_hash` hidden · hasMany `CustPcode` |
-| `MandUser` | `mand_user` | `mand_id` | `mand_pw_hash` hidden · hasMany `CustPcode` |
+| `MandUser` | `mand_user` | `mand_id` | `mand_pw_hash` hidden · `active` cast bool · `valid_to` cast date · hasMany `CustPcode` |
 | `CustPcode` | `cust_pcode` | `pcode_id` | belongsTo `MandUser`, `CustUser` |
 
 ### SessionDb (`App\Models\SessionDb\*` — extends `SessionDbModel`)
@@ -208,6 +208,19 @@ All custom middleware lives in `app/Http/Middleware/` and is registered in `boot
   - On the first request of a new session: SHA-256 hashes of `request->ip()` and `request->userAgent()` are stored as `_ip_hash` and `_ua_hash` in the session.
   - On every subsequent request: the stored hashes are compared to the current values using `hash_equals()` (constant-time, safe against timing attacks).
   - On mismatch: `session()->invalidate()` + `regenerateToken()` + redirect to `route('login')` with an error message.
+- **No configuration required.**
+
+### `MandantActiveCheck`
+- **File:** `app/Http/Middleware/MandantActiveCheck.php`
+- **Stack:** `/mandant` route group only
+- **Purpose:** After a Mandant logs in, ensures their account is still active and not expired on every mandant-area request. Guards against a suspended or time-limited account continuing an established session.
+- **Behaviour:**
+  - Only acts when `_user_type === 'mand'` (passes through for all other session types).
+  - Reads `_mand_id` from the session; if absent or the `mand_user` row is not found → `invalidateAndRedirect()`.
+  - If `active === false` → `invalidateAndRedirect()` with "deaktiviert" message.
+  - If `valid_to` is not null and the date is in the past → `invalidateAndRedirect()` with "abgelaufen" message.
+  - On a valid, active, non-expired account: passes the request through unchanged.
+  - `mand_prefstat` is **not** checked here — it serves a different purpose.
 - **No configuration required.**
 
 ### `AnonymousSessionTimeout`
@@ -300,11 +313,15 @@ Any controller or service that creates or modifies a session must respect the fo
 | `_ip_hash` | `string` | `SessionHijackProtection` | Do not write — set automatically on session creation |
 | `_ua_hash` | `string` | `SessionHijackProtection` | Do not write — set automatically on session creation |
 | `_user_type` | `string` | Login controllers | **Must** be set on every login: `'anon'` · `'cust'` · `'mand'` · `'syst'` |
+| `_syst_id` | `int` | System login controller | **Must** be set on system login: primary key from `syst_user.syst_id` |
+| `_mand_id` | `int` | Mandant login controller | **Must** be set on mandant login: primary key from `mand_user.mand_id` |
 | `_anon_last_activity` | `int` | `AnonymousSessionTimeout` | Do not write — updated automatically on every anonymous request |
 
 **Rules:**
 - `_ip_hash` and `_ua_hash` are owned exclusively by `SessionHijackProtection`. Never write them in application code.
 - `_user_type` **must** be written by the login controller immediately after authentication. `AnonymousSessionTimeout` will not fire unless `_user_type === 'anon'` is present.
+- `_syst_id` **must** be written by `SystemLoginController::verifyTwoFactor()` alongside `_user_type = 'syst'` after successful 2FA verification.
+- `_mand_id` **must** be written by the Mandant login controller alongside `_user_type = 'mand'`. `MandantActiveCheck` reads this key on every mandant-area request.
 - `_anon_last_activity` is owned exclusively by `AnonymousSessionTimeout`. Never write it in application code.
 
 ### General
