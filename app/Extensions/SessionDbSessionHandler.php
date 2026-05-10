@@ -1,18 +1,20 @@
 <?php
 /**
  * FILE:        app/Extensions/SessionDbSessionHandler.php
- * VERSION:     2.0.0
+ * VERSION:     2.1.0
  *
  * FUNCTIONS:   open(savePath, sessionName) — SessionHandlerInterface-Stub; immer true.
  *              close()                     — SessionHandlerInterface-Stub; immer true.
- *              read(id)                    — Liest sess_token anhand sess_id; prüft
+ *              read(id)                    — Liest payload anhand sess_id; prüft
  *                                           Ablauf via last_activity (Datetime-Vergleich).
  *                                           Reads: sessiondb.session.sess_id,
- *                                                  sess_token, last_activity
- *              write(id, data)             — Aktualisiert bestehende Session (UPDATE)
- *                                           oder legt neue an (INSERT). Fehler beim
- *                                           INSERT werden geloggt und sind nicht mehr
- *                                           still. Race-Condition-Fallback auf UPDATE.
+ *                                                  payload, last_activity
+ *              write(id, data)             — Aktualisiert payload + Metadaten (UPDATE)
+ *                                           oder legt neue Session an (INSERT).
+ *                                           sess_token = Session-Key ($id, max 128 Zeichen).
+ *                                           payload    = vollständiger Session-Inhalt ($data).
+ *                                           INSERT-Fehler werden geloggt (kein stilles Scheitern).
+ *                                           Race-Condition-Fallback auf UPDATE.
  *                                           Writes: sessiondb.session.*
  *              destroy(id)                 — Löscht Session anhand sess_id.
  *                                           Writes: sessiondb.session.sess_id
@@ -28,8 +30,8 @@
  *              Illuminate\Support\Carbon::parse()
  *              Illuminate\Support\Facades\Log::error()
  *
- * DB ACCESS:   sessiondb.session.sess_id, sess_token, user_type, last_activity,
- *              expires_at, ip_hash, ua_hash, created_at
+ * DB ACCESS:   sessiondb.session.sess_id, sess_token, payload, user_type,
+ *              last_activity, expires_at, ip_hash, ua_hash, created_at
  */
 
 namespace App\Extensions;
@@ -80,7 +82,7 @@ class SessionDbSessionHandler implements SessionHandlerInterface
             return '';
         }
 
-        return base64_decode($session->sess_token);
+        return $session->payload ?? '';
     }
 
     public function write(string $id, string $data): bool
@@ -88,7 +90,7 @@ class SessionDbSessionHandler implements SessionHandlerInterface
         $now = Carbon::now();
 
         $updatePayload = [
-            'sess_token'    => base64_encode($data),
+            'payload'       => $data,
             'last_activity' => $now->toDateTimeString(),
             'expires_at'    => $now->copy()->addMinutes($this->minutes)->toDateTimeString(),
             'ip_hash'       => hash('sha256', $this->request?->ip() ?? ''),
@@ -107,6 +109,7 @@ class SessionDbSessionHandler implements SessionHandlerInterface
             try {
                 $this->db()->insert(array_merge($updatePayload, [
                     'sess_id'    => $id,
+                    'sess_token' => substr($id, 0, 128),
                     'user_type'  => 'anon',
                     'created_at' => $now->toDateTimeString(),
                 ]));
