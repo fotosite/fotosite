@@ -1,4 +1,36 @@
 <?php
+/**
+ * FILE:        app/Extensions/SessionDbSessionHandler.php
+ * VERSION:     1.1.0
+ *
+ * FUNCTIONS:   read(sessionId)              — Liest Session anhand sess_id; gibt
+ *                                             base64-dekodiertes sess_token zurück.
+ *                                             Reads: sessiondb.session.sess_id,
+ *                                             sess_token, last_activity
+ *              expired(session)             — Prüft ob last_activity älter als
+ *                                             $minutes ist.
+ *              getDefaultPayload(data)      — Erstellt Insert-/Update-Payload:
+ *                                             sess_token, user_type (Default 'anon'),
+ *                                             last_activity, expires_at, ip_hash,
+ *                                             ua_hash.
+ *              performInsert(sessionId, payload) — Fügt neuen Session-Datensatz ein;
+ *                                             fällt bei Duplikat auf Update zurück.
+ *                                             Writes: sessiondb.session.*
+ *              performUpdate(sessionId, payload) — Aktualisiert bestehenden Datensatz.
+ *                                             Writes: sessiondb.session.*
+ *              destroy(sessionId)           — Löscht Session-Datensatz.
+ *                                             Writes: sessiondb.session.sess_id
+ *              gc(lifetime)                 — Löscht abgelaufene Sessions.
+ *                                             Writes: sessiondb.session.last_activity
+ *
+ * CALLS:       Illuminate\Database\QueryException
+ *              Illuminate\Support\Arr::set()
+ *              Illuminate\Support\Carbon::now()
+ *              Illuminate\Support\Carbon::parse()
+ *
+ * DB ACCESS:   sessiondb.session.sess_id, sess_token, user_type, last_activity,
+ *              expires_at, ip_hash, ua_hash, created_at
+ */
 
 namespace App\Extensions;
 
@@ -42,6 +74,7 @@ class SessionDbSessionHandler extends DatabaseSessionHandler
     {
         $payload = [
             'sess_token'    => base64_encode($data),
+            'user_type'     => 'anon',
             'last_activity' => Carbon::now()->toDateTimeString(),
             'expires_at'    => Carbon::now()->addMinutes($this->minutes)->toDateTimeString(),
         ];
