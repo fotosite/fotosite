@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Extensions/SessionDbSessionHandler.php
- * VERSION:     2.1.0
+ * VERSION:     2.2.0
  *
  * FUNCTIONS:   open(savePath, sessionName) — SessionHandlerInterface-Stub; immer true.
  *              close()                     — SessionHandlerInterface-Stub; immer true.
@@ -30,8 +30,9 @@
  *              Illuminate\Support\Carbon::parse()
  *              Illuminate\Support\Facades\Log::error()
  *
- * DB ACCESS:   sessiondb.session.sess_id, sess_token, payload, user_type,
- *              last_activity, expires_at, ip_hash, ua_hash, created_at
+ * DB ACCESS:   sessiondb.session.sess_token, payload, user_type, cust_passcode,
+ *              ip_hash, ua_hash, created_at, last_activity, expires_at
+ *              (sess_id: BIGINT AUTO_INCREMENT — wird nicht im INSERT gesetzt)
  */
 
 namespace App\Extensions;
@@ -108,10 +109,10 @@ class SessionDbSessionHandler implements SessionHandlerInterface
         } else {
             try {
                 $this->db()->insert(array_merge($updatePayload, [
-                    'sess_id'    => $id,
-                    'sess_token' => substr($id, 0, 128),
-                    'user_type'  => 'anon',
-                    'created_at' => $now->toDateTimeString(),
+                    'sess_token'   => substr($id, 0, 128),
+                    'user_type'    => 'anon',
+                    'cust_passcode' => 0,
+                    'created_at'   => $now->toDateTimeString(),
                 ]));
             } catch (QueryException $e) {
                 Log::error('SessionDbSessionHandler: INSERT fehlgeschlagen', [
