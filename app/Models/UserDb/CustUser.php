@@ -1,4 +1,16 @@
 <?php
+/**
+ * FILE:        app/Models/UserDb/CustUser.php
+ * VERSION:     1.1.0
+ *
+ * FUNCTIONS:   passcodes()     — hasMany CustPcode via cust_id
+ *
+ * CALLS:       App\Models\UserDb\CustPcode
+ *
+ * DB ACCESS:   userdb.cust_user.cust_id, cust_uname, cust_email, cust_tel,
+ *              cust_firstname, cust_lastname, cust_street+nr,
+ *              cust_postcode_city, cust_company, cust_pw_hash, cust_2fa_opt_in
+ */
 
 namespace App\Models\UserDb;
 
@@ -20,6 +32,11 @@ class CustUser extends UserDbModel
         'cust_postcode_city',
         'cust_company',
         'cust_pw_hash',
+        'cust_2fa_opt_in',
+    ];
+
+    protected $casts = [
+        'cust_2fa_opt_in' => 'boolean',
     ];
 
     protected $hidden = ['cust_pw_hash'];

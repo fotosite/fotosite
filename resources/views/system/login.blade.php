@@ -92,7 +92,7 @@
                 @csrf
 
                 <p class="text-sm text-gray-600 mb-5">
-                    Ein Code wurde an Ihre hinterlegte Nummer gesendet.
+                    Ein Code wurde an Ihre hinterlegte E-Mail-Adresse gesendet.
                 </p>
 
                 <div>
