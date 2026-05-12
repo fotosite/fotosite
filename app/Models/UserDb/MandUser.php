@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Models/UserDb/MandUser.php
- * VERSION:     1.1.0
+ * VERSION:     1.2.0
  *
  * FUNCTIONS:   passcodes()     — hasMany CustPcode via mand_id
  *
@@ -36,13 +36,15 @@ class MandUser extends UserDbModel
         'mand_prefstat',
         'mand_cust_2fa',
         'active',
+        'has_public_content',
         'valid_to',
     ];
 
     protected $casts = [
-        'active'        => 'boolean',
-        'mand_cust_2fa' => 'boolean',
-        'valid_to'      => 'date',
+        'active'             => 'boolean',
+        'mand_cust_2fa'      => 'boolean',
+        'has_public_content' => 'boolean',
+        'valid_to'           => 'date',
     ];
 
     protected $hidden = ['mand_pw_hash'];

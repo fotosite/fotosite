@@ -1,4 +1,5 @@
 <?php
+// Modified: logout redirects to route('login') — Fotosite V8
 
 namespace App\Http\Controllers\Auth;
 
@@ -42,6 +43,8 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        // Central logout redirect — all user types (syst, mand, cust)
+        // Target route will later be replaced by the unified login page.
+        return redirect()->route('login');
     }
 }
