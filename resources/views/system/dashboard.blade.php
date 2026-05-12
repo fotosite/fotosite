@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/system/dashboard.blade.php
-    VERSION: 1.0.0
+    VERSION: 1.2.0
 
     DESCRIPTION:
       System-Dashboard — landing page after successful system login + 2FA.
@@ -33,40 +33,39 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="min-h-screen bg-zinc-950 text-zinc-100 antialiased"
+<body class="min-h-screen bg-gray-50 text-gray-900 antialiased"
       x-data>
 
     {{-- ══════════════════════════════════════════════════════
          TOP BAR
     ══════════════════════════════════════════════════════ --}}
-    <header class="sticky top-0 z-20 border-b border-zinc-800/80
-                   bg-zinc-950/90 backdrop-blur-sm">
+    <header class="sticky top-0 z-20 border-b border-gray-200 bg-white shadow-sm">
         <div class="mx-auto max-w-4xl px-6 h-14
                     flex items-center justify-between">
 
             {{-- Brand --}}
             <div class="flex items-center gap-3">
                 <span class="text-[11px] font-mono tracking-widest
-                             uppercase text-zinc-600">
+                             uppercase text-gray-400">
                     Fotosite&thinsp;V8
                 </span>
                 <span class="text-zinc-800 select-none">|</span>
                 <span class="text-sm font-semibold tracking-widest
-                             uppercase text-amber-500">
+                             uppercase text-amber-600">
                     System
                 </span>
             </div>
 
             {{-- User + Logout --}}
             <div class="flex items-center gap-5">
-                <span class="hidden sm:block text-xs text-zinc-500
+                <span class="hidden sm:block text-xs text-gray-500
                              truncate max-w-[180px]">
                     {{ $userName }}
                 </span>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit"
-                            class="text-xs text-zinc-600 hover:text-red-400
+                            class="text-xs text-gray-400 hover:text-red-500
                                    transition-colors duration-150 tracking-wide">
                         Abmelden
                     </button>
@@ -83,12 +82,12 @@
 
         {{-- Page title --}}
         <div class="mb-10">
-            <h1 class="text-xl font-light tracking-tight text-zinc-200">
+            <h1 class="text-xl font-semibold tracking-tight text-gray-800">
                 Dashboard
             </h1>
             <p class="mt-1.5 text-sm text-zinc-600">
                 Angemeldet als
-                <span class="text-zinc-400">{{ $userName }}</span>
+                <span class="text-gray-700 font-medium">{{ $userName }}</span>
                 @if($userEmail)
                     &thinsp;·&thinsp;
                     <span class="text-zinc-600">{{ $userEmail }}</span>
@@ -108,15 +107,14 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
             {{-- ── 1. Eigenverwaltung ── --}}
-            <div class="group relative flex flex-col gap-5 rounded-xl
-                        border border-zinc-800 bg-zinc-900 p-6
-                        opacity-60 cursor-not-allowed select-none"
-                 title="Wird im nächsten Schritt umgesetzt"
-                 @click="alert('Eigenverwaltung wird im nächsten Schritt umgesetzt.')">
+            <a href="{{ route('system.profile') }}"
+               class="group relative flex flex-col gap-5 rounded-xl
+                      border border-gray-200 bg-white p-6 shadow-sm
+                      hover:border-amber-400 hover:shadow-md transition-all duration-200">
 
-                <div class="w-9 h-9 rounded-lg border border-zinc-700
-                            bg-zinc-800 flex items-center justify-center">
-                    <svg class="w-[18px] h-[18px] text-zinc-400"
+                <div class="w-9 h-9 rounded-lg border border-gray-200
+                            bg-gray-100 flex items-center justify-center">
+                    <svg class="w-[18px] h-[18px] text-gray-500"
                          xmlns="http://www.w3.org/2000/svg"
                          fill="none" viewBox="0 0 24 24"
                          stroke-width="1.5" stroke="currentColor">
@@ -128,31 +126,31 @@
                 </div>
 
                 <div>
-                    <h2 class="text-sm font-semibold text-zinc-200 tracking-wide mb-1">
+                    <h2 class="text-sm font-semibold text-gray-800 tracking-wide mb-1">
                         Eigenverwaltung
                     </h2>
-                    <p class="text-xs text-zinc-600 leading-relaxed">
+                    <p class="text-xs text-gray-500 leading-relaxed">
                         Profil, E-Mail, Passwort,<br>2FA-Einstellungen
                     </p>
                 </div>
 
                 <span class="absolute top-4 right-4 text-[9px] font-mono
-                             tracking-widest uppercase text-zinc-700
-                             border border-zinc-800 rounded px-1.5 py-0.5">
-                    ausstehend
+                             tracking-widest uppercase text-amber-600
+                             border border-amber-200 rounded px-1.5 py-0.5">
+                    verfügbar
                 </span>
-            </div>
+            </a>
 
             {{-- ── 2. Mandantenverwaltung ── --}}
             <div class="group relative flex flex-col gap-5 rounded-xl
-                        border border-zinc-800 bg-zinc-900 p-6
+                        border border-gray-200 bg-white p-6 shadow-sm
                         opacity-60 cursor-not-allowed select-none"
                  title="Wird im nächsten Schritt umgesetzt"
                  @click="alert('Mandantenverwaltung wird im nächsten Schritt umgesetzt.')">
 
-                <div class="w-9 h-9 rounded-lg border border-zinc-700
-                            bg-zinc-800 flex items-center justify-center">
-                    <svg class="w-[18px] h-[18px] text-zinc-400"
+                <div class="w-9 h-9 rounded-lg border border-gray-200
+                            bg-gray-100 flex items-center justify-center">
+                    <svg class="w-[18px] h-[18px] text-gray-500"
                          xmlns="http://www.w3.org/2000/svg"
                          fill="none" viewBox="0 0 24 24"
                          stroke-width="1.5" stroke="currentColor">
@@ -166,24 +164,24 @@
                 </div>
 
                 <div>
-                    <h2 class="text-sm font-semibold text-zinc-200 tracking-wide mb-1">
+                    <h2 class="text-sm font-semibold text-gray-800 tracking-wide mb-1">
                         Mandantenverwaltung
                     </h2>
-                    <p class="text-xs text-zinc-600 leading-relaxed">
+                    <p class="text-xs text-gray-500 leading-relaxed">
                         Mandanten anlegen, bearbeiten,<br>löschen · CRUD
                     </p>
                 </div>
 
                 <span class="absolute top-4 right-4 text-[9px] font-mono
-                             tracking-widest uppercase text-zinc-700
-                             border border-zinc-800 rounded px-1.5 py-0.5">
+                             tracking-widest uppercase text-gray-400
+                             border border-gray-200 rounded px-1.5 py-0.5">
                     ausstehend
                 </span>
             </div>
 
             {{-- ── 3. Content-Verwaltung (Platzhalter) ── --}}
             <div class="relative flex flex-col gap-5 rounded-xl
-                        border border-zinc-900 bg-zinc-900/30 p-6
+                        border border-gray-100 bg-gray-50 p-6
                         opacity-30 cursor-default select-none">
 
                 <div class="w-9 h-9 rounded-lg border border-zinc-800/60
@@ -203,17 +201,17 @@
                 </div>
 
                 <div>
-                    <h2 class="text-sm font-semibold text-zinc-500 tracking-wide mb-1">
+                    <h2 class="text-sm font-semibold text-gray-500 tracking-wide mb-1">
                         Content-Verwaltung
                     </h2>
-                    <p class="text-xs text-zinc-700 leading-relaxed">
+                    <p class="text-xs text-gray-400 leading-relaxed">
                         Systemweite Inhaltsübersicht
                     </p>
                 </div>
 
                 <span class="absolute top-4 right-4 text-[9px] font-mono
-                             tracking-widest uppercase text-zinc-800
-                             border border-zinc-900 rounded px-1.5 py-0.5">
+                             tracking-widest uppercase text-gray-300
+                             border border-gray-200 rounded px-1.5 py-0.5">
                     geplant
                 </span>
             </div>
@@ -225,15 +223,14 @@
     {{-- ══════════════════════════════════════════════════════
          FOOTER
     ══════════════════════════════════════════════════════ --}}
-    <footer class="fixed bottom-0 inset-x-0 border-t border-zinc-900/80
-                   bg-zinc-950/90 backdrop-blur-sm">
+    <footer class="fixed bottom-0 inset-x-0 border-t border-gray-200 bg-white shadow-sm">
         <div class="mx-auto max-w-4xl px-6 h-9
                     flex items-center justify-between">
             <span class="text-[10px] font-mono tracking-widest
-                         uppercase text-zinc-800">
+                         uppercase text-gray-400">
                 Fotosite V8 · System-Bereich
             </span>
-            <span class="text-[10px] text-zinc-800">
+            <span class="text-[10px] text-gray-400">
                 Session aktiv
             </span>
         </div>
