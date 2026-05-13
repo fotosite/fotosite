@@ -274,3 +274,32 @@ ALTER TABLE
     `activity_group` ADD CONSTRAINT `activity_group_mand_id_foreign` FOREIGN KEY(`mand_id`) REFERENCES `mand_user`(`mand_id`);
 ALTER TABLE
     `activity_subgroup` ADD CONSTRAINT `activity_subgroup_mand_id_foreign` FOREIGN KEY(`mand_id`) REFERENCES `mand_user`(`mand_id`);
+
+
+-- ============================================================
+-- Ergänzungen für WebAuthn / Passkey-Infrastruktur
+-- id-Spalten als Trigger-Lösung (AUTO_INCREMENT nicht doppelt möglich)
+-- Datum: [aktuelles Datum]
+-- ============================================================
+
+-- mand_user: id-Spalte anlegen
+ALTER TABLE `mand_user`
+    ADD COLUMN `id` BIGINT UNSIGNED NULL,
+    ADD UNIQUE KEY `mand_user_id_unique`(`id`);
+
+-- Trigger: id nach INSERT mit mand_id-Wert befüllen
+CREATE TRIGGER mand_user_after_insert
+AFTER INSERT ON `mand_user`
+FOR EACH ROW
+    UPDATE `mand_user` SET `id` = NEW.mand_id WHERE `mand_id` = NEW.mand_id;
+
+-- cust_user: id-Spalte anlegen
+ALTER TABLE `cust_user`
+    ADD COLUMN `id` BIGINT UNSIGNED NULL,
+    ADD UNIQUE KEY `cust_user_id_unique`(`id`);
+
+-- Trigger: id nach INSERT mit cust_id-Wert befüllen
+CREATE TRIGGER cust_user_after_insert
+AFTER INSERT ON `cust_user`
+FOR EACH ROW
+    UPDATE `cust_user` SET `id` = NEW.cust_id WHERE `cust_id` = NEW.cust_id;
