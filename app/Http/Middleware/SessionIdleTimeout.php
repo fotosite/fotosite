@@ -42,6 +42,8 @@ class SessionIdleTimeout
 
     public function handle(Request $request, Closure $next): Response
     {
+      
+
         if (! $request->hasSession() || ! $request->session()->isStarted()) {
             return $next($request);
         }

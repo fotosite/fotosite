@@ -11,7 +11,7 @@ A photo-display website where **Mandanten** (tenants) provide photo content and 
 | **System-User** | CRUD on Mandanten accounts; no access to photo content |
 | **Mandant** | CRUD on own groups, subgroups, photo objects, and assigned customers |
 | **Customer (registered)** | Reads photos up to their stored security level (passcode-based) |
-| **Customer (anonymous)** | Reads photos by entering a password sequence each session; 30-min timeout |
+| **Customer (anonymous)** | Reads photos by entering a password sequence each session; idle timeout configurable via `.env` |
 
 ### Security Levels (Customer scope)
 | Level | Meaning |
@@ -26,7 +26,7 @@ A photo-display website where **Mandanten** (tenants) provide photo content and 
 - A Mandant defines up to 6 passwords, each corresponding to one security level digit.
 - Entering the correct password sequence generates a 4-character **passcode** (mand_id + 4 chars) stored in `cust_pcode`.
 - Passwords have a validity period managed by the Mandant (`pw_list.valid_from` / `valid_until`).
-- Registered customers retain their passcode until deleted; anonymous sessions expire after 30 min.
+- Registered customers retain their passcode until deleted; anonymous sessions expire after a configurable idle timeout (default 15 min, see `config/session_timeout.php`).
 
 ### Data Structure Hierarchy
 ```
@@ -189,7 +189,7 @@ All custom middleware lives in `app/Http/Middleware/` and is registered in `boot
     // Web group — require an active session
     $middleware->web(append: [
         \App\Http\Middleware\SessionHijackProtection::class,
-        \App\Http\Middleware\AnonymousSessionTimeout::class,
+        \App\Http\Middleware\SessionIdleTimeout::class,
     ]);
 })
 ```
@@ -223,16 +223,16 @@ All custom middleware lives in `app/Http/Middleware/` and is registered in `boot
   - `mand_prefstat` is **not** checked here — it serves a different purpose.
 - **No configuration required.**
 
-### `AnonymousSessionTimeout`
-- **File:** `app/Http/Middleware/AnonymousSessionTimeout.php`
+### `SessionIdleTimeout`
+- **File:** `app/Http/Middleware/SessionIdleTimeout.php`
 - **Stack:** `web` group
-- **Purpose:** Enforces an idle timeout for anonymous customer sessions as required by the project spec (30 min).
+- **Purpose:** Enforces configurable idle timeouts for all authenticated user types (anon, cust, mand, syst). Replaces the former `AnonymousSessionTimeout` which only covered anonymous sessions.
 - **Behaviour:**
-  - Only acts when the session key `_user_type` equals `'anon'` (set at anonymous login time).
-  - On each request: compares `time()` against `_anon_last_activity`. If the difference exceeds the configured timeout → `invalidate()` + `regenerateToken()` + redirect to `/` with an error message.
-  - On a valid request: refreshes `_anon_last_activity = time()`.
-- **Configuration:** `ANON_SESSION_TIMEOUT` in `.env` (integer, seconds, default `1800`).
-  - The value can be changed without a deployment by updating `.env`. Per the project spec, the timeout is a fixed operational value that can be adjusted per SQL / env — not a per-user setting.
+  - A missing `_user_type` is treated as `'anon'` — anonymous sessions never write this key to the session payload (only to `sessiondb.session.user_type`). Passes through unchanged only when the session has not been started.
+  - On each request: reads the timeout for the active user type from `config('session_timeout.<type>')`, then compares `time()` against `_last_activity`. If the difference exceeds the timeout → `invalidate()` + `regenerateToken()` + type-specific redirect with a German error message.
+  - On a valid request: refreshes `_last_activity = time()`.
+  - Redirect targets: `anon → /` · `cust → /customer/login` · `mand → /mandant/login` · `syst → /system/login`
+- **Configuration:** `config/session_timeout.php` — reads `ANON_SESSION_TIMEOUT`, `CUST_SESSION_TIMEOUT`, `MAND_SESSION_TIMEOUT`, `SYST_SESSION_TIMEOUT` from `.env` (integers, seconds; defaults: anon 900, cust 900, mand 1800, syst 600).
 
 ### Session keys used by middleware
 
@@ -251,18 +251,18 @@ All custom middleware lives in `app/Http/Middleware/` and is registered in `boot
 - **Action on mismatch:** session invalidated, redirect to `login`
 
 #### `_user_type`
-- **Written by:** login controllers (to be implemented) — set immediately after successful authentication
-- **Read by:** `AnonymousSessionTimeout` — on every request to decide whether to apply the timeout
+- **Written by:** login controllers — set immediately after successful authentication
+- **Read by:** `SessionIdleTimeout` — on every request to select the applicable timeout and redirect target
 - **Value:** one of `'anon'` · `'cust'` · `'mand'` · `'syst'`
 - **Lifetime:** lives for the duration of the authenticated session
-- **Contract:** any login controller that creates an anonymous session **must** write `_user_type = 'anon'` to the session, or `AnonymousSessionTimeout` will not trigger
+- **Contract:** login controllers for `cust`, `mand`, and `syst` **must** write `_user_type` to the session. Anonymous sessions may omit it — `SessionIdleTimeout` treats a missing key as `'anon'`
 
-#### `_anon_last_activity`
-- **Written by:** `AnonymousSessionTimeout` — on every request where `_user_type === 'anon'` and the session is still valid
-- **Read by:** `AnonymousSessionTimeout` — on every request to calculate idle time
+#### `_last_activity`
+- **Written by:** `SessionIdleTimeout` — on every request where `_user_type` is a known type and the session is still valid
+- **Read by:** `SessionIdleTimeout` — on every request to calculate idle time
 - **Value:** `time()` — Unix timestamp (integer)
-- **Lifetime:** reset on each valid request; absent on the very first anonymous request (treated as no prior activity, timeout does not fire)
-- **Action on timeout:** `time() - _anon_last_activity > ANON_SESSION_TIMEOUT` → session invalidated, redirect to `/`
+- **Lifetime:** reset on each valid request; absent on the very first request of a session (timeout does not fire, key is then written)
+- **Action on timeout:** `time() - _last_activity > config('session_timeout.<type>')` → session invalidated, type-specific redirect
 
 ---
 
@@ -315,14 +315,14 @@ Any controller or service that creates or modifies a session must respect the fo
 | `_user_type` | `string` | Login controllers | **Must** be set on every login: `'anon'` · `'cust'` · `'mand'` · `'syst'` |
 | `_syst_id` | `int` | System login controller | **Must** be set on system login: primary key from `syst_user.syst_id` |
 | `_mand_id` | `int` | Mandant login controller | **Must** be set on mandant login: primary key from `mand_user.mand_id` |
-| `_anon_last_activity` | `int` | `AnonymousSessionTimeout` | Do not write — updated automatically on every anonymous request |
+| `_last_activity` | `int` | `SessionIdleTimeout` | Do not write — updated automatically on every request with a known `_user_type` |
 
 **Rules:**
 - `_ip_hash` and `_ua_hash` are owned exclusively by `SessionHijackProtection`. Never write them in application code.
-- `_user_type` **must** be written by the login controller immediately after authentication. `AnonymousSessionTimeout` will not fire unless `_user_type === 'anon'` is present.
+- `_user_type` **must** be written by the login controller immediately after authentication. `SessionIdleTimeout` passes through silently when the key is absent or unknown.
 - `_syst_id` **must** be written by `SystemLoginController::verifyTwoFactor()` alongside `_user_type = 'syst'` after successful 2FA verification.
 - `_mand_id` **must** be written by the Mandant login controller alongside `_user_type = 'mand'`. `MandantActiveCheck` reads this key on every mandant-area request.
-- `_anon_last_activity` is owned exclusively by `AnonymousSessionTimeout`. Never write it in application code.
+- `_last_activity` is owned exclusively by `SessionIdleTimeout`. Never write it in application code.
 
 ### General
 - All new features branch from the Breeze auth scaffold.

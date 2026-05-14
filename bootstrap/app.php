@@ -23,7 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Web group — require an active session
         $middleware->web(append: [
             \App\Http\Middleware\SessionHijackProtection::class,
-            \App\Http\Middleware\AnonymousSessionTimeout::class,
+            \App\Http\Middleware\SessionIdleTimeout::class,
         ]);
 
         // Named middleware aliases
