@@ -122,7 +122,7 @@ app/
 │   │   └── UserDb/
 │   │       └── UserDbController.php       # Abstract base for user controllers
 │   └── Middleware/
-│       ├── AnonymousSessionTimeout.php
+│       ├── SessionIdleTimeout.php
 │       ├── NoIndexHeader.php
 │       └── SessionHijackProtection.php
 ├── Models/
@@ -221,9 +221,9 @@ All domain models set `public $timestamps = false`.
 **Applied:** `web` middleware group
 **Purpose:** On each request, hashes the current IP address and User-Agent and compares them against values stored at session start. On mismatch, invalidates the session, regenerates the CSRF token, and redirects to login with an error. Defends against session fixation and hijacking.
 
-### `AnonymousSessionTimeout`
+### `SessionIdleTimeout`
 **Applied:** `web` middleware group
-**Purpose:** Enforces an idle timeout for anonymous (`anon`) sessions. Reads `ANON_SESSION_TIMEOUT` from `.env` (default: 1800 s). On timeout, invalidates session and redirects to home with an error. Updates last-activity timestamp on every valid request.
+**Purpose:** Enforces configurable idle timeouts for all four user types (anon, cust, mand, syst). Reads per-type timeout values from `config/session_timeout.php` (`ANON_SESSION_TIMEOUT`, `CUST_SESSION_TIMEOUT`, `MAND_SESSION_TIMEOUT`, `SYST_SESSION_TIMEOUT` in `.env`; defaults: anon 900 s, cust 900 s, mand 1800 s, syst 600 s). On timeout, invalidates the session, regenerates the CSRF token, and redirects to the type-specific login route with `?expired=1`. Updates `_last_activity` timestamp on every valid request. Replaces the former `AnonymousSessionTimeout` middleware.
 
 Registration in `bootstrap/app.php`:
 ```php
@@ -231,7 +231,7 @@ Registration in `bootstrap/app.php`:
     $middleware->append(NoIndexHeader::class);              // global
     $middleware->appendToGroup('web', [
         SessionHijackProtection::class,
-        AnonymousSessionTimeout::class,
+        SessionIdleTimeout::class,
     ]);
 })
 ```

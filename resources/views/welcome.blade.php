@@ -18,6 +18,15 @@
         @endif
     </head>
     <body class="bg-[#FDFDFC] dark:bg-[#0a0a0a] text-[#1b1b18] flex p-6 lg:p-8 items-center lg:justify-center min-h-screen flex-col">
+        {{-- Session-Timeout-Fehlermeldung --}}
+        @if (isset($_GET['expired']))
+            <div style="position:fixed;top:1rem;left:50%;transform:translateX(-50%);
+                        background:#fee2e2;border:1px solid #f87171;color:#991b1b;
+                        padding:0.75rem 1.5rem;border-radius:0.375rem;z-index:9999;
+                        font-family:sans-serif;font-size:0.875rem;">
+                Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.
+            </div>
+        @endif
         <header class="w-full lg:max-w-4xl max-w-[335px] text-sm mb-6 not-has-[nav]:hidden">
             @if (Route::has('login'))
                 <nav class="flex items-center justify-end gap-4">

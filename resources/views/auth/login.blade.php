@@ -1,6 +1,14 @@
 <x-guest-layout>
+    <p class="text-red-600">TEST</p>
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
+
+    {{-- Session-Timeout-Fehlermeldung --}}
+    @if (request('expired'))
+        <div class="mb-4 text-sm text-red-600">
+            Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.
+        </div>
+    @endif
 
     <form method="POST" action="{{ route('login') }}">
         @csrf

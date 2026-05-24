@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Middleware/SessionIdleTimeout.php
- * VERSION:     1.0.1
+ * VERSION:     1.0.3
  *
  * FUNCTIONS:   handle(Request, Closure) — Enforces configurable idle timeouts for
  *                  all authenticated user types (anon, cust, mand, syst). Reads
@@ -10,8 +10,8 @@
  *                  payload (only to sessiondb.session.user_type). Loads the matching
  *                  timeout from config('session_timeout'). Compares time() against
  *                  _last_activity. On timeout: invalidates the session and redirects
- *                  to the login route for the given user type with a German error
- *                  message. On valid session: updates _last_activity to time().
+ *                  to the login route for the given user type with ?expired=1 appended
+ *                  as a query parameter. On valid session: updates _last_activity to time().
  *                  Passes through unchanged only when the session has not been started.
  *
  * CALLS:       Illuminate\Http\Request::hasSession()
@@ -57,8 +57,7 @@ class SessionIdleTimeout
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            return redirect(self::REDIRECT_TARGETS[$userType])
-                ->withErrors(['session' => 'Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.']);
+            return redirect(self::REDIRECT_TARGETS[$userType] . '?expired=1');
         }
 
         $request->session()->put('_last_activity', time());
