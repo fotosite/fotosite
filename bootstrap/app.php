@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\SessionHijackProtection::class,
             \App\Http\Middleware\SessionIdleTimeout::class,
+            \App\Http\Middleware\ValidateUserExists::class,
         ]);
 
         // Named middleware aliases
