@@ -16,5 +16,6 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware('web')->prefix('customer')->name('customer.')->group(function () {
-    //
+    Route::get('/dashboard', fn() => 'cust ok')
+        ->name('dashboard');
 });

@@ -45,11 +45,11 @@ use App\Http\Controllers\UserDb\SystemUserController;
 use Illuminate\Support\Facades\Route;
 
 // ── Authenticated area ────────────────────────────────────────
-Route::middleware(['web', 'syst.auth'])
+Route::middleware(['web', 'role:syst'])
     ->prefix('system')
     ->name('system.')
     ->group(function () {
-        Route::get('/dashboard', [SystemDashboardController::class, 'index'])
+        Route::get('/dashboard', fn() => 'syst ok')
             ->name('dashboard');
 
         Route::get('/profile', [SystemProfileController::class, 'edit'])

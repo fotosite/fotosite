@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 |   App\Http\Controllers\FotoBlobDb\— mandant media management
 */
 
-Route::middleware(['web', 'auth'])->prefix('mandant')->name('mandant.')->group(function () {
-    //
+Route::middleware(['web', 'role:mand'])->prefix('mandant')->name('mandant.')->group(function () {
+    Route::get('/dashboard', fn() => 'mand ok')
+        ->name('dashboard');
 });

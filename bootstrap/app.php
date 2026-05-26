@@ -29,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Named middleware aliases
         $middleware->alias([
             'syst.auth' => \App\Http\Middleware\SystUserCheck::class,
+            'role'      => \App\Http\Middleware\RequireRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
