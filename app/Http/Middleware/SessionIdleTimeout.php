@@ -1,18 +1,21 @@
 <?php
 /**
  * FILE:        app/Http/Middleware/SessionIdleTimeout.php
- * VERSION:     1.0.3
+ * VERSION:     1.0.4
+ * AUTOR:       Martin Wagner
+ * DATUM:       2026-05-26
  *
- * FUNCTIONS:   handle(Request, Closure) — Enforces configurable idle timeouts for
- *                  all authenticated user types (anon, cust, mand, syst). Reads
- *                  _user_type from the session; a missing key is treated as 'anon'
- *                  because anonymous sessions never write _user_type to the session
- *                  payload (only to sessiondb.session.user_type). Loads the matching
- *                  timeout from config('session_timeout'). Compares time() against
- *                  _last_activity. On timeout: invalidates the session and redirects
- *                  to the login route for the given user type with ?expired=1 appended
- *                  as a query parameter. On valid session: updates _last_activity to time().
- *                  Passes through unchanged only when the session has not been started.
+ * ZWECK:       Erzwingt konfigurierbare Idle-Timeouts für alle User-Typen
+ *              (anon, cust, mand, syst). Ersetzt AnonymousSessionTimeout.
+ *
+ * FUNCTIONS:   handle(Request, Closure) — Liest _user_type aus der Session
+ *                  (Default 'anon', da anonyme Sessions diesen Key nicht schreiben).
+ *                  Lädt den passenden Timeout aus config('session_timeout').
+ *                  Vergleicht time() mit _last_activity. Bei Überschreitung:
+ *                  Session invalidieren, Token regenerieren, Redirect zum
+ *                  typgerechten Login mit deutscher Fehlermeldung.
+ *                  Bei gültiger Session: _last_activity aktualisieren.
+ *                  Kein Eingriff, wenn die Session noch nicht gestartet wurde.
  *
  * CALLS:       Illuminate\Http\Request::hasSession()
  *              Illuminate\Http\Request::session()::isStarted()
@@ -40,10 +43,15 @@ class SessionIdleTimeout
         'syst' => '/system/login',
     ];
 
+    private const TIMEOUT_MESSAGES = [
+        'anon' => 'Ihre Sitzung ist abgelaufen.',
+        'cust' => 'Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.',
+        'mand' => 'Ihre Mandanten-Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.',
+        'syst' => 'Ihre System-Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.',
+    ];
+
     public function handle(Request $request, Closure $next): Response
     {
-      
-
         if (! $request->hasSession() || ! $request->session()->isStarted()) {
             return $next($request);
         }
@@ -57,7 +65,8 @@ class SessionIdleTimeout
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            return redirect(self::REDIRECT_TARGETS[$userType] . '?expired=1');
+            return redirect(self::REDIRECT_TARGETS[$userType])
+                ->with('error', self::TIMEOUT_MESSAGES[$userType]);
         }
 
         $request->session()->put('_last_activity', time());
