@@ -5,8 +5,8 @@ use App\Http\Controllers\UserDb\SystemLoginController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
-});
+    return view('auth.login-modal');
+})->name('home');
 
 Route::get('/dashboard', function () {
     return view('dashboard');

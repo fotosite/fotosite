@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/MandantLoginController.php
- * VERSION:     1.0
+ * VERSION:     1.1
  * AUTOR:       Martin Wagner
  * DATUM:       2026-05-26
  *
@@ -41,7 +41,7 @@ class MandantLoginController extends UserDbController
 {
     public function showLogin(): \Illuminate\Contracts\View\View
     {
-        return view('mandant.auth.login');
+        return view('auth.login-modal');
     }
 
     public function handleLogin(Request $request): Response
