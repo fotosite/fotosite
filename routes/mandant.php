@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\UserDb\MandantLoginController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -15,6 +16,21 @@ use Illuminate\Support\Facades\Route;
 |   App\Http\Controllers\FotoBlobDb\— mandant media management
 */
 
+// ── Public login routes (no role middleware) ──────────────────
+Route::middleware('web')->prefix('mandant')->name('mandant.')->group(function () {
+    Route::get('/login',       [MandantLoginController::class, 'showLogin'])
+        ->name('login');
+    Route::post('/login',      [MandantLoginController::class, 'handleLogin'])
+        ->name('login.handle');
+    Route::get('/login/2fa',   [MandantLoginController::class, 'showTwoFactor'])
+        ->name('login.2fa');
+    Route::post('/login/2fa',  [MandantLoginController::class, 'verifyTwoFactor'])
+        ->name('login.2fa.verify');
+    Route::post('/logout',     [MandantLoginController::class, 'logout'])
+        ->name('logout');
+});
+
+// ── Authenticated area ────────────────────────────────────────
 Route::middleware(['web', 'role:mand'])->prefix('mandant')->name('mandant.')->group(function () {
     Route::get('/dashboard', fn() => 'mand ok')
         ->name('dashboard');
