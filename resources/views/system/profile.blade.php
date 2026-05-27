@@ -61,7 +61,7 @@
                              truncate max-w-[180px]">
                     {{ $user?->syst_uname ?? 'System' }}
                 </span>
-                <form method="POST" action="{{ route('logout') }}">
+                <form method="POST" action="{{ route('system.logout') }}">
                     @csrf
                     <button type="submit"
                             class="text-xs text-gray-400 hover:text-red-500

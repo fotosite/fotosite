@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/SystemLoginController.php
- * VERSION:     1.1.0
+ * VERSION:     1.2.0
  *
  * FUNCTIONS:   login()           — Zeigt das System-Login-Formular an.
  *                                  Reads: —
@@ -16,6 +16,9 @@
  *                                  show_2fa-Flash; bei Erfolg: Session regenerieren,
  *                                  _user_type und _syst_id schreiben,
  *                                  2fa_syst_id löschen, Redirect zu /system/dashboard.
+ *                                  Reads: —
+ *              logout()          — Session invalidieren + Token regenerieren;
+ *                                  Redirect zu /backstage.
  *                                  Reads: —
  *
  * CALLS:       App\Models\UserDb\SystUser::where()->first()
@@ -95,5 +98,13 @@ class SystemLoginController extends UserDbController
         $request->session()->forget('2fa_syst_id');
 
         return redirect('/system/dashboard');
+    }
+
+    public function logout(Request $request): RedirectResponse
+    {
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('system.backstage.login');
     }
 }

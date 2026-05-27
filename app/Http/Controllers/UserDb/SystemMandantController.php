@@ -220,7 +220,7 @@ class SystemMandantController extends UserDbController
 
         $invite->delete();
 
-        return redirect()->route('login')
+        return redirect()->route('mandant.login')
             ->with('status', 'Mandanten-Account erstellt. Bitte melden Sie sich an.');
     }
 }

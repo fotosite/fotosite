@@ -22,5 +22,3 @@ Route::middleware('auth')->group(function () {
 Route::get('/backstage', [SystemLoginController::class, 'login'])->name('system.backstage.login');
 Route::post('/backstage', [SystemLoginController::class, 'handleLogin'])->name('system.backstage.handle');
 Route::post('/backstage/verify', [SystemLoginController::class, 'verifyTwoFactor'])->name('system.login.verify');
-
-require __DIR__.'/auth.php';

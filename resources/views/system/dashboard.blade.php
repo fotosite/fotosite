@@ -21,7 +21,7 @@
       $lastName  (string) — syst_lastname
 
     ROUTES USED:
-      POST /logout — Breeze logout (route('logout'))
+      POST /system/logout — System logout (route('system.logout'))
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -62,7 +62,7 @@
                              truncate max-w-[180px]">
                     {{ $userName }}
                 </span>
-                <form method="POST" action="{{ route('logout') }}">
+                <form method="POST" action="{{ route('system.logout') }}">
                     @csrf
                     <button type="submit"
                             class="text-xs text-gray-400 hover:text-red-500

@@ -39,6 +39,7 @@
  */
 
 use App\Http\Controllers\UserDb\SystemDashboardController;
+use App\Http\Controllers\UserDb\SystemLoginController;
 use App\Http\Controllers\UserDb\SystemMandantController;
 use App\Http\Controllers\UserDb\SystemProfileController;
 use App\Http\Controllers\UserDb\SystemUserController;
@@ -49,8 +50,11 @@ Route::middleware(['web', 'role:syst'])
     ->prefix('system')
     ->name('system.')
     ->group(function () {
-        Route::get('/dashboard', fn() => 'syst ok')
+        Route::get('/dashboard', [SystemDashboardController::class, 'index'])
             ->name('dashboard');
+
+        Route::post('/logout', [SystemLoginController::class, 'logout'])
+            ->name('logout');
 
         Route::get('/profile', [SystemProfileController::class, 'edit'])
             ->name('profile');
