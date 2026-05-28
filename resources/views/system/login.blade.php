@@ -10,31 +10,7 @@
 <body class="bg-gray-100 font-sans antialiased">
 
 <div class="min-h-screen flex items-center justify-center px-4"
-     x-data="{
-         show2fa: {{ session('show_2fa') ? 'true' : 'false' }},
-         countdown: 300,
-         expired: false,
-         init() {
-             if (this.show2fa) {
-                 this.startCountdown();
-             }
-         },
-         startCountdown() {
-             const interval = setInterval(() => {
-                 if (this.countdown > 0) {
-                     this.countdown--;
-                 } else {
-                     this.expired = true;
-                     clearInterval(interval);
-                 }
-             }, 1000);
-         },
-         formattedCountdown() {
-             const m = String(Math.floor(this.countdown / 60)).padStart(2, '0');
-             const s = String(this.countdown % 60).padStart(2, '0');
-             return m + ':' + s;
-         }
-     }">
+     x-data="{ show2fa: {{ session('show_2fa') ? 'true' : 'false' }} }">
 
     <div class="w-full max-w-sm bg-white rounded-lg shadow-md px-8 py-8">
 
@@ -86,8 +62,7 @@
         {{-- Zustand 2: SMS-Code --}}
         <div x-show="show2fa">
 
-            <form x-show="!expired"
-                  method="POST" action="{{ route('system.login.verify') }}"
+            <form method="POST" action="{{ route('system.login.verify') }}"
                   autocomplete="off">
                 @csrf
 
@@ -106,11 +81,6 @@
                                   focus:border-gray-500 focus:ring-gray-500">
                 </div>
 
-                <p class="mt-3 text-center text-xs text-gray-400">
-                    Gültig noch
-                    <span class="font-mono text-gray-600" x-text="formattedCountdown()"></span>
-                </p>
-
                 <div class="mt-5">
                     <button type="submit"
                             class="w-full flex justify-center py-2 px-4 rounded-md text-sm font-medium
@@ -121,9 +91,12 @@
                 </div>
             </form>
 
-            <p x-show="expired" class="text-sm text-red-600">
-                Code abgelaufen — bitte neu anmelden.
-            </p>
+            <div class="mt-5 text-center">
+                <a href="{{ route('system.backstage.login') }}"
+                   class="text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                    ← Zurück zum Login
+                </a>
+            </div>
 
         </div>
 

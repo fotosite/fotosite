@@ -50,6 +50,13 @@
             </div>
         </form>
 
+        <div class="mt-5 text-center">
+            <a href="{{ route('mandant.login') }}"
+               class="text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                ← Zurück zum Login
+            </a>
+        </div>
+
     </div>
 </div>
 

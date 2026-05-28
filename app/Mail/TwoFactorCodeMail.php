@@ -44,7 +44,7 @@ class TwoFactorCodeMail extends Mailable
             with: [
                 'code'          => $this->code,
                 'recipientName' => $this->recipientName,
-                'validMinutes'  => 10,
+                'validMinutes'  => 2,
             ],
         );
     }

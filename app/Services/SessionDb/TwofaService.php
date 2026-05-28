@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Services/SessionDb/TwofaService.php
- * VERSION:     1.2.0
+ * VERSION:     1.3.0
  *
  * FUNCTIONS:   generate()       — Creates a 6-digit code for a given user_type + purpose, stores hashed, returns plain
  *              verify()         — Checks code against hash; marks tfa_used = true on success
@@ -30,7 +30,7 @@ use Carbon\Carbon;
 class TwofaService extends SessionDbService
 {
     private const CODE_LENGTH   = 6;
-    private const VALID_MINUTES = 10;
+    private const VALID_MINUTES = 2;
 
     /**
      * Generates a new 6-digit code for the given user and purpose, stores it
