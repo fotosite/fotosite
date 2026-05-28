@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/MandantLoginController.php
- * VERSION:     1.2
+ * VERSION:     1.3
  * AUTOR:       Martin Wagner
  * DATUM:       2026-05-28
  *
@@ -21,7 +21,8 @@
  *                                  regenerieren, _user_type und _mand_id schreiben,
  *                                  pending_mand_id löschen, Redirect zu mandant.dashboard.
  *                                  Reads: sessiondb.twofa_code.* (via TwofaService)
- *              logout()          — Invalidiert die Session und leitet zu mandant.login.
+ *              logout()          — Invalidiert die Session und leitet zu mandant.login
+ *                                  mit status-Flash 'Sie wurden erfolgreich abgemeldet.'
  *                                  Reads: —
  *
  * CALLS:       App\Services\SessionDb\TwofaService::verify()
@@ -103,6 +104,7 @@ class MandantLoginController extends UserDbController
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('mandant.login');
+        return redirect()->route('mandant.login')
+            ->with('status', 'Sie wurden erfolgreich abgemeldet.');
     }
 }
