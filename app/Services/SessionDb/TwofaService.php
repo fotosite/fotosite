@@ -1,10 +1,18 @@
 <?php
 /**
  * FILE:        app/Services/SessionDb/TwofaService.php
- * VERSION:     1.1.0
+ * VERSION:     1.2.0
  *
- * FUNCTIONS:   generate()       — Creates a 6-digit code for a given purpose, stores hashed in DB, returns plain code
- *              verify()         — Checks code against hash; marks tfa_used = true on success (record kept for debugging)
+ * FUNCTIONS:   generate()       — Creates a 6-digit code for a given user_type + purpose, stores hashed, returns plain
+ *              verify()         — Checks code against hash; marks tfa_used = true on success
+ *              generateCode()   — Alias-style entry point used by session-aware callers (type, userId, sessId);
+ *                                 sessId is accepted but has no DB column — stores under tfa_purpose='login'.
+ *                                 Writes: sessiondb.twofa_code.user_type, user_id, tfa_purpose,
+ *                                         tfa_code_hash, tfa_expires_at, tfa_used, created_at
+ *              verifyCode()     — Verifies a plain code for type + userId (tfa_purpose='login');
+ *                                 marks tfa_used = true on success. Returns bool.
+ *                                 Reads: sessiondb.twofa_code.user_type, user_id, tfa_purpose,
+ *                                        tfa_code_hash, tfa_expires_at, tfa_used, created_at
  *              purgeExpired()   — Deletes rows where tfa_expires_at < now() OR tfa_used = true
  *
  * CALLS:       App\Models\SessionDb\TwofaCode::updateOrCreate()
@@ -71,6 +79,47 @@ class TwofaService extends SessionDbService
         }
 
         if (! password_verify($inputCode, $record->tfa_code_hash)) {
+            return false;
+        }
+
+        $record->tfa_used = true;
+        $record->save();
+
+        return true;
+    }
+
+    /**
+     * Session-aware entry point: generates a 6-digit code for $type + $userId.
+     * $sessId is accepted for interface consistency but has no DB column.
+     * Stores the bcrypt-hashed code under tfa_purpose = 'login'.
+     */
+    public function generateCode(string $type, int $userId, int $sessId): string
+    {
+        return $this->generate($type, $userId, 'login');
+    }
+
+    /**
+     * Verifies a plain code for $type + $userId (tfa_purpose = 'login').
+     * Returns true and marks the record used on success; false otherwise.
+     */
+    public function verifyCode(string $code, string $type, int $userId): bool
+    {
+        $record = TwofaCode::where('user_type', $type)
+            ->where('user_id', $userId)
+            ->where('tfa_purpose', 'login')
+            ->where('tfa_used', false)
+            ->latest('created_at')
+            ->first();
+
+        if (! $record) {
+            return false;
+        }
+
+        if (Carbon::now()->isAfter($record->tfa_expires_at)) {
+            return false;
+        }
+
+        if (! password_verify($code, $record->tfa_code_hash)) {
             return false;
         }
 

@@ -32,6 +32,6 @@ Route::middleware('web')->prefix('mandant')->name('mandant.')->group(function ()
 
 // ── Authenticated area ────────────────────────────────────────
 Route::middleware(['web', 'role:mand'])->prefix('mandant')->name('mandant.')->group(function () {
-    Route::get('/dashboard', fn() => 'mand ok')
+    Route::get('/dashboard', fn() => view('mandant.dashboard'))
         ->name('dashboard');
 });

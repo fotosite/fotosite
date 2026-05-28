@@ -14,7 +14,7 @@
         Formular-Submit mit Validierungsfehler die richtige Seite / der
         richtige Tab direkt sichtbar ist (kein Zurückspringen zum Default).
     --}}
-    <div x-data="{ page: '{{ old('_form', 'cust') }}', custTab: '{{ old('_tab', 'anon') }}' }"
+    <div x-data="{ page: '{{ session('login_page', 'cust') }}', custTab: '{{ old('_tab', 'anon') }}' }"
          class="w-full max-w-md bg-white rounded-2xl shadow-2xl px-8 py-10">
 
         {{-- Flash: abgelaufene Session --}}
@@ -177,7 +177,7 @@
                 @csrf
                 <input type="hidden" name="_form" value="mand">
 
-                @error('email')
+                @error('mand_email')
                     <div class="mb-3 text-sm text-red-600">{{ $message }}</div>
                 @enderror
                 @error('password')
@@ -188,14 +188,15 @@
                 @enderror
 
                 <div>
-                    <label for="mand_uname"
+                    <label for="mand_email"
                            class="block text-sm font-medium text-gray-700 mb-1">
-                        Benutzername
+                        E-Mail-Adresse
                     </label>
-                    <input id="mand_uname"
-                           type="text"
-                           name="username"
-                           value="{{ old('username') }}"
+                    <input id="mand_email"
+                           type="email"
+                           name="mand_email"
+                           value="{{ old('mand_email') }}"
+                           placeholder="ihre@email.de"
                            class="block w-full rounded-lg border-gray-300 shadow-sm
                                   focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                            required autofocus>

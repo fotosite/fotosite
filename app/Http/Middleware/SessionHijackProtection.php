@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Middleware/SessionHijackProtection.php
- * VERSION:     1.0.0
+ * VERSION:     1.1.0
  *
  * FUNCTIONS:   handle(Request, Closure) — Validates IP hash and user-agent hash
  *                  stored in the session against the current request values.
@@ -45,7 +45,7 @@ class SessionHijackProtection
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
 
-                return redirect()->route('login')
+                return redirect('/')
                     ->withErrors(['session' => 'Your session has been terminated for security reasons.']);
             }
         } else {

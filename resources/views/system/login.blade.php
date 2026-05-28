@@ -50,7 +50,7 @@
 
         {{-- Zustand 1: E-Mail + Passwort --}}
         <form x-show="!show2fa"
-              method="POST" action="/backstage"
+              method="POST" action="{{ route('system.backstage.handle') }}"
               autocomplete="off">
             @csrf
 
