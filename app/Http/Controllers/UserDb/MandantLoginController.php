@@ -1,66 +1,108 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/MandantLoginController.php
- * VERSION:     1.1
+ * VERSION:     1.2
  * AUTOR:       Martin Wagner
- * DATUM:       2026-05-26
+ * DATUM:       2026-05-28
  *
  * ZWECK:       Mand-Login mit 2FA — Formular anzeigen, Credentials prüfen,
  *              2FA-Code verifizieren, Session schreiben, Logout.
  *
  * FUNCTIONS:   showLogin()       — Zeigt das Mandant-Login-Formular an.
  *                                  Reads: —
- *              handleLogin()     — Prüft E-Mail + Passwort; delegiert Code-Erzeugung
- *                                  an TwofaService::generate(); sendet Code per Mail;
- *                                  speichert 2fa_mand_id in Session.
- *                                  Reads: userdb.mand_user.mand_id, mand_email,
- *                                         mand_pw_hash, mand_firstname
- *              showTwoFactor()   — Zeigt das 2FA-Eingabeformular an.
+ *              handleLogin()     — Stub; folgt in Abschnitt 5.
  *                                  Reads: —
- *              verifyTwoFactor() — Delegiert Prüfung an TwofaService::verify();
- *                                  bei Erfolg: Session regenerieren, _user_type
- *                                  und _mand_id schreiben, 2fa_mand_id löschen,
- *                                  Redirect zu /mandant/dashboard.
+ *              showTwoFactor()   — Prüft pending_mand_id in Session;
+ *                                  zeigt mandant.auth.two-factor View an.
  *                                  Reads: —
- *              logout()          — Invalidiert die Session und leitet zu /mandant/login.
+ *              verifyTwoFactor() — Validiert tfa_code (digits:6); liest
+ *                                  pending_mand_id aus Session; delegiert Prüfung
+ *                                  an TwofaService::verify(); bei Erfolg: Session
+ *                                  regenerieren, _user_type und _mand_id schreiben,
+ *                                  pending_mand_id löschen, Redirect zu mandant.dashboard.
+ *                                  Reads: sessiondb.twofa_code.* (via TwofaService)
+ *              logout()          — Invalidiert die Session und leitet zu mandant.login.
  *                                  Reads: —
  *
- * CALLS:       App\Models\UserDb\MandUser::where()->first()
- *              App\Services\SessionDb\TwofaService::generate()
- *              App\Services\SessionDb\TwofaService::verify()
+ * CALLS:       App\Services\SessionDb\TwofaService::verify()
+ *              App\Services\SessionDb\SessionIntegrityService::buildSessionData()
  *
- * DB ACCESS:   userdb.mand_user.mand_id, mand_email, mand_pw_hash, mand_firstname
+ * DB ACCESS:   sessiondb.twofa_code.* (via TwofaService)
  */
 
 namespace App\Http\Controllers\UserDb;
 
+use App\Services\SessionDb\SessionIntegrityService;
+use App\Services\SessionDb\TwofaService;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 
 class MandantLoginController extends UserDbController
 {
-    public function showLogin(): \Illuminate\Contracts\View\View
+    public function __construct(
+        private readonly TwofaService $twofaService,
+        private readonly SessionIntegrityService $sessionIntegrityService,
+    ) {}
+
+    public function showLogin(): View
     {
         return view('auth.login-modal');
     }
 
-    public function handleLogin(Request $request): Response
+    public function handleLogin(Request $request): RedirectResponse
     {
-        return response('handleLogin ok');
+        // Stub — wird in Abschnitt 5 implementiert
+        return redirect()->route('mandant.login');
     }
 
-    public function showTwoFactor(Request $request): Response
+    public function showTwoFactor(Request $request): View|RedirectResponse
     {
-        return response('showTwoFactor ok');
+        if (! $request->session()->has('pending_mand_id')) {
+            return redirect()->route('mandant.login');
+        }
+
+        return view('mandant.auth.two-factor');
     }
 
-    public function verifyTwoFactor(Request $request): Response
+    public function verifyTwoFactor(Request $request): RedirectResponse
     {
-        return response('verifyTwoFactor ok');
+        $request->validate([
+            'tfa_code' => ['required', 'digits:6'],
+        ]);
+
+        $mandId = $request->session()->get('pending_mand_id');
+
+        if (! $mandId) {
+            return redirect()->route('mandant.login');
+        }
+
+        $verified = $this->twofaService->verify(
+            'mand',
+            (int) $mandId,
+            'login',
+            $request->string('tfa_code')->toString()
+        );
+
+        if (! $verified) {
+            return back()->withErrors(['tfa_code' => 'Ungültiger oder abgelaufener Code.']);
+        }
+
+        $sessionData = $this->sessionIntegrityService->buildSessionData('mand', (int) $mandId);
+
+        $request->session()->regenerate();
+        $request->session()->put('_user_type', $sessionData['user_type']);
+        $request->session()->put('_mand_id',   $sessionData['mand_id']);
+        $request->session()->forget('pending_mand_id');
+
+        return redirect()->route('mandant.dashboard');
     }
 
-    public function logout(Request $request): Response
+    public function logout(Request $request): RedirectResponse
     {
-        return response('logout ok');
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('mandant.login');
     }
 }
