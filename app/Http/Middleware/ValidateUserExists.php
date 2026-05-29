@@ -1,13 +1,15 @@
 <?php
 /**
  * FILE:        app/Http/Middleware/ValidateUserExists.php
- * VERSION:     1.0
+ * VERSION:     1.1.0
  * AUTOR:       Martin Wagner
  * DATUM:       2026-05-26
  *
  * ZWECK:       Check 4 — Stellt sicher, dass der in der Session gespeicherte
  *              User-Datensatz noch in der Datenbank existiert. Verhindert, dass
  *              gelöschte Accounts weiterhin aktive Sessions besitzen.
+ *              Für mand: zusätzlich active = 1 geprüft — gesperrte Mandanten
+ *              werden wie gelöschte behandelt (Session invalidieren).
  *              anon-Sessions werden ohne DB-Prüfung durchgelassen.
  *              Ergebnis wird 60 Sekunden gecacht.
  *
@@ -29,7 +31,7 @@
  *              Illuminate\Http\Request::session()::invalidate()
  *              Illuminate\Http\Request::session()::regenerateToken()
  *
- * DB ACCESS:   userdb.mand_user.mand_id
+ * DB ACCESS:   userdb.mand_user.mand_id, active
  *              userdb.cust_user.cust_id
  *              userdb.syst_user.syst_id
  */
@@ -96,7 +98,12 @@ class ValidateUserExists
         $cacheKey = 'user_exists_' . $userType . '_' . $userId;
         $model    = self::MODEL_MAP[$userType];
 
-        $exists = Cache::remember($cacheKey, 60, fn() => $model::find($userId) !== null);
+        $exists = Cache::remember($cacheKey, 60, function () use ($model, $userId, $userType) {
+            if ($userType === 'mand') {
+                return $model::where('mand_id', $userId)->where('active', 1)->exists();
+            }
+            return $model::find($userId) !== null;
+        });
 
         if (! $exists) {
             Cache::forget($cacheKey);
