@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/konto.blade.php
-    VERSION: 1.0.0
+    VERSION: 1.1.0
 
     DESCRIPTION:
       Mandant Eigenverwaltung — Kontaktdaten und Passwort bearbeiten.
@@ -120,7 +120,7 @@
                             <span class="text-gray-400 font-normal">(optional)</span>
                         </label>
                         <input id="mand_uname" name="mand_uname" type="text"
-                               value="{{ old('mand_uname') }}"
+                               value="{{ old('mand_uname', $mand->mand_uname) }}"
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
                                       focus:border-indigo-500 focus:ring-indigo-500
@@ -137,7 +137,7 @@
                             E-Mail
                         </label>
                         <input id="mand_email" name="mand_email" type="email"
-                               value="{{ old('mand_email') }}"
+                               value="{{ old('mand_email', $mand->mand_email) }}"
                                required
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
@@ -155,7 +155,7 @@
                             Telefon
                         </label>
                         <input id="mand_tel" name="mand_tel" type="text"
-                               value="{{ old('mand_tel') }}"
+                               value="{{ old('mand_tel', $mand->mand_tel) }}"
                                required
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
@@ -175,7 +175,7 @@
                                 Vorname
                             </label>
                             <input id="mand_firstname" name="mand_firstname" type="text"
-                                   value="{{ old('mand_firstname') }}"
+                                   value="{{ old('mand_firstname', $mand->mand_firstname) }}"
                                    required
                                    class="mt-1 block w-full rounded-md border-gray-300
                                           shadow-sm text-sm
@@ -192,7 +192,7 @@
                                 Nachname
                             </label>
                             <input id="mand_lastname" name="mand_lastname" type="text"
-                                   value="{{ old('mand_lastname') }}"
+                                   value="{{ old('mand_lastname', $mand->mand_lastname) }}"
                                    required
                                    class="mt-1 block w-full rounded-md border-gray-300
                                           shadow-sm text-sm
@@ -212,7 +212,7 @@
                             Straße und Hausnummer
                         </label>
                         <input id="mand_street_nr" name="mand_street+nr" type="text"
-                               value="{{ old('mand_street+nr') }}"
+                               value="{{ old('mand_street+nr', $mand->{'mand_street+nr'}) }}"
                                required
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
@@ -230,7 +230,7 @@
                             PLZ und Ort
                         </label>
                         <input id="mand_postcode_city" name="mand_postcode+city" type="text"
-                               value="{{ old('mand_postcode+city') }}"
+                               value="{{ old('mand_postcode+city', $mand->{'mand_postcode+city'}) }}"
                                required
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
@@ -248,7 +248,7 @@
                             Firma / Organisation
                         </label>
                         <input id="mand_company" name="mand_company" type="text"
-                               value="{{ old('mand_company') }}"
+                               value="{{ old('mand_company', $mand->mand_company) }}"
                                required
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
@@ -265,7 +265,7 @@
                             <div class="flex h-5 items-center mt-0.5">
                                 <input id="mand_2fa_opt_in" name="mand_2fa_opt_in"
                                        type="checkbox" value="1"
-                                       {{ old('mand_2fa_opt_in') ? 'checked' : '' }}
+                                       {{ old('mand_2fa_opt_in', $mand->mand_2fa_opt_in) ? 'checked' : '' }}
                                        class="h-4 w-4 rounded border-gray-300
                                               text-indigo-600 focus:ring-indigo-500">
                             </div>
