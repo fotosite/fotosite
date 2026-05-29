@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/MandantSelfController.php
- * VERSION:     1.0.0
+ * VERSION:     1.1.0
  * AUTOR:       Martin Wagner
  * DATUM:       2026-05-29
  *
@@ -21,13 +21,14 @@
 
 namespace App\Http\Controllers\UserDb;
 
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\Response;
 
 class MandantSelfController extends UserDbController
 {
-    public function edit(): Response
+    public function edit(): View
     {
-        return response('konto edit ok');
+        return view('mandant.konto');
     }
 
     public function update(): Response
