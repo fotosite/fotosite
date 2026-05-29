@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/system/users/password_reset.blade.php
-    VERSION: 1.0.0
+    VERSION: 1.1.0
 
     DESCRIPTION:
       Standalone password-reset page for system users.
@@ -73,6 +73,7 @@
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
                                       focus:border-gray-500 focus:ring-gray-500">
+                        <p class="text-sm text-gray-500 mt-1">Mindestanforderungen: 14 Zeichen, Groß- und Kleinbuchstaben, Ziffern, Sonderzeichen.</p>
                     </div>
 
                     <div>

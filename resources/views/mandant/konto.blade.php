@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/konto.blade.php
-    VERSION: 1.1.0
+    VERSION: 1.2.0
 
     DESCRIPTION:
       Mandant Eigenverwaltung — Kontaktdaten und Passwort bearbeiten.
@@ -331,6 +331,7 @@
                         </label>
                         <input id="current_password" name="current_password"
                                type="password" required
+                               autocomplete="current-password"
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
                                       focus:border-indigo-500 focus:ring-indigo-500
@@ -347,10 +348,12 @@
                         </label>
                         <input id="password" name="password"
                                type="password" required
+                               autocomplete="new-password"
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
                                       focus:border-indigo-500 focus:ring-indigo-500
                                       @error('password') border-red-400 @enderror">
+                        <p class="text-sm text-gray-500 mt-1">Mindestanforderungen: 12 Zeichen, Groß- und Kleinbuchstaben, Ziffern, Sonderzeichen.</p>
                         @error('password')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                         @enderror
@@ -364,6 +367,7 @@
                         <input id="password_confirmation"
                                name="password_confirmation"
                                type="password" required
+                               autocomplete="new-password"
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
                                       focus:border-indigo-500 focus:ring-indigo-500

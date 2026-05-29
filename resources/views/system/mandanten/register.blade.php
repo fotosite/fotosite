@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/system/mandanten/register.blade.php
-    VERSION: 1.0.0
+    VERSION: 1.1.0
 
     DESCRIPTION:
       Standalone mandant registration page for invited mandants.
@@ -149,6 +149,7 @@
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
                                       focus:border-gray-500 focus:ring-gray-500">
+                        <p class="text-sm text-gray-500 mt-1">Mindestanforderungen: 12 Zeichen, Groß- und Kleinbuchstaben, Ziffern, Sonderzeichen.</p>
                     </div>
 
                     <div>
