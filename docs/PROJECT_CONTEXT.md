@@ -2,7 +2,7 @@
 
 ## 1. Project Overview
 
-Multi-tenant photo website. Each tenant (Mandant) manages their own photo content, activity groups, and customer access. The system supports anonymous browsing and authenticated access across three distinct user roles, with content visibility controlled by five security levels.
+Multi-tenant photo website. Each tenant (Mandant) manages their own photo content, activity groups, and customer access. The system supports anonymous browsing and authenticated access across three distinct user roles, with content visibility controlled by seven security levels (0–6).
 
 **User roles:**
 - `syst` — System administrator (platform owner)
@@ -10,7 +10,19 @@ Multi-tenant photo website. Each tenant (Mandant) manages their own photo conten
 - `cust` — Customer (end user with optional passcode)
 - `anon` — Anonymous visitor (unauthenticated, session-tracked)
 
-**Security levels:** Content items (activity groups, subgroups, photos) carry a `*_sec_code` field that controls visibility per role. Five levels are defined in the data model.
+**Security levels:** Content items (activity groups, subgroups, photos) carry a `*_sec_code` field that controls visibility per role. Seven levels (0–6) are defined in the data model.
+
+| Level | Bedeutung | Speicherung |
+|---|---|---|
+| 0 | Public — sichtbar für alle, einschließlich anon | Datei |
+| 1 | Bekannte / Kollegen | Datei |
+| 2 | Freunde | Datei |
+| 3 | Großfamilie | Datei |
+| 4 | Kernfamilie + enge Freunde | Datei |
+| 5 | Beziehung | Datei |
+| 6 | Intim | BLOB in `fotoblobdb` |
+
+> Stufe 6 wird als BLOB in der Datenbank (`fotoblobdb.foto_obj_db`) gespeichert. Alle anderen Stufen (0–5) werden als Datei im Dateisystem abgelegt.
 
 **Session model:** Every visitor — including anonymous ones — gets a session row in the `session` table. Session records track user type, identity references (syst_id / mand_id / cust_id), IP hash, user-agent hash, and expiry. Anonymous sessions time out after a configurable idle period (default 1800 s).
 
