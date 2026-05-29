@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/MandantSelfController.php
- * VERSION:     1.2.0
+ * VERSION:     1.3.0
  * AUTOR:       Martin Wagner
  * DATUM:       2026-05-29
  *
@@ -16,10 +16,19 @@
  *                                          mand_tel, mand_firstname, mand_lastname,
  *                                          mand_street+nr, mand_postcode+city,
  *                                          mand_company, mand_2fa_opt_in
- *              updatePassword() — Speichert neues Passwort (Hash). (Stub)
+ *              updatePassword() — Validiert aktuelles + neues Passwort (Policy:
+ *                                  min 12, gemischte Groß-/Kleinschreibung, Ziffern,
+ *                                  Sonderzeichen, uncompromised); prüft ob Benutzername
+ *                                  im Passwort enthalten ist; speichert neuen Hash;
+ *                                  invalidiert Session; Redirect zu mandant.login.
+ *                                  Reads:  userdb.mand_user.mand_id, mand_uname,
+ *                                          mand_pw_hash
  *                                  Writes: userdb.mand_user.mand_pw_hash
  *
  * CALLS:       App\Models\UserDb\MandUser::find()
+ *              Illuminate\Support\Facades\Hash::check()
+ *              Illuminate\Support\Facades\Hash::make()
+ *              Illuminate\Validation\Rules\Password::min()
  *
  * DB ACCESS:   userdb.mand_user.mand_id, mand_uname, mand_email, mand_tel,
  *              mand_firstname, mand_lastname, mand_street+nr, mand_postcode+city,
@@ -32,7 +41,8 @@ use App\Models\UserDb\MandUser;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 
 class MandantSelfController extends UserDbController
 {
@@ -81,8 +91,40 @@ class MandantSelfController extends UserDbController
             ->with('status', 'Kontodaten erfolgreich gespeichert.');
     }
 
-    public function updatePassword(): Response
+    public function updatePassword(Request $request): RedirectResponse
     {
-        return response('konto password ok');
+        $mandId = $request->session()->get('_mand_id');
+        $mand   = $mandId ? MandUser::find($mandId) : null;
+
+        if (! $mand) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return redirect()->route('mandant.login');
+        }
+
+        $request->validate([
+            'current_password' => ['required'],
+            'password'         => [
+                'required',
+                'confirmed',
+                Password::min(12)->mixedCase()->numbers()->symbols()->uncompromised(),
+            ],
+        ]);
+
+        if ($mand->mand_uname && str_contains($request->password, $mand->mand_uname)) {
+            return back()->withErrors(['password' => 'Das Passwort darf den Benutzernamen nicht enthalten.']);
+        }
+
+        if (! Hash::check($request->current_password, $mand->mand_pw_hash)) {
+            return back()->withErrors(['current_password' => 'Das aktuelle Passwort ist nicht korrekt.']);
+        }
+
+        $mand->update(['mand_pw_hash' => Hash::make($request->password)]);
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('mandant.login')
+            ->with('status', 'Passwort geändert. Bitte melden Sie sich erneut an.');
     }
 }
