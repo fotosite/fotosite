@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/dashboard.blade.php
-    VERSION: 2.0.0
+    VERSION: 2.1.0
 
     DESCRIPTION:
       Mandanten-Dashboard — Einstiegsseite nach erfolgreichem Mand-Login + 2FA.
@@ -11,7 +11,8 @@
       (keine — Route-Closure übergibt noch keine Variablen)
 
     ROUTES USED:
-      POST /mandant/logout — Mandant-Logout (route('mandant.logout'))
+      POST /mandant/logout  — Mandant-Logout (route('mandant.logout'))
+      GET  /mandant/konto   — Konto-Verwaltung (route('mandant.konto'))
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -196,6 +197,38 @@
                     geplant
                 </span>
             </div>
+
+
+            {{-- 4. Konto --}}
+            <a href="{{ route('mandant.konto') }}"
+               class="relative flex flex-col gap-5 rounded-xl
+                      border border-indigo-100 bg-white p-6
+                      hover:border-indigo-300 hover:shadow-sm
+                      transition-all duration-150">
+
+                <div class="w-9 h-9 rounded-lg border border-indigo-200
+                            bg-indigo-50 flex items-center justify-center">
+                    <svg class="w-[18px] h-[18px] text-indigo-500"
+                         xmlns="http://www.w3.org/2000/svg"
+                         fill="none" viewBox="0 0 24 24"
+                         stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5
+                                 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933
+                                 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/>
+                    </svg>
+                </div>
+
+                <div>
+                    <h2 class="text-sm font-semibold text-gray-800 tracking-wide mb-1">
+                        Konto
+                    </h2>
+                    <p class="text-xs text-gray-500 leading-relaxed">
+                        Profil und Passwort<br>verwalten
+                    </p>
+                </div>
+
+            </a>
 
         </div>{{-- /grid --}}
 

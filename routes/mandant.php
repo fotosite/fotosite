@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\UserDb\MandantLoginController;
+use App\Http\Controllers\UserDb\MandantSelfController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -34,4 +35,11 @@ Route::middleware('web')->prefix('mandant')->name('mandant.')->group(function ()
 Route::middleware(['web', 'role:mand'])->prefix('mandant')->name('mandant.')->group(function () {
     Route::get('/dashboard', fn() => view('mandant.dashboard'))
         ->name('dashboard');
+
+    Route::get('/konto',            [MandantSelfController::class, 'edit'])
+        ->name('konto');
+    Route::patch('/konto',          [MandantSelfController::class, 'update'])
+        ->name('konto.update');
+    Route::patch('/konto/passwort', [MandantSelfController::class, 'updatePassword'])
+        ->name('konto.password');
 });
