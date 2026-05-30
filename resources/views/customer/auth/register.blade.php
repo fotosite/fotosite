@@ -1,16 +1,19 @@
 {{--
     FILE:    resources/views/customer/auth/register.blade.php
-    VERSION: 1.0.0
+    VERSION: 1.1.0
     AUTHOR:  Martin Wagner
     DATE:    2026-05-30
 
     DESCRIPTION:
       Kunden-Registrierungsformular — wird per Einladungs-Token aufgerufen.
-      E-Mail ist durch den Einladungslink vorausgefüllt und schreibgeschützt.
+      Zwei Modi:
+        $alreadyExists = true  → Kompaktform für bereits registrierte User
+        $alreadyExists = false → Vollständiges Registrierungsformular
 
     DATA FROM CONTROLLER:
-      $token      — Einladungs-Token (string)
-      $cust_email — E-Mail-Adresse aus CustInvite (vorausgefüllt, readonly)
+      $token         — Einladungs-Token (string)
+      $cust_email    — E-Mail-Adresse aus CustInvite (vorausgefüllt / readonly)
+      $alreadyExists — bool: true wenn cust_email bereits in cust_user vorhanden
 
     ROUTES USED:
       POST /customer/register/{token} — Registrierung abschicken (route('customer.register.store'))
@@ -29,7 +32,8 @@
 <body class="min-h-screen bg-gray-100 font-sans antialiased">
 
 <div class="min-h-screen flex items-center justify-center px-4 py-12">
-    <div class="w-full max-w-lg bg-white rounded-xl shadow-md px-8 py-8">
+    <div class="w-full bg-white rounded-xl shadow-md px-8 py-8
+                {{ $alreadyExists ? 'max-w-sm' : 'max-w-lg' }}">
 
         {{-- Kopfzeile --}}
         <div class="mb-7">
@@ -37,11 +41,8 @@
                 Fotosite&thinsp;V8
             </p>
             <h1 class="text-xl font-semibold text-gray-800">
-                Konto erstellen
+                {{ $alreadyExists ? 'Einladung annehmen' : 'Konto erstellen' }}
             </h1>
-            <p class="mt-1 text-sm text-gray-500">
-                Füllen Sie das Formular aus, um Ihren Zugang zu aktivieren.
-            </p>
         </div>
 
         {{-- Flash-Meldung --}}
@@ -62,11 +63,51 @@
             </div>
         @endif
 
+        @if($alreadyExists)
+
+        {{-- ── Kompaktform: bereits registrierter User ──────── --}}
+        <div class="mb-6 space-y-2 text-sm text-gray-600">
+            <p>Sie wurden von einem Mandanten eingeladen.</p>
+            <p>
+                Ihr Account ist bereits registriert:
+                <span class="font-medium text-gray-800">{{ $cust_email }}</span>
+            </p>
+            <p class="text-gray-400 text-xs">
+                Mit einem Klick auf "Einladung annehmen" wird Ihr Zugang für diesen
+                Mandanten freigeschaltet.
+            </p>
+        </div>
+
+        <form method="POST"
+              action="{{ route('customer.register.store', ['token' => $token]) }}">
+            @csrf
+            <input type="hidden" name="token"      value="{{ $token }}">
+            <input type="hidden" name="cust_email" value="{{ $cust_email }}">
+            <input type="hidden" name="existing"   value="1">
+
+            <button type="submit"
+                    class="w-full flex justify-center rounded-lg
+                           bg-indigo-600 px-4 py-2.5 text-sm font-medium
+                           text-white hover:bg-indigo-700
+                           transition-colors duration-150
+                           focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                Einladung annehmen
+            </button>
+        </form>
+
+        @else
+
+        {{-- ── Vollständiges Registrierungsformular ─────────── --}}
+        <p class="mb-6 text-sm text-gray-500">
+            Füllen Sie das Formular aus, um Ihren Zugang zu aktivieren.
+        </p>
+
         <form method="POST"
               action="{{ route('customer.register.store', ['token' => $token]) }}"
               autocomplete="off">
             @csrf
-            <input type="hidden" name="token" value="{{ $token }}">
+            <input type="hidden" name="token"    value="{{ $token }}">
+            <input type="hidden" name="existing" value="0">
 
             <div class="space-y-5">
 
@@ -247,6 +288,8 @@
             </div>
 
         </form>
+
+        @endif
 
         {{-- Zurück --}}
         <div class="mt-6 text-center">
