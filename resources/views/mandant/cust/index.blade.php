@@ -1,13 +1,13 @@
 {{--
     FILE:    resources/views/mandant/cust/index.blade.php
-    VERSION: 2.0.0
+    VERSION: 3.0.0
     AUTHOR:  Martin Wagner
     DATE:    2026-05-30
 
     DESCRIPTION:
       Kundenliste des eingeloggten Mandanten.
-      Zeigt alle CustPcode-Einträge mit zugehörigem CustUser.
-      Sicherheitsstufe per Dropdown änderbar (PATCH), Eintrag entfernbar (DELETE).
+      Zeigt alle CustPcode-Einträge. Spalte "Kunde" zeigt cust_alias + E-Mail (grau).
+      Alias und Sicherheitsstufe gemeinsam editierbar (PATCH). Eintrag entfernbar (DELETE).
 
     DATA FROM CONTROLLER:
       $custs — Collection<CustPcode> mit eager-geladenem custUser
@@ -15,7 +15,7 @@
     ROUTES USED:
       POST   /mandant/logout                      — Abmelden (route('mandant.logout'))
       GET    /mandant/kunden/einladen             — Einladungsformular (route('mandant.kunden.invite'))
-      PATCH  /mandant/kunden/{id}/passcode        — Stufe ändern (route('mandant.kunden.passcode'))
+      PATCH  /mandant/kunden/{id}/passcode        — Alias + Stufe ändern (route('mandant.kunden.passcode'))
       DELETE /mandant/kunden/{id}                 — Entfernen (route('mandant.kunden.destroy'))
       GET    /mandant/dashboard                   — Dashboard (route('mandant.dashboard'))
 --}}
@@ -79,7 +79,7 @@
                     Kundenliste
                 </h1>
                 <p class="mt-1.5 text-sm text-zinc-600">
-                    Ihre eingeladenen Kunden und deren Sicherheitsstufe.
+                    Ihre eingeladenen Kunden — Alias und Sicherheitsstufe editierbar.
                 </p>
             </div>
             <a href="{{ route('mandant.kunden.invite') }}"
@@ -112,16 +112,12 @@
                     <thead>
                         <tr class="border-b border-gray-100 bg-gray-50 text-left">
                             <th class="px-4 py-3 font-medium text-gray-600 text-xs uppercase
-                                       tracking-wide">
-                                Name
+                                       tracking-wide w-44">
+                                Kunde
                             </th>
                             <th class="px-4 py-3 font-medium text-gray-600 text-xs uppercase
                                        tracking-wide">
-                                E-Mail
-                            </th>
-                            <th class="px-4 py-3 font-medium text-gray-600 text-xs uppercase
-                                       tracking-wide w-64">
-                                Sicherheitsstufe
+                                Alias &amp; Sicherheitsstufe bearbeiten
                             </th>
                             <th class="px-4 py-3 font-medium text-gray-600 text-xs uppercase
                                        tracking-wide w-28 text-right">
@@ -133,32 +129,34 @@
                         @foreach($custs as $cust)
                             <tr class="hover:bg-gray-50 transition-colors duration-100">
 
-                                {{-- Name --}}
-                                <td class="px-4 py-3 text-gray-800 font-medium">
-                                    @if($cust->custUser)
-                                        {{ $cust->custUser->cust_firstname }}
-                                        {{ $cust->custUser->cust_lastname }}
-                                    @else
-                                        <span class="text-gray-400 italic">—</span>
-                                    @endif
+                                {{-- Kunde: Alias + E-Mail --}}
+                                <td class="px-4 py-3">
+                                    <div class="font-medium text-gray-800">
+                                        {{ $cust->cust_alias ?: '—' }}
+                                    </div>
+                                    <div class="text-xs text-gray-400 mt-0.5">
+                                        {{ $cust->custUser?->cust_email ?? '—' }}
+                                    </div>
                                 </td>
 
-                                {{-- E-Mail --}}
-                                <td class="px-4 py-3 text-gray-600">
-                                    @if($cust->custUser)
-                                        {{ $cust->custUser->cust_email }}
-                                    @else
-                                        <span class="text-gray-400 italic">—</span>
-                                    @endif
-                                </td>
-
-                                {{-- Sicherheitsstufe — Dropdown + Speichern --}}
+                                {{-- Bearbeiten: Alias-Textfeld + Stufen-Dropdown + Speichern --}}
                                 <td class="px-4 py-3">
                                     <form method="POST"
                                           action="{{ route('mandant.kunden.passcode', $cust->pcode_id) }}"
-                                          class="flex items-center gap-2">
+                                          class="flex items-center gap-2 flex-wrap">
                                         @csrf
                                         @method('PATCH')
+
+                                        <input type="text"
+                                               name="cust_alias"
+                                               value="{{ $cust->cust_alias }}"
+                                               required
+                                               placeholder="Alias"
+                                               class="rounded-lg border border-gray-300 bg-white
+                                                      px-2 py-1.5 text-xs text-gray-800 shadow-sm
+                                                      w-36
+                                                      focus:outline-none focus:ring-2 focus:ring-indigo-400">
+
                                         <select name="sec_level"
                                                 class="rounded-lg border border-gray-300 bg-white
                                                        px-2 py-1.5 text-xs text-gray-800 shadow-sm
@@ -180,6 +178,7 @@
                                                 </option>
                                             @endforeach
                                         </select>
+
                                         <button type="submit"
                                                 class="rounded-lg border border-indigo-200
                                                        bg-indigo-50 px-2.5 py-1.5 text-xs
@@ -196,9 +195,6 @@
                                     x-data>
                                     <form method="POST"
                                           action="{{ route('mandant.kunden.destroy', $cust->pcode_id) }}"
-                                          x-on:submit.prevent="
-                                              $event.target.submit()
-                                          "
                                           @submit.prevent="
                                               if (confirm('Kunden wirklich entfernen?'))
                                                   $el.submit()

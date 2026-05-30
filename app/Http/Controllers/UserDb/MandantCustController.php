@@ -1,32 +1,36 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/MandantCustController.php
- * VERSION:     1.2.0
+ * VERSION:     1.4.0
  * AUTHOR:      Martin Wagner
  * DATE:        2026-05-30
- * PURPOSE:     Cust-Verwaltung durch Mandant — Einladen, Passcode-Verwaltung, Löschen
+ * PURPOSE:     Cust-Verwaltung durch Mandant — Einladen, Alias/Passcode-Verwaltung, Löschen
  *
- * FUNCTIONS:   index()          — Listet Kunden des eingeloggten Mandanten
- *                                 Reads: userdb.cust_pcode.mand_id, cust_id, cust_passcode,
- *                                        pcode_prefstat
- *                                        userdb.cust_user.cust_id, cust_firstname,
- *                                        cust_lastname, cust_email
- *              invite()         — Zeigt Einladungsformular
- *                                 Reads: (keine)
- *              store()          — Validiert Formular, prüft Duplikat, erstellt CustInvite,
- *                                 sendet CustInviteMail.
- *                                 Reads:  userdb.cust_user.cust_id, cust_email
- *                                         userdb.cust_pcode.mand_id, cust_id
- *                                 Writes: sessiondb.cust_invite.mand_id, cust_email,
- *                                         sec_level, token, created_at, expires_at, used
- *              updatePasscode() — Aktualisiert Sicherheitsstufe (cust_passcode) eines Kunden
- *                                 Reads:  userdb.cust_pcode.pcode_id, mand_id
- *                                 Writes: userdb.cust_pcode.cust_passcode
- *              destroy()        — Entfernt Kunden-Zuordnung des Mandanten
- *                                 Reads:  userdb.cust_pcode.pcode_id, mand_id
- *                                 Writes: userdb.cust_pcode (DELETE)
+ * FUNCTIONS:   index()   — Listet Kunden des eingeloggten Mandanten
+ *                           Reads: userdb.cust_pcode.mand_id, cust_id, cust_passcode,
+ *                                  pcode_prefstat, cust_alias
+ *                                  userdb.cust_user.cust_id, cust_firstname,
+ *                                  cust_lastname, cust_email
+ *              invite()  — Zeigt Einladungsformular
+ *                           Reads: (keine)
+ *              store()   — Validiert Formular (inkl. cust_alias), prüft Duplikat,
+ *                           erstellt CustInvite (inkl. cust_alias), sendet CustInviteMail.
+ *                           cust_alias fließt via CustInvite zu CustPcode::create()
+ *                           in CustRegisterController::store().
+ *                           Reads:  userdb.mand_user.mand_id, mand_uname
+ *                                   userdb.cust_user.cust_id, cust_email
+ *                                   userdb.cust_pcode.mand_id, cust_id
+ *                           Writes: sessiondb.cust_invite.mand_id, cust_email, cust_alias,
+ *                                   sec_level, token, created_at, expires_at, used
+ *              update()  — Aktualisiert cust_alias + Sicherheitsstufe (cust_passcode)
+ *                           Reads:  userdb.cust_pcode.pcode_id, mand_id
+ *                           Writes: userdb.cust_pcode.cust_passcode, cust_alias
+ *              destroy() — Entfernt Kunden-Zuordnung des Mandanten
+ *                           Reads:  userdb.cust_pcode.pcode_id, mand_id
+ *                           Writes: userdb.cust_pcode (DELETE)
  *
- * CALLS:       App\Models\UserDb\CustUser::where()->first()
+ * CALLS:       App\Models\UserDb\MandUser::find()
+ *              App\Models\UserDb\CustUser::where()->first()
  *              App\Models\UserDb\CustPcode::where()->exists()
  *              App\Models\UserDb\CustPcode::where()->with()->get()
  *              App\Models\UserDb\CustPcode::where()->first()
@@ -35,10 +39,12 @@
  *              Illuminate\Support\Facades\Mail::to()->send()
  *              Illuminate\Support\Str::random()
  *
- * DB ACCESS:   userdb.cust_user.cust_id, cust_firstname, cust_lastname, cust_email
- *              userdb.cust_pcode.pcode_id, mand_id, cust_id, cust_passcode, pcode_prefstat
- *              sessiondb.cust_invite.invite_id, mand_id, cust_email, sec_level,
- *              token, created_at, expires_at, used
+ * DB ACCESS:   userdb.mand_user.mand_id, mand_uname
+ *              userdb.cust_user.cust_id, cust_firstname, cust_lastname, cust_email
+ *              userdb.cust_pcode.pcode_id, mand_id, cust_id, cust_passcode,
+ *              pcode_prefstat, cust_alias
+ *              sessiondb.cust_invite.invite_id, mand_id, cust_email, cust_alias,
+ *              sec_level, token, created_at, expires_at, used
  */
 
 namespace App\Http\Controllers\UserDb;
@@ -47,6 +53,7 @@ use App\Mail\CustInviteMail;
 use App\Models\SessionDb\CustInvite;
 use App\Models\UserDb\CustPcode;
 use App\Models\UserDb\CustUser;
+use App\Models\UserDb\MandUser;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -73,15 +80,18 @@ class MandantCustController extends UserDbController
 
     public function store(Request $request): RedirectResponse
     {
-        $mandId = (int) $request->session()->get('_mand_id');
+        $mandId   = (int) $request->session()->get('_mand_id');
+        $mand     = MandUser::find($mandId);
+        $mandUname = $mand ? $mand->mand_uname : 'Fotosite';
 
-        $request->validate([
+        $validated = $request->validate([
             'cust_email' => ['required', 'email', 'max:255'],
+            'cust_alias' => ['required', 'string', 'max:255'],
             'sec_level'  => ['required', 'integer', 'min:1', 'max:6'],
         ]);
 
-        $email    = $request->input('cust_email');
-        $secLevel = (int) $request->input('sec_level');
+        $email    = $validated['cust_email'];
+        $secLevel = (int) $validated['sec_level'];
 
         $existingCust = CustUser::where('cust_email', $email)->first();
         if ($existingCust) {
@@ -100,6 +110,7 @@ class MandantCustController extends UserDbController
         CustInvite::create([
             'mand_id'    => $mandId,
             'cust_email' => $email,
+            'cust_alias' => $validated['cust_alias'],
             'sec_level'  => $secLevel,
             'token'      => $token,
             'created_at' => now(),
@@ -109,13 +120,13 @@ class MandantCustController extends UserDbController
 
         $registerUrl = route('customer.register', ['token' => $token]);
 
-        Mail::to($email)->send(new CustInviteMail($registerUrl, $mandId));
+        Mail::to($email)->send(new CustInviteMail($registerUrl, $mandUname));
 
         return redirect()->route('mandant.kunden.index')
             ->with('status', 'Einladung wurde gesendet.');
     }
 
-    public function updatePasscode(Request $request, int $id): RedirectResponse
+    public function update(Request $request, int $id): RedirectResponse
     {
         $mandId = (int) $request->session()->get('_mand_id');
 
@@ -128,10 +139,14 @@ class MandantCustController extends UserDbController
         }
 
         $validated = $request->validate([
-            'sec_level' => ['required', 'integer', 'min:1', 'max:6'],
+            'sec_level'  => ['required', 'integer', 'min:1', 'max:6'],
+            'cust_alias' => ['required', 'string', 'max:255'],
         ]);
 
-        $pcode->update(['cust_passcode' => $validated['sec_level']]);
+        $pcode->update([
+            'cust_passcode' => $validated['sec_level'],
+            'cust_alias'    => $validated['cust_alias'],
+        ]);
 
         return redirect()->route('mandant.kunden.index')
             ->with('status', 'Sicherheitsstufe aktualisiert.');

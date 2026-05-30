@@ -1,4 +1,20 @@
 <?php
+/**
+ * FILE:        app/Models/UserDb/CustPcode.php
+ * VERSION:     1.1.0
+ * AUTHOR:      Martin Wagner
+ * DATE:        2026-05-30
+ * PURPOSE:     Mandant-Kunden-Zuordnung mit Sicherheitsstufe und internem Alias
+ *
+ * FUNCTIONS:   mandUser() — belongsTo MandUser via mand_id
+ *              custUser() — belongsTo CustUser via cust_id
+ *
+ * CALLS:       App\Models\UserDb\MandUser
+ *              App\Models\UserDb\CustUser
+ *
+ * DB ACCESS:   userdb.cust_pcode.pcode_id, mand_id, cust_id, cust_passcode,
+ *              pcode_prefstat, cust_alias
+ */
 
 namespace App\Models\UserDb;
 
@@ -15,6 +31,7 @@ class CustPcode extends UserDbModel
         'cust_id',
         'cust_passcode',
         'pcode_prefstat',
+        'cust_alias',
     ];
 
     public function mandUser(): BelongsTo

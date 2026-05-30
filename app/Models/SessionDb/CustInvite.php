@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Models/SessionDb/CustInvite.php
- * VERSION:     1.0.0
+ * VERSION:     1.1.0
  * AUTHOR:      Martin Wagner
  * DATE:        2026-05-30
  * PURPOSE:     Cust-Einladungs-Token — ein Datensatz pro ausgestellter Einladung
@@ -10,7 +10,7 @@
  *
  * CALLS:       (none)
  *
- * DB ACCESS:   sessiondb.cust_invite.invite_id, mand_id, cust_email,
+ * DB ACCESS:   sessiondb.cust_invite.invite_id, mand_id, cust_email, cust_alias,
  *              sec_level, token, created_at, expires_at, used
  */
 
@@ -26,6 +26,7 @@ class CustInvite extends SessionDbModel
         'invite_id',
         'mand_id',
         'cust_email',
+        'cust_alias',
         'sec_level',
         'token',
         'created_at',

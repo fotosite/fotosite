@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/cust/einladen.blade.php
-    VERSION: 1.0.0
+    VERSION: 1.1.0
     AUTHOR:  Martin Wagner
     DATE:    2026-05-30
 
@@ -108,6 +108,29 @@
                               @error('cust_email') border-red-400 bg-red-50 @else border-gray-300 @enderror">
                 @error('cust_email')
                     <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
+            {{-- Interner Alias --}}
+            <div>
+                <label for="cust_alias"
+                       class="block text-sm font-medium text-gray-700 mb-1.5">
+                    Ihr interner Name für diesen Kunden
+                </label>
+                <input type="text"
+                       id="cust_alias"
+                       name="cust_alias"
+                       value="{{ old('cust_alias') }}"
+                       required
+                       placeholder="z.B. Anna M., Schwester, Kollege Max"
+                       autocomplete="off"
+                       class="w-full rounded-lg border px-3 py-2 text-sm
+                              text-gray-800 shadow-sm
+                              focus:outline-none focus:ring-2 focus:ring-indigo-400
+                              @error('cust_alias') border-red-400 bg-red-50 @else border-gray-300 @enderror">
+                <p class="mt-1 text-xs text-gray-400">Nur für Sie sichtbar.</p>
+                @error('cust_alias')
+                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                 @enderror
             </div>
 

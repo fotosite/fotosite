@@ -56,7 +56,7 @@ Route::middleware(['web', 'role:mand'])->prefix('mandant')->name('mandant.')->gr
         ->name('kunden.invite');
     Route::post('/kunden/einladen',          [MandantCustController::class, 'store'])
         ->name('kunden.store');
-    Route::patch('/kunden/{id}/passcode',    [MandantCustController::class, 'updatePasscode'])
+    Route::patch('/kunden/{id}/passcode',    [MandantCustController::class, 'update'])
         ->name('kunden.passcode');
     Route::delete('/kunden/{id}',            [MandantCustController::class, 'destroy'])
         ->name('kunden.destroy');

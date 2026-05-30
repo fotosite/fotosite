@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustRegisterController.php
- * VERSION:     1.3.0
+ * VERSION:     1.4.0
  * AUTHOR:      Martin Wagner
  * DATE:        2026-05-30
  * PURPOSE:     Kunden-Registrierung per Einladungs-Token
@@ -18,7 +18,7 @@
  *                                  userdb.cust_user.cust_email
  *                          Writes: userdb.cust_user.* (nur bei Neu-Registrierung)
  *                                  userdb.cust_pcode.mand_id, cust_id, cust_passcode,
- *                                  pcode_prefstat
+ *                                  pcode_prefstat, cust_alias
  *                                  sessiondb.cust_invite.used (UPDATE)
  *
  * CALLS:       App\Models\SessionDb\CustInvite::where()->first()
@@ -127,6 +127,7 @@ class CustRegisterController extends UserDbController
             'mand_id'        => $invite->mand_id,
             'cust_id'        => $cust->cust_id,
             'cust_passcode'  => $invite->sec_level,
+            'cust_alias'     => $invite->cust_alias ?? '',
             'pcode_prefstat' => 1,
         ]);
 
