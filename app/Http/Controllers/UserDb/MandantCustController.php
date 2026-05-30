@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/MandantCustController.php
- * VERSION:     1.4.0
+ * VERSION:     1.5.0
  * AUTHOR:      Martin Wagner
  * DATE:        2026-05-30
  * PURPOSE:     Cust-Verwaltung durch Mandant — Einladen, Alias/Passcode-Verwaltung, Löschen
@@ -25,22 +25,26 @@
  *              update()  — Aktualisiert cust_alias + Sicherheitsstufe (cust_passcode)
  *                           Reads:  userdb.cust_pcode.pcode_id, mand_id
  *                           Writes: userdb.cust_pcode.cust_passcode, cust_alias
- *              destroy() — Entfernt Kunden-Zuordnung des Mandanten
- *                           Reads:  userdb.cust_pcode.pcode_id, mand_id
+ *              destroy() — Entfernt Kunden-Zuordnung des Mandanten; löscht CustUser
+ *                           wenn keine weitere Mand-Zuordnung existiert.
+ *                           Reads:  userdb.cust_pcode.pcode_id, mand_id, cust_id
  *                           Writes: userdb.cust_pcode (DELETE)
+ *                                   userdb.cust_user (DELETE, nur wenn $remaining === 0)
  *
  * CALLS:       App\Models\UserDb\MandUser::find()
  *              App\Models\UserDb\CustUser::where()->first()
+ *              App\Models\UserDb\CustUser::find()->delete()
  *              App\Models\UserDb\CustPcode::where()->exists()
  *              App\Models\UserDb\CustPcode::where()->with()->get()
  *              App\Models\UserDb\CustPcode::where()->first()
+ *              App\Models\UserDb\CustPcode::where()->count()
  *              App\Models\SessionDb\CustInvite::create()
  *              App\Mail\CustInviteMail
  *              Illuminate\Support\Facades\Mail::to()->send()
  *              Illuminate\Support\Str::random()
  *
  * DB ACCESS:   userdb.mand_user.mand_id, mand_uname
- *              userdb.cust_user.cust_id, cust_firstname, cust_lastname, cust_email
+ *              userdb.cust_user.cust_id, cust_firstname, cust_lastname, cust_email (DELETE)
  *              userdb.cust_pcode.pcode_id, mand_id, cust_id, cust_passcode,
  *              pcode_prefstat, cust_alias
  *              sessiondb.cust_invite.invite_id, mand_id, cust_email, cust_alias,
@@ -164,7 +168,14 @@ class MandantCustController extends UserDbController
             abort(404);
         }
 
+        $custId = $pcode->cust_id;
+
         $pcode->delete();
+
+        $remaining = CustPcode::where('cust_id', $custId)->count();
+        if ($remaining === 0) {
+            CustUser::find($custId)?->delete();
+        }
 
         return redirect()->route('mandant.kunden.index')
             ->with('status', 'Kunde wurde entfernt.');
