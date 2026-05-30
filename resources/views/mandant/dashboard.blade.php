@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/dashboard.blade.php
-    VERSION: 2.2.0
+    VERSION: 2.3.0
 
     DESCRIPTION:
       Mandanten-Dashboard — Einstiegsseite nach erfolgreichem Mand-Login + 2FA.
@@ -83,6 +83,35 @@
             <div class="mb-8 rounded-lg border border-indigo-200
                         bg-indigo-50 px-4 py-3 text-sm text-indigo-700">
                 {{ session('status') }}
+            </div>
+        @endif
+
+        {{-- Passwortliste: Status-Hinweise --}}
+        @php
+            $mandId   = session('_mand_id');
+            $pwlist   = $mandId
+                ? \App\Models\SessionDb\PwList::where('mand_id', $mandId)->first()
+                : null;
+            $pwExpired = $pwlist && $pwlist->valid_until < now();
+            $pwMissing = ! $pwlist;
+        @endphp
+
+        @if($pwExpired)
+            <div class="p-4 rounded-lg mb-4 text-sm
+                        bg-amber-50 border border-amber-300 text-amber-800">
+                ⚠️ Der Gültigkeitszeitraum für Ihre Passwortliste ist abgelaufen.
+                Bitte aktualisieren Sie die
+                <a href="{{ route('mandant.pwlist') }}"
+                   class="font-semibold underline hover:no-underline">Passwortliste</a>.
+            </div>
+        @endif
+
+        @if($pwMissing)
+            <div class="p-4 rounded-lg mb-4 text-sm
+                        bg-blue-50 border border-blue-300 text-blue-800">
+                ℹ️ Sie haben noch keine Passwortliste angelegt.
+                <a href="{{ route('mandant.pwlist') }}"
+                   class="font-semibold underline hover:no-underline">Jetzt anlegen</a>.
             </div>
         @endif
 

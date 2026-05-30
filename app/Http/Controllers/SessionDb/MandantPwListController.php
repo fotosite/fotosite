@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/SessionDb/MandantPwListController.php
- * VERSION:     1.1.0
+ * VERSION:     1.2.0
  * AUTOR:       Martin Wagner
  * DATUM:       2026-05-30
  *
@@ -78,6 +78,24 @@ class MandantPwListController extends SessionDbController
             'pw6'         => ['required', 'string', 'min:8'],
             'valid_from'  => ['required', 'date'],
             'valid_until' => ['required', 'date', 'after:valid_from'],
+        ], [
+            'pw1.required'        => 'Passwort 1 ist erforderlich.',
+            'pw1.min'             => 'Passwort 1 muss mindestens 8 Zeichen haben.',
+            'pw2.required'        => 'Passwort 2 ist erforderlich.',
+            'pw2.min'             => 'Passwort 2 muss mindestens 8 Zeichen haben.',
+            'pw3.required'        => 'Passwort 3 ist erforderlich.',
+            'pw3.min'             => 'Passwort 3 muss mindestens 8 Zeichen haben.',
+            'pw4.required'        => 'Passwort 4 ist erforderlich.',
+            'pw4.min'             => 'Passwort 4 muss mindestens 8 Zeichen haben.',
+            'pw5.required'        => 'Passwort 5 ist erforderlich.',
+            'pw5.min'             => 'Passwort 5 muss mindestens 8 Zeichen haben.',
+            'pw6.required'        => 'Passwort 6 ist erforderlich.',
+            'pw6.min'             => 'Passwort 6 muss mindestens 8 Zeichen haben.',
+            'valid_from.required' => 'Bitte Gültigkeitsbeginn angeben.',
+            'valid_from.date'     => 'Gültigkeitsbeginn muss ein gültiges Datum sein.',
+            'valid_until.required'=> 'Bitte Ablaufdatum angeben.',
+            'valid_until.date'    => 'Ablaufdatum muss ein gültiges Datum sein.',
+            'valid_until.after'   => 'Das Ablaufdatum muss nach dem Gültigkeitsbeginn liegen.',
         ]);
 
         PwList::updateOrCreate(['mand_id' => $mandId], [
