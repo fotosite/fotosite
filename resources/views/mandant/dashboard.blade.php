@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/dashboard.blade.php
-    VERSION: 2.3.0
+    VERSION: 2.4.0
 
     DESCRIPTION:
       Mandanten-Dashboard — Einstiegsseite nach erfolgreichem Mand-Login + 2FA.
@@ -190,14 +190,16 @@
                 </span>
             </div>
 
-            {{-- 3. Kunden (geplant) --}}
-            <div class="relative flex flex-col gap-5 rounded-xl
-                        border border-gray-100 bg-gray-50 p-6
-                        opacity-40 cursor-default select-none">
+            {{-- 3. Kunden --}}
+            <a href="{{ route('mandant.kunden.index') }}"
+               class="relative flex flex-col gap-5 rounded-xl
+                      border border-indigo-100 bg-white p-6
+                      hover:border-indigo-300 hover:shadow-sm
+                      transition-all duration-150">
 
-                <div class="w-9 h-9 rounded-lg border border-gray-200
-                            bg-gray-100 flex items-center justify-center">
-                    <svg class="w-[18px] h-[18px] text-gray-400"
+                <div class="w-9 h-9 rounded-lg border border-indigo-200
+                            bg-indigo-50 flex items-center justify-center">
+                    <svg class="w-[18px] h-[18px] text-indigo-500"
                          xmlns="http://www.w3.org/2000/svg"
                          fill="none" viewBox="0 0 24 24"
                          stroke-width="1.5" stroke="currentColor">
@@ -213,20 +215,15 @@
                 </div>
 
                 <div>
-                    <h2 class="text-sm font-semibold text-gray-700 tracking-wide mb-1">
+                    <h2 class="text-sm font-semibold text-gray-800 tracking-wide mb-1">
                         Kunden
                     </h2>
-                    <p class="text-xs text-gray-400 leading-relaxed">
+                    <p class="text-xs text-gray-500 leading-relaxed">
                         Kunden anlegen, Passcodes<br>verwalten, löschen
                     </p>
                 </div>
 
-                <span class="absolute top-4 right-4 text-[9px] font-mono
-                             tracking-widest uppercase text-gray-300
-                             border border-gray-200 rounded px-1.5 py-0.5">
-                    geplant
-                </span>
-            </div>
+            </a>
 
 
             {{-- 4. Konto --}}

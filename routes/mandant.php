@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\SessionDb\MandantPwListController;
+use App\Http\Controllers\UserDb\MandantCustController;
 use App\Http\Controllers\UserDb\MandantLoginController;
 use App\Http\Controllers\UserDb\MandantSelfController;
 use Illuminate\Support\Facades\Route;
@@ -48,4 +49,15 @@ Route::middleware(['web', 'role:mand'])->prefix('mandant')->name('mandant.')->gr
         ->name('pwlist');
     Route::patch('/passwortliste', [MandantPwListController::class, 'update'])
         ->name('pwlist.update');
+
+    Route::get('/kunden',                    [MandantCustController::class, 'index'])
+        ->name('kunden.index');
+    Route::get('/kunden/einladen',           [MandantCustController::class, 'invite'])
+        ->name('kunden.invite');
+    Route::post('/kunden/einladen',          [MandantCustController::class, 'store'])
+        ->name('kunden.store');
+    Route::patch('/kunden/{id}/passcode',    [MandantCustController::class, 'updatePasscode'])
+        ->name('kunden.passcode');
+    Route::delete('/kunden/{id}',            [MandantCustController::class, 'destroy'])
+        ->name('kunden.destroy');
 });
