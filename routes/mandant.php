@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\SessionDb\MandantPwListController;
 use App\Http\Controllers\UserDb\MandantLoginController;
 use App\Http\Controllers\UserDb\MandantSelfController;
 use Illuminate\Support\Facades\Route;
@@ -42,4 +43,9 @@ Route::middleware(['web', 'role:mand'])->prefix('mandant')->name('mandant.')->gr
         ->name('konto.update');
     Route::patch('/konto/passwort', [MandantSelfController::class, 'updatePassword'])
         ->name('konto.password');
+
+    Route::get('/passwortliste',   [MandantPwListController::class, 'edit'])
+        ->name('pwlist');
+    Route::patch('/passwortliste', [MandantPwListController::class, 'update'])
+        ->name('pwlist.update');
 });

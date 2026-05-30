@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/dashboard.blade.php
-    VERSION: 2.1.0
+    VERSION: 2.2.0
 
     DESCRIPTION:
       Mandanten-Dashboard — Einstiegsseite nach erfolgreichem Mand-Login + 2FA.
@@ -12,7 +12,8 @@
 
     ROUTES USED:
       POST /mandant/logout  — Mandant-Logout (route('mandant.logout'))
-      GET  /mandant/konto   — Konto-Verwaltung (route('mandant.konto'))
+      GET  /mandant/konto          — Konto-Verwaltung (route('mandant.konto'))
+      GET  /mandant/passwortliste — Passwortliste (route('mandant.pwlist'))
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -225,6 +226,37 @@
                     </h2>
                     <p class="text-xs text-gray-500 leading-relaxed">
                         Profil und Passwort<br>verwalten
+                    </p>
+                </div>
+
+            </a>
+
+            {{-- 5. Passwortliste --}}
+            <a href="{{ route('mandant.pwlist') }}"
+               class="relative flex flex-col gap-5 rounded-xl
+                      border border-indigo-100 bg-white p-6
+                      hover:border-indigo-300 hover:shadow-sm
+                      transition-all duration-150">
+
+                <div class="w-9 h-9 rounded-lg border border-indigo-200
+                            bg-indigo-50 flex items-center justify-center">
+                    <svg class="w-[18px] h-[18px] text-indigo-500"
+                         xmlns="http://www.w3.org/2000/svg"
+                         fill="none" viewBox="0 0 24 24"
+                         stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25
+                                 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25
+                                 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/>
+                    </svg>
+                </div>
+
+                <div>
+                    <h2 class="text-sm font-semibold text-gray-800 tracking-wide mb-1">
+                        Passwortliste
+                    </h2>
+                    <p class="text-xs text-gray-500 leading-relaxed">
+                        Passwörter und Gültigkeit<br>verwalten
                     </p>
                 </div>
 
