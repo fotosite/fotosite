@@ -35,12 +35,12 @@ class MandantCustController extends UserDbController
 {
     public function index(): View
     {
-        return view('mandant.kunden.index');
+        return view('mandant.cust.index');
     }
 
     public function invite(): View
     {
-        return view('mandant.kunden.einladen');
+        return view('mandant.cust.einladen');
     }
 
     public function store(Request $request): Response

@@ -1,5 +1,5 @@
 {{--
-    FILE:    resources/views/mandant/kunden/einladen.blade.php
+    FILE:    resources/views/mandant/cust/einladen.blade.php
     VERSION: 1.0.0
     AUTHOR:  Martin Wagner
     DATE:    2026-05-30
