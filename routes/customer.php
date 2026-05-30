@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\UserDb\CustRegisterController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -18,4 +19,9 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('web')->prefix('customer')->name('customer.')->group(function () {
     Route::get('/dashboard', fn() => 'cust ok')
         ->name('dashboard');
+
+    Route::get('/register/{token}',  [CustRegisterController::class, 'show'])
+        ->name('register');
+    Route::post('/register/{token}', [CustRegisterController::class, 'store'])
+        ->name('register.store');
 });
