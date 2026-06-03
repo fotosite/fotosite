@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustLoginController.php
- * VERSION:     1.1.0
+ * VERSION:     1.2.0
  * AUTOR:       Martin Wagner
  * DATUM:       2026-06-03
  *
@@ -19,9 +19,11 @@
  *                                         userdb.cust_pcode.pcode_id, cust_id, mand_id,
  *                                         cust_passcode, pcode_prefstat
  *                                         userdb.mand_user.mand_id, mand_cust_2fa
- *              handleAnonLogin() — [Stub] Prüft Passwort-Sequenz gegen pw_list;
- *                                  setzt anonyme Session.
- *                                  Reads: —
+ *              handleAnonLogin() — Validiert Passwort gegen alle aktiven pw_lists;
+ *                                  ermittelt Mandant + Sicherheitsstufe; baut anonyme
+ *                                  Session ohne cust_id.
+ *                                  Reads: sessiondb.pw_list.mand_id, pw1–pw6,
+ *                                         valid_from, valid_until
  *              showTwoFactor()   — [Stub] Zeigt 2FA-Formular für Cust-Login.
  *                                  Reads: —
  *              verifyTwoFactor() — [Stub] Verifiziert 2FA-Code; schreibt Session.
@@ -32,6 +34,7 @@
  * CALLS:       App\Models\UserDb\CustUser::where()->first()
  *              App\Models\UserDb\CustPcode::where()->orderByDesc()->first()
  *              App\Models\UserDb\MandUser::find()
+ *              App\Models\SessionDb\PwList::where()->get()
  *              App\Mail\TwoFactorCodeMail
  *              App\Services\SessionDb\TwofaService::generateCode()
  *              App\Services\SessionDb\SessionIntegrityService::buildSessionData()
@@ -41,11 +44,14 @@
  * DB ACCESS:   userdb.cust_user.cust_id, cust_email, cust_pw_hash, cust_firstname
  *              userdb.cust_pcode.pcode_id, cust_id, mand_id, cust_passcode, pcode_prefstat
  *              userdb.mand_user.mand_id, mand_cust_2fa
+ *              sessiondb.pw_list.mand_id, pw1, pw2, pw3, pw4, pw5, pw6,
+ *              valid_from, valid_until
  */
 
 namespace App\Http\Controllers\UserDb;
 
 use App\Mail\TwoFactorCodeMail;
+use App\Models\SessionDb\PwList;
 use App\Models\UserDb\CustPcode;
 use App\Models\UserDb\CustUser;
 use App\Models\UserDb\MandUser;
@@ -134,9 +140,49 @@ class CustLoginController extends UserDbController
         return redirect()->route('customer.dashboard');
     }
 
-    public function handleAnonLogin(Request $request): Response
+    public function handleAnonLogin(Request $request): RedirectResponse
     {
-        return response('handleAnonLogin ok');
+        $request->validate([
+            'password' => ['required', 'string', 'min:8'],
+        ]);
+
+        $password = $request->input('password');
+
+        $pwLists = PwList::where('valid_from', '<=', now())
+            ->where('valid_until', '>=', now())
+            ->get();
+
+        $mandId   = null;
+        $secLevel = null;
+
+        foreach ($pwLists as $pwList) {
+            foreach (['pw1', 'pw2', 'pw3', 'pw4', 'pw5', 'pw6'] as $index => $field) {
+                try {
+                    if (decrypt($pwList->$field) === $password) {
+                        $mandId   = $pwList->mand_id;
+                        $secLevel = $index + 1;
+                        break 2;
+                    }
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+        }
+
+        if ($mandId === null) {
+            return back()
+                ->withErrors(['password' => 'Passwort nicht gültig oder abgelaufen.'])
+                ->with('login_page', 'cust')
+                ->with('cust_tab', 'anon');
+        }
+
+        $request->session()->regenerate();
+        $request->session()->put('_user_type',     'anon');
+        $request->session()->put('_mand_id',       $mandId);
+        $request->session()->put('_sec_level',     $secLevel);
+        $request->session()->put('_last_activity', time());
+
+        return redirect()->route('customer.dashboard');
     }
 
     public function showTwoFactor(Request $request): Response
