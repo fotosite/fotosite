@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/MandantSelfController.php
- * VERSION:     1.3.0
+ * VERSION:     1.4.0
  * AUTOR:       Martin Wagner
  * DATUM:       2026-05-29
  *
@@ -15,7 +15,7 @@
  *                                  Writes: userdb.mand_user.mand_uname, mand_email,
  *                                          mand_tel, mand_firstname, mand_lastname,
  *                                          mand_street+nr, mand_postcode+city,
- *                                          mand_company, mand_2fa_opt_in
+ *                                          mand_company, mand_2fa_opt_in, mand_cust_2fa
  *              updatePassword() — Validiert aktuelles + neues Passwort (Policy:
  *                                  min 12, gemischte Groß-/Kleinschreibung, Ziffern,
  *                                  Sonderzeichen, uncompromised); prüft ob Benutzername
@@ -32,7 +32,7 @@
  *
  * DB ACCESS:   userdb.mand_user.mand_id, mand_uname, mand_email, mand_tel,
  *              mand_firstname, mand_lastname, mand_street+nr, mand_postcode+city,
- *              mand_company, mand_2fa_opt_in, mand_pw_hash
+ *              mand_company, mand_2fa_opt_in, mand_cust_2fa, mand_pw_hash
  */
 
 namespace App\Http\Controllers\UserDb;
@@ -81,9 +81,11 @@ class MandantSelfController extends UserDbController
             'mand_postcode+city' => ['required', 'string', 'max:255'],
             'mand_company'       => ['required', 'string', 'max:255'],
             'mand_2fa_opt_in'    => ['sometimes', 'boolean'],
+            'mand_cust_2fa'      => ['required', 'integer', 'min:0', 'max:7'],
         ]);
 
         $validated['mand_2fa_opt_in'] = $request->boolean('mand_2fa_opt_in');
+        $validated['mand_cust_2fa']   = (int) $validated['mand_cust_2fa'];
 
         $mand->update($validated);
 

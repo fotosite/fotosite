@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/konto.blade.php
-    VERSION: 1.3.0
+    VERSION: 1.4.0
 
     DESCRIPTION:
       Mandant Eigenverwaltung — Kontaktdaten und Passwort bearbeiten.
@@ -283,6 +283,35 @@
                             </div>
                         </div>
                         @error('mand_2fa_opt_in')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- mand_cust_2fa --}}
+                    <div>
+                        <label for="mand_cust_2fa"
+                               class="block text-sm font-medium text-gray-700">
+                            2FA-Schwellwert für Mitglieder
+                        </label>
+                        <p class="text-xs text-gray-400 mt-0.5 mb-1.5">
+                            Ab welcher Sicherheitsstufe müssen sich Ihre Mitglieder mit 2FA anmelden.
+                        </p>
+                        @php $cur2fa = old('mand_cust_2fa', $mand->mand_cust_2fa); @endphp
+                        <select id="mand_cust_2fa" name="mand_cust_2fa"
+                                class="mt-1 block w-full rounded-md border-gray-300
+                                       shadow-sm text-sm
+                                       focus:border-indigo-500 focus:ring-indigo-500
+                                       @error('mand_cust_2fa') border-red-400 @enderror">
+                            <option value="0" {{ $cur2fa == 0 ? 'selected' : '' }}>Nie — kein 2FA für Mitglieder</option>
+                            <option value="1" {{ $cur2fa == 1 ? 'selected' : '' }}>Ab Stufe 1 — Bekannte</option>
+                            <option value="2" {{ $cur2fa == 2 ? 'selected' : '' }}>Ab Stufe 2 — Großfamilie</option>
+                            <option value="3" {{ $cur2fa == 3 ? 'selected' : '' }}>Ab Stufe 3 — Freunde (Standard)</option>
+                            <option value="4" {{ $cur2fa == 4 ? 'selected' : '' }}>Ab Stufe 4 — Enge Freunde &amp; Kernfamilie</option>
+                            <option value="5" {{ $cur2fa == 5 ? 'selected' : '' }}>Ab Stufe 5 — Vertraulich</option>
+                            <option value="6" {{ $cur2fa == 6 ? 'selected' : '' }}>Ab Stufe 6 — Streng vertraulich</option>
+                            <option value="7" {{ $cur2fa == 7 ? 'selected' : '' }}>Immer — alle Mitglieder</option>
+                        </select>
+                        @error('mand_cust_2fa')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                         @enderror
                     </div>

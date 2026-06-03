@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Models/UserDb/MandUser.php
- * VERSION:     1.3.0
+ * VERSION:     1.4.0
  *
  * FUNCTIONS:   passcodes()     — hasMany CustPcode via mand_id
  *
@@ -10,8 +10,9 @@
  * DB ACCESS:   userdb.mand_user.mand_id, mand_uname, mand_email, mand_tel,
  *              mand_firstname, mand_lastname, mand_street+nr,
  *              mand_postcode+city, mand_company, mand_pw_hash,
- *              mand_prefstat, mand_cust_2fa, mand_2fa_opt_in,
- *              active, valid_to, has_public_content
+ *              mand_prefstat, mand_2fa_opt_in, active, valid_to, has_public_content
+ *              mand_cust_2fa (integer) — Ab welcher Sicherheitsstufe (0–6) 2FA
+ *              für Mitglieder erzwungen wird. 0=nie, 7=immer, Standard=3
  */
 
 namespace App\Models\UserDb;
@@ -44,7 +45,7 @@ class MandUser extends UserDbModel
 
     protected $casts = [
         'active'             => 'boolean',
-        'mand_cust_2fa'      => 'boolean',
+        'mand_cust_2fa'      => 'integer',
         'mand_2fa_opt_in'    => 'boolean',
         'has_public_content' => 'boolean',
         'valid_to'           => 'date',

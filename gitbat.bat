@@ -1,5 +1,4 @@
 git add .
-git commit -m "feat: pw_list Kollisionsschutz — lockForUpdate() Transaktion + AJAX-Prüfung"
-git tag p4_pwlist_collision_ok
+git commit -m "feat: mand_cust_2fa Schwellwert im Konto editierbar"
 git push
 git push --tags
