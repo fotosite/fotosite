@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/SessionDb/MandantPwListController.php
- * VERSION:     1.2.0
+ * VERSION:     1.6.0
  * AUTOR:       Martin Wagner
  * DATUM:       2026-05-30
  *
@@ -13,8 +13,8 @@
  *                          pw1–pw6 vor der Übergabe an die View; ungültige
  *                          Cipher-Werte werden als '' behandelt.
  *                          Reads: sessiondb.pw_list.*
- *              update() — Validiert pw1–pw6 (Klartext), verschlüsselt sie vor
- *                          dem Speichern; schreibt valid_from, valid_until.
+ *              update() — Validiert pw1–pw6 (Klartext), prüft Eindeutigkeit,
+ *                          verschlüsselt sie vor dem Speichern; schreibt valid_from, valid_until.
  *                          Writes: sessiondb.pw_list.pw1–pw6, valid_from, valid_until
  *
  * CALLS:       App\Models\SessionDb\PwList::where()
@@ -31,6 +31,7 @@ use App\Models\SessionDb\PwList;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class MandantPwListController extends SessionDbController
 {
@@ -69,7 +70,7 @@ class MandantPwListController extends SessionDbController
             return redirect()->route('mandant.login');
         }
 
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'pw1'         => ['required', 'string', 'min:8'],
             'pw2'         => ['required', 'string', 'min:8'],
             'pw3'         => ['required', 'string', 'min:8'],
@@ -77,7 +78,7 @@ class MandantPwListController extends SessionDbController
             'pw5'         => ['required', 'string', 'min:8'],
             'pw6'         => ['required', 'string', 'min:8'],
             'valid_from'  => ['required', 'date'],
-            'valid_until' => ['required', 'date', 'after:valid_from'],
+            'valid_until' => ['required', 'date', 'after:valid_from', 'after:today'],
         ], [
             'pw1.required'        => 'Passwort 1 ist erforderlich.',
             'pw1.min'             => 'Passwort 1 muss mindestens 8 Zeichen haben.',
@@ -95,8 +96,27 @@ class MandantPwListController extends SessionDbController
             'valid_from.date'     => 'Gültigkeitsbeginn muss ein gültiges Datum sein.',
             'valid_until.required'=> 'Bitte Ablaufdatum angeben.',
             'valid_until.date'    => 'Ablaufdatum muss ein gültiges Datum sein.',
-            'valid_until.after'   => 'Das Ablaufdatum muss nach dem Gültigkeitsbeginn liegen.',
+            'valid_until.after'   => 'Das Ablaufdatum muss nach dem Gültigkeitsbeginn und in der Zukunft liegen.',
         ]);
+
+        if ($validator->fails()) {
+            return back()
+                ->withInput()
+                ->withErrors($validator)
+                ->with('error', 'Nicht gespeichert — Fehler liegen vor.');
+        }
+
+        $validated = $validator->validated();
+
+        $passwords = [$validated['pw1'], $validated['pw2'], $validated['pw3'],
+                      $validated['pw4'], $validated['pw5'], $validated['pw6']];
+
+        if (count($passwords) !== count(array_unique($passwords))) {
+            return back()
+                ->withInput()
+                ->withErrors(['passwords' => 'Die Passwörter müssen eindeutig sein.'])
+                ->with('error', 'Nicht gespeichert — Fehler liegen vor.');
+        }
 
         PwList::updateOrCreate(['mand_id' => $mandId], [
             'pw1'         => encrypt($validated['pw1']),

@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/pwlist.blade.php
-    VERSION: 1.8.0
+    VERSION: 1.14.0
 
     DESCRIPTION:
       Mandant Passwortliste — pw1–pw6 und Gültigkeitszeitraum bearbeiten.
@@ -99,6 +99,22 @@
             </div>
         @endif
 
+        {{-- Flash: Nicht gespeichert --}}
+        @if(session('error'))
+            <div class="mb-6 rounded-lg border border-red-200
+                        bg-red-50 px-4 py-3 text-sm text-red-700">
+                {{ session('error') }}
+            </div>
+        @endif
+
+        {{-- Fehler: Passwörter nicht eindeutig --}}
+        @error('passwords')
+            <div class="mb-6 rounded-lg border border-red-200
+                        bg-red-50 px-4 py-3 text-sm text-red-700">
+                {{ $message }}
+            </div>
+        @enderror
+
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
 
             {{-- Hinweistext --}}
@@ -116,35 +132,27 @@
                       validUntil: '{{ old('valid_until', $pwlist?->valid_until?->format('Y-m-d') ?? '') }}',
                       today: new Date().toISOString().split('T')[0],
                       get fromInPast() { return this.validFrom && this.validFrom < this.today },
-                      get untilInPast() { return this.validUntil && this.validUntil < this.today },
-                      get untilBeforeFrom() { return this.validFrom && this.validUntil && this.validUntil < this.validFrom },
-                      fixFromDate() {},
-                      fixUntilDate() {
-                          if (this.untilBeforeFrom) {
-                              this.validUntil = this.validFrom;
-                              this.$nextTick(() => {
-                                  const fp = this.$refs.validUntil?._flatpickr;
-                                  if (fp) fp.setDate(this.validUntil, true);
-                              });
-                          }
-                      }
+                      get untilInPast() { return this.validUntil && this.validUntil >= this.validFrom && this.validUntil < this.today },
+                      get untilBeforeFrom() { return this.validFrom && this.validUntil && this.validUntil < this.validFrom }
                   }">
                 @csrf
                 @method('PATCH')
 
                 <div class="space-y-4">
 
+                    <div class="grid grid-cols-2 gap-x-6 gap-y-4">
+
                     {{-- pw1 --}}
-                    <div x-data="{ show: false, tooShort: false }">
+                    <div x-data="{ show: false, tooShort: false, isDuplicate: false }">
                         <label for="pw1"
                                class="block text-sm font-medium text-gray-700">
                             Passwort Stufe 1
                         </label>
                         <div class="relative mt-1">
-                            <input id="pw1" name="pw1" x-ref="pw"
+                            <input id="pw1" name="pw1" data-pwfield="1" x-ref="pw"
                                    :type="show ? 'text' : 'password'"
                                    autocomplete="off"
-                                   @blur="tooShort = $el.value.length > 0 && $el.value.length < 8"
+                                   @blur="tooShort = $el.value.length > 0 && $el.value.length < 8; isDuplicate = $el.value.length >= 8 && Array.from(document.querySelectorAll('input[data-pwfield]')).filter(el => el !== $el).map(el => el.value).filter(v => v.length >= 8).includes($el.value)"
                                    value="{{ old('pw1', $pwlist->pw1 ?? '') }}"
                                    class="block w-full rounded-md border-gray-300
                                           shadow-sm text-sm pr-16
@@ -184,19 +192,23 @@
                            class="text-sm text-amber-600 mt-1">
                             ⚠️ Passwort zu kurz — mindestens 8 Zeichen erforderlich.
                         </p>
+                        <p x-show="isDuplicate" x-cloak
+                           class="text-sm text-red-600 mt-1">
+                            ⚠️ Dieses Passwort ist bereits in der Liste vorhanden.
+                        </p>
                     </div>
 
                     {{-- pw2 --}}
-                    <div x-data="{ show: false, tooShort: false }">
+                    <div x-data="{ show: false, tooShort: false, isDuplicate: false }">
                         <label for="pw2"
                                class="block text-sm font-medium text-gray-700">
                             Passwort Stufe 2
                         </label>
                         <div class="relative mt-1">
-                            <input id="pw2" name="pw2" x-ref="pw"
+                            <input id="pw2" name="pw2" data-pwfield="2" x-ref="pw"
                                    :type="show ? 'text' : 'password'"
                                    autocomplete="off"
-                                   @blur="tooShort = $el.value.length > 0 && $el.value.length < 8"
+                                   @blur="tooShort = $el.value.length > 0 && $el.value.length < 8; isDuplicate = $el.value.length >= 8 && Array.from(document.querySelectorAll('input[data-pwfield]')).filter(el => el !== $el).map(el => el.value).filter(v => v.length >= 8).includes($el.value)"
                                    value="{{ old('pw2', $pwlist->pw2 ?? '') }}"
                                    class="block w-full rounded-md border-gray-300
                                           shadow-sm text-sm pr-16
@@ -236,19 +248,23 @@
                            class="text-sm text-amber-600 mt-1">
                             ⚠️ Passwort zu kurz — mindestens 8 Zeichen erforderlich.
                         </p>
+                        <p x-show="isDuplicate" x-cloak
+                           class="text-sm text-red-600 mt-1">
+                            ⚠️ Dieses Passwort ist bereits in der Liste vorhanden.
+                        </p>
                     </div>
 
                     {{-- pw3 --}}
-                    <div x-data="{ show: false, tooShort: false }">
+                    <div x-data="{ show: false, tooShort: false, isDuplicate: false }">
                         <label for="pw3"
                                class="block text-sm font-medium text-gray-700">
                             Passwort Stufe 3
                         </label>
                         <div class="relative mt-1">
-                            <input id="pw3" name="pw3" x-ref="pw"
+                            <input id="pw3" name="pw3" data-pwfield="3" x-ref="pw"
                                    :type="show ? 'text' : 'password'"
                                    autocomplete="off"
-                                   @blur="tooShort = $el.value.length > 0 && $el.value.length < 8"
+                                   @blur="tooShort = $el.value.length > 0 && $el.value.length < 8; isDuplicate = $el.value.length >= 8 && Array.from(document.querySelectorAll('input[data-pwfield]')).filter(el => el !== $el).map(el => el.value).filter(v => v.length >= 8).includes($el.value)"
                                    value="{{ old('pw3', $pwlist->pw3 ?? '') }}"
                                    class="block w-full rounded-md border-gray-300
                                           shadow-sm text-sm pr-16
@@ -288,19 +304,23 @@
                            class="text-sm text-amber-600 mt-1">
                             ⚠️ Passwort zu kurz — mindestens 8 Zeichen erforderlich.
                         </p>
+                        <p x-show="isDuplicate" x-cloak
+                           class="text-sm text-red-600 mt-1">
+                            ⚠️ Dieses Passwort ist bereits in der Liste vorhanden.
+                        </p>
                     </div>
 
                     {{-- pw4 --}}
-                    <div x-data="{ show: false, tooShort: false }">
+                    <div x-data="{ show: false, tooShort: false, isDuplicate: false }">
                         <label for="pw4"
                                class="block text-sm font-medium text-gray-700">
                             Passwort Stufe 4
                         </label>
                         <div class="relative mt-1">
-                            <input id="pw4" name="pw4" x-ref="pw"
+                            <input id="pw4" name="pw4" data-pwfield="4" x-ref="pw"
                                    :type="show ? 'text' : 'password'"
                                    autocomplete="off"
-                                   @blur="tooShort = $el.value.length > 0 && $el.value.length < 8"
+                                   @blur="tooShort = $el.value.length > 0 && $el.value.length < 8; isDuplicate = $el.value.length >= 8 && Array.from(document.querySelectorAll('input[data-pwfield]')).filter(el => el !== $el).map(el => el.value).filter(v => v.length >= 8).includes($el.value)"
                                    value="{{ old('pw4', $pwlist->pw4 ?? '') }}"
                                    class="block w-full rounded-md border-gray-300
                                           shadow-sm text-sm pr-16
@@ -340,19 +360,23 @@
                            class="text-sm text-amber-600 mt-1">
                             ⚠️ Passwort zu kurz — mindestens 8 Zeichen erforderlich.
                         </p>
+                        <p x-show="isDuplicate" x-cloak
+                           class="text-sm text-red-600 mt-1">
+                            ⚠️ Dieses Passwort ist bereits in der Liste vorhanden.
+                        </p>
                     </div>
 
                     {{-- pw5 --}}
-                    <div x-data="{ show: false, tooShort: false }">
+                    <div x-data="{ show: false, tooShort: false, isDuplicate: false }">
                         <label for="pw5"
                                class="block text-sm font-medium text-gray-700">
                             Passwort Stufe 5
                         </label>
                         <div class="relative mt-1">
-                            <input id="pw5" name="pw5" x-ref="pw"
+                            <input id="pw5" name="pw5" data-pwfield="5" x-ref="pw"
                                    :type="show ? 'text' : 'password'"
                                    autocomplete="off"
-                                   @blur="tooShort = $el.value.length > 0 && $el.value.length < 8"
+                                   @blur="tooShort = $el.value.length > 0 && $el.value.length < 8; isDuplicate = $el.value.length >= 8 && Array.from(document.querySelectorAll('input[data-pwfield]')).filter(el => el !== $el).map(el => el.value).filter(v => v.length >= 8).includes($el.value)"
                                    value="{{ old('pw5', $pwlist->pw5 ?? '') }}"
                                    class="block w-full rounded-md border-gray-300
                                           shadow-sm text-sm pr-16
@@ -392,19 +416,23 @@
                            class="text-sm text-amber-600 mt-1">
                             ⚠️ Passwort zu kurz — mindestens 8 Zeichen erforderlich.
                         </p>
+                        <p x-show="isDuplicate" x-cloak
+                           class="text-sm text-red-600 mt-1">
+                            ⚠️ Dieses Passwort ist bereits in der Liste vorhanden.
+                        </p>
                     </div>
 
                     {{-- pw6 --}}
-                    <div x-data="{ show: false, tooShort: false }">
+                    <div x-data="{ show: false, tooShort: false, isDuplicate: false }">
                         <label for="pw6"
                                class="block text-sm font-medium text-gray-700">
                             Passwort Stufe 6
                         </label>
                         <div class="relative mt-1">
-                            <input id="pw6" name="pw6" x-ref="pw"
+                            <input id="pw6" name="pw6" data-pwfield="6" x-ref="pw"
                                    :type="show ? 'text' : 'password'"
                                    autocomplete="off"
-                                   @blur="tooShort = $el.value.length > 0 && $el.value.length < 8"
+                                   @blur="tooShort = $el.value.length > 0 && $el.value.length < 8; isDuplicate = $el.value.length >= 8 && Array.from(document.querySelectorAll('input[data-pwfield]')).filter(el => el !== $el).map(el => el.value).filter(v => v.length >= 8).includes($el.value)"
                                    value="{{ old('pw6', $pwlist->pw6 ?? '') }}"
                                    class="block w-full rounded-md border-gray-300
                                           shadow-sm text-sm pr-16
@@ -444,6 +472,12 @@
                            class="text-sm text-amber-600 mt-1">
                             ⚠️ Passwort zu kurz — mindestens 8 Zeichen erforderlich.
                         </p>
+                        <p x-show="isDuplicate" x-cloak
+                           class="text-sm text-red-600 mt-1">
+                            ⚠️ Dieses Passwort ist bereits in der Liste vorhanden.
+                        </p>
+                    </div>
+
                     </div>
 
                     {{-- valid_from / valid_until --}}
@@ -461,7 +495,7 @@
                                        dateFormat: 'Y-m-d',
                                        allowInput: true,
                                        locale: 'de',
-                                       onChange: (dates, dateStr) => { validFrom = dateStr; fixFromDate(); }
+                                       onChange: (dates, dateStr) => { validFrom = dateStr; }
                                    })"
                                    value="{{ old('valid_from', $pwlist?->valid_from?->format('Y-m-d') ?? '') }}"
                                    class="mt-1 block w-full rounded-md border-gray-300
@@ -489,23 +523,20 @@
                                        dateFormat: 'Y-m-d',
                                        allowInput: true,
                                        locale: 'de',
-                                       onChange: (dates, dateStr) => { validUntil = dateStr; fixUntilDate(); }
+                                       onChange: (dates, dateStr) => { validUntil = dateStr; }
                                    })"
                                    value="{{ old('valid_until', $pwlist?->valid_until?->format('Y-m-d') ?? '') }}"
                                    class="mt-1 block w-full rounded-md border-gray-300
                                           shadow-sm text-sm
                                           focus:border-indigo-500 focus:ring-indigo-500
                                           @error('valid_until') border-red-400 @enderror">
-                            @error('valid_until')
-                                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                            @enderror
                             <p x-show="untilInPast" x-cloak
                                class="text-sm text-amber-600 mt-1">
                                 ⚠️ Ablaufdatum liegt in der Vergangenheit.
                             </p>
                             <p x-show="untilBeforeFrom" x-cloak
                                class="text-sm text-red-600 mt-1">
-                                ⚠️ Ablaufdatum liegt vor dem Gültigkeitsbeginn — auf Beginndatum gesetzt.
+                                ⚠️ Ablaufdatum liegt vor dem Gültigkeitsbeginn.
                             </p>
                         </div>
 
@@ -515,11 +546,11 @@
 
                 <div class="mt-6">
                     <button type="submit"
-                            class="w-full flex justify-center py-2 px-4 rounded-md
-                                   text-sm font-medium text-white bg-indigo-600
-                                   hover:bg-indigo-700 transition-colors
-                                   focus:outline-none focus:ring-2
-                                   focus:ring-indigo-500 focus:ring-offset-2">
+                            class="w-full rounded-lg bg-indigo-600 px-4 py-2.5
+                                   text-sm font-semibold text-white
+                                   hover:bg-indigo-700 focus:outline-none
+                                   focus:ring-2 focus:ring-indigo-500
+                                   focus:ring-offset-2 transition-colors">
                         Passwortliste speichern
                     </button>
                 </div>

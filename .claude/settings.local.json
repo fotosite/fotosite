@@ -6,7 +6,8 @@
       "Bash(composer require *)",
       "Bash(New-Item -ItemType Directory -Force \"D:\\\\mwa\\\\Projekte\\\\fotosite\\\\Fotosite_V08\\\\claudescode\\\\fotosite\\\\resources\\\\views\\\\mandant\\\\kunden\")",
       "Bash(Out-Null)",
-      "Bash(Write-Output \"ok\")"
+      "Bash(Write-Output \"ok\")",
+      "Bash(git worktree *)"
     ]
   }
 }
