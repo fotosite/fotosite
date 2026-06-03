@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustLoginController.php
- * VERSION:     1.2.0
+ * VERSION:     1.3.0
  * AUTOR:       Martin Wagner
  * DATUM:       2026-06-03
  *
@@ -24,10 +24,14 @@
  *                                  Session ohne cust_id.
  *                                  Reads: sessiondb.pw_list.mand_id, pw1–pw6,
  *                                         valid_from, valid_until
- *              showTwoFactor()   — [Stub] Zeigt 2FA-Formular für Cust-Login.
+ *              showTwoFactor()   — Prüft pending_cust_id in Session;
+ *                                  gibt customer.auth.two-factor zurück.
  *                                  Reads: —
- *              verifyTwoFactor() — [Stub] Verifiziert 2FA-Code; schreibt Session.
- *                                  Reads: —
+ *              verifyTwoFactor() — Validiert tfa_code (digits:6); liest pending_*
+ *                                  aus Session; delegiert an TwofaService::verifyCode();
+ *                                  bei Erfolg: Session aufbauen, pending_* vergessen,
+ *                                  Redirect zu customer.dashboard.
+ *                                  Reads: sessiondb.twofa_code.* (via TwofaService)
  *              logout()          — [Stub] Invalidiert Session, Redirect zu login.
  *                                  Reads: —
  *
@@ -37,6 +41,7 @@
  *              App\Models\SessionDb\PwList::where()->get()
  *              App\Mail\TwoFactorCodeMail
  *              App\Services\SessionDb\TwofaService::generateCode()
+ *              App\Services\SessionDb\TwofaService::verifyCode()
  *              App\Services\SessionDb\SessionIntegrityService::buildSessionData()
  *              Illuminate\Support\Facades\Hash::check()
  *              Illuminate\Support\Facades\Mail::to()->send()
@@ -46,6 +51,7 @@
  *              userdb.mand_user.mand_id, mand_cust_2fa
  *              sessiondb.pw_list.mand_id, pw1, pw2, pw3, pw4, pw5, pw6,
  *              valid_from, valid_until
+ *              sessiondb.twofa_code.* (via TwofaService)
  */
 
 namespace App\Http\Controllers\UserDb;
@@ -57,6 +63,7 @@ use App\Models\UserDb\CustUser;
 use App\Models\UserDb\MandUser;
 use App\Services\SessionDb\SessionIntegrityService;
 use App\Services\SessionDb\TwofaService;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -185,14 +192,48 @@ class CustLoginController extends UserDbController
         return redirect()->route('customer.dashboard');
     }
 
-    public function showTwoFactor(Request $request): Response
+    public function showTwoFactor(Request $request): View|RedirectResponse
     {
-        return response('showTwoFactor ok');
+        if (! $request->session()->has('pending_cust_id')) {
+            return redirect()->route('customer.login');
+        }
+
+        return view('customer.auth.two-factor');
     }
 
-    public function verifyTwoFactor(Request $request): Response
+    public function verifyTwoFactor(Request $request): RedirectResponse
     {
-        return response('verifyTwoFactor ok');
+        $request->validate([
+            'tfa_code' => ['required', 'digits:6'],
+        ]);
+
+        $custId   = $request->session()->get('pending_cust_id');
+        $mandId   = $request->session()->get('pending_mand_id');
+        $secLevel = $request->session()->get('pending_sec_level');
+
+        if (! $custId || ! $mandId || $secLevel === null) {
+            return redirect()->route('customer.login');
+        }
+
+        $verified = $this->twofaService->verifyCode(
+            $request->tfa_code,
+            'cust',
+            (int) $custId
+        );
+
+        if (! $verified) {
+            return back()->withErrors(['tfa_code' => 'Ungültiger oder abgelaufener Code.']);
+        }
+
+        $request->session()->regenerate();
+        $request->session()->put('_user_type',     'cust');
+        $request->session()->put('_cust_id',       $custId);
+        $request->session()->put('_mand_id',       $mandId);
+        $request->session()->put('_sec_level',     $secLevel);
+        $request->session()->put('_last_activity', time());
+        $request->session()->forget(['pending_cust_id', 'pending_mand_id', 'pending_sec_level']);
+
+        return redirect()->route('customer.dashboard');
     }
 
     public function logout(Request $request): Response
