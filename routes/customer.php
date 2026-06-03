@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\UserDb\CustDashboardController;
 use App\Http\Controllers\UserDb\CustLoginController;
 use App\Http\Controllers\UserDb\CustRegisterController;
 use Illuminate\Support\Facades\Route;
@@ -37,7 +38,7 @@ Route::middleware('web')->prefix('customer')->name('customer.')->group(function 
         ->name('logout');
 
     // ── Dashboard ─────────────────────────────────────────
-    Route::get('/dashboard', fn() => 'cust ok')
+    Route::get('/dashboard', [CustDashboardController::class, 'index'])
         ->name('dashboard');
 
     Route::get('/register/{token}',  [CustRegisterController::class, 'show'])
