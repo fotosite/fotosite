@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/pwlist.blade.php
-    VERSION: 1.7.0
+    VERSION: 1.8.0
 
     DESCRIPTION:
       Mandant Passwortliste — pw1–pw6 und Gültigkeitszeitraum bearbeiten.
@@ -115,35 +115,16 @@
                       validFrom: '{{ old('valid_from', $pwlist?->valid_from?->format('Y-m-d') ?? '') }}',
                       validUntil: '{{ old('valid_until', $pwlist?->valid_until?->format('Y-m-d') ?? '') }}',
                       today: new Date().toISOString().split('T')[0],
-                      get tomorrow() {
-                          const d = new Date(); d.setDate(d.getDate() + 1);
-                          return d.toISOString().split('T')[0];
-                      },
-                      fixing: false,
                       get fromInPast() { return this.validFrom && this.validFrom < this.today },
                       get untilInPast() { return this.validUntil && this.validUntil < this.today },
                       get untilBeforeFrom() { return this.validFrom && this.validUntil && this.validUntil < this.validFrom },
-                      fixFromDate() {
-                          if (this.fixing) return;
-                          if (this.fromInPast) {
-                              this.fixing = true;
-                              this.validFrom = this.today;
-                              this.$nextTick(() => {
-                                  const fp = this.$refs.validFrom?._flatpickr;
-                                  if (fp) fp.setDate(this.today, true);
-                                  this.fixing = false;
-                              });
-                          }
-                      },
+                      fixFromDate() {},
                       fixUntilDate() {
-                          if (this.fixing) return;
-                          if (this.untilInPast || this.untilBeforeFrom) {
-                              this.fixing = true;
-                              this.validUntil = this.tomorrow;
+                          if (this.untilBeforeFrom) {
+                              this.validUntil = this.validFrom;
                               this.$nextTick(() => {
                                   const fp = this.$refs.validUntil?._flatpickr;
                                   if (fp) fp.setDate(this.validUntil, true);
-                                  this.fixing = false;
                               });
                           }
                       }
@@ -492,7 +473,7 @@
                             @enderror
                             <p x-show="fromInPast" x-cloak
                                class="text-sm text-amber-600 mt-1">
-                                ⚠️ Gültigkeitsbeginn liegt in der Vergangenheit — auf heute gesetzt.
+                                ⚠️ Gültigkeitsbeginn liegt in der Vergangenheit.
                             </p>
                         </div>
 
@@ -524,7 +505,7 @@
                             </p>
                             <p x-show="untilBeforeFrom" x-cloak
                                class="text-sm text-red-600 mt-1">
-                                ⚠️ Ablaufdatum liegt vor dem Gültigkeitsbeginn.
+                                ⚠️ Ablaufdatum liegt vor dem Gültigkeitsbeginn — auf Beginndatum gesetzt.
                             </p>
                         </div>
 
