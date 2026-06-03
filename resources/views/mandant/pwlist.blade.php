@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/pwlist.blade.php
-    VERSION: 1.15.0
+    VERSION: 1.16.0
 
     DESCRIPTION:
       Mandant Passwortliste — pw1–pw6 und Gültigkeitszeitraum bearbeiten.
@@ -13,9 +13,10 @@
                                oder null bei Erstanlage
 
     ROUTES USED:
-      GET   mandant.dashboard     — Zurück-Link
-      PATCH mandant.pwlist.update — Passwortliste speichern
-      POST  mandant.logout        — Abmelden
+      GET   mandant.dashboard      — Zurück-Link
+      PATCH mandant.pwlist.update  — Passwortliste speichern
+      POST  mandant.pwlist.check   — Passwort systemweit prüfen (JSON)
+      POST  mandant.logout         — Abmelden
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -23,6 +24,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Passwortliste · Fotosite V8</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet"
@@ -146,7 +148,7 @@
                     <div class="grid grid-cols-2 gap-x-6 gap-y-4">
 
                     {{-- pw1 --}}
-                    <div x-data="{ show: false, tooShort: false, isDuplicate: false }">
+                    <div x-data="{ show: false, tooShort: false, isDuplicate: false, isUnavailable: false }">
                         <label for="pw1"
                                class="block text-sm font-medium text-gray-700">
                             Passwort Stufe 1
@@ -155,7 +157,22 @@
                             <input id="pw1" name="pw1" data-pwfield="1" x-ref="pw"
                                    :type="show ? 'text' : 'password'"
                                    autocomplete="off"
-                                   @blur="tooShort = $el.value.length > 0 && $el.value.length < 8; isDuplicate = $el.value.length >= 8 && Array.from(document.querySelectorAll('input[data-pwfield]')).filter(el => el !== $el).map(el => el.value).filter(v => v.length >= 8).includes($el.value)"
+                                   @blur="
+                                     tooShort = $el.value.length > 0 && $el.value.length < 8;
+                                     isDuplicate = $el.value.length >= 8 && Array.from(document.querySelectorAll('input[data-pwfield]')).filter(el => el !== $el).map(el => el.value).filter(v => v.length >= 8).includes($el.value);
+                                     if ($el.value.length >= 8) {
+                                       fetch('{{ route('mandant.pwlist.check') }}', {
+                                         method: 'POST',
+                                         headers: {
+                                           'Content-Type': 'application/json',
+                                           'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                                         },
+                                         body: JSON.stringify({ password: $el.value })
+                                       }).then(r => r.json()).then(data => { isUnavailable = !data.available })
+                                     } else {
+                                       isUnavailable = false;
+                                     }
+                                   "
                                    value="{{ old('pw1', $pwlist->pw1 ?? '') }}"
                                    class="block w-full rounded-md border-gray-300
                                           shadow-sm text-sm pr-16
@@ -199,10 +216,14 @@
                            class="text-sm text-red-600 mt-1">
                             ⚠️ Dieses Passwort ist bereits in der Liste vorhanden.
                         </p>
+                        <p x-show="isUnavailable" x-cloak
+                           class="text-sm text-red-600 mt-1">
+                            ⚠️ Dieses Passwort ist bereits von einem anderen Galerist:in vergeben.
+                        </p>
                     </div>
 
                     {{-- pw2 --}}
-                    <div x-data="{ show: false, tooShort: false, isDuplicate: false }">
+                    <div x-data="{ show: false, tooShort: false, isDuplicate: false, isUnavailable: false }">
                         <label for="pw2"
                                class="block text-sm font-medium text-gray-700">
                             Passwort Stufe 2
@@ -211,7 +232,22 @@
                             <input id="pw2" name="pw2" data-pwfield="2" x-ref="pw"
                                    :type="show ? 'text' : 'password'"
                                    autocomplete="off"
-                                   @blur="tooShort = $el.value.length > 0 && $el.value.length < 8; isDuplicate = $el.value.length >= 8 && Array.from(document.querySelectorAll('input[data-pwfield]')).filter(el => el !== $el).map(el => el.value).filter(v => v.length >= 8).includes($el.value)"
+                                   @blur="
+                                     tooShort = $el.value.length > 0 && $el.value.length < 8;
+                                     isDuplicate = $el.value.length >= 8 && Array.from(document.querySelectorAll('input[data-pwfield]')).filter(el => el !== $el).map(el => el.value).filter(v => v.length >= 8).includes($el.value);
+                                     if ($el.value.length >= 8) {
+                                       fetch('{{ route('mandant.pwlist.check') }}', {
+                                         method: 'POST',
+                                         headers: {
+                                           'Content-Type': 'application/json',
+                                           'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                                         },
+                                         body: JSON.stringify({ password: $el.value })
+                                       }).then(r => r.json()).then(data => { isUnavailable = !data.available })
+                                     } else {
+                                       isUnavailable = false;
+                                     }
+                                   "
                                    value="{{ old('pw2', $pwlist->pw2 ?? '') }}"
                                    class="block w-full rounded-md border-gray-300
                                           shadow-sm text-sm pr-16
@@ -255,10 +291,14 @@
                            class="text-sm text-red-600 mt-1">
                             ⚠️ Dieses Passwort ist bereits in der Liste vorhanden.
                         </p>
+                        <p x-show="isUnavailable" x-cloak
+                           class="text-sm text-red-600 mt-1">
+                            ⚠️ Dieses Passwort ist bereits von einem anderen Galerist:in vergeben.
+                        </p>
                     </div>
 
                     {{-- pw3 --}}
-                    <div x-data="{ show: false, tooShort: false, isDuplicate: false }">
+                    <div x-data="{ show: false, tooShort: false, isDuplicate: false, isUnavailable: false }">
                         <label for="pw3"
                                class="block text-sm font-medium text-gray-700">
                             Passwort Stufe 3
@@ -267,7 +307,22 @@
                             <input id="pw3" name="pw3" data-pwfield="3" x-ref="pw"
                                    :type="show ? 'text' : 'password'"
                                    autocomplete="off"
-                                   @blur="tooShort = $el.value.length > 0 && $el.value.length < 8; isDuplicate = $el.value.length >= 8 && Array.from(document.querySelectorAll('input[data-pwfield]')).filter(el => el !== $el).map(el => el.value).filter(v => v.length >= 8).includes($el.value)"
+                                   @blur="
+                                     tooShort = $el.value.length > 0 && $el.value.length < 8;
+                                     isDuplicate = $el.value.length >= 8 && Array.from(document.querySelectorAll('input[data-pwfield]')).filter(el => el !== $el).map(el => el.value).filter(v => v.length >= 8).includes($el.value);
+                                     if ($el.value.length >= 8) {
+                                       fetch('{{ route('mandant.pwlist.check') }}', {
+                                         method: 'POST',
+                                         headers: {
+                                           'Content-Type': 'application/json',
+                                           'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                                         },
+                                         body: JSON.stringify({ password: $el.value })
+                                       }).then(r => r.json()).then(data => { isUnavailable = !data.available })
+                                     } else {
+                                       isUnavailable = false;
+                                     }
+                                   "
                                    value="{{ old('pw3', $pwlist->pw3 ?? '') }}"
                                    class="block w-full rounded-md border-gray-300
                                           shadow-sm text-sm pr-16
@@ -311,10 +366,14 @@
                            class="text-sm text-red-600 mt-1">
                             ⚠️ Dieses Passwort ist bereits in der Liste vorhanden.
                         </p>
+                        <p x-show="isUnavailable" x-cloak
+                           class="text-sm text-red-600 mt-1">
+                            ⚠️ Dieses Passwort ist bereits von einem anderen Galerist:in vergeben.
+                        </p>
                     </div>
 
                     {{-- pw4 --}}
-                    <div x-data="{ show: false, tooShort: false, isDuplicate: false }">
+                    <div x-data="{ show: false, tooShort: false, isDuplicate: false, isUnavailable: false }">
                         <label for="pw4"
                                class="block text-sm font-medium text-gray-700">
                             Passwort Stufe 4
@@ -323,7 +382,22 @@
                             <input id="pw4" name="pw4" data-pwfield="4" x-ref="pw"
                                    :type="show ? 'text' : 'password'"
                                    autocomplete="off"
-                                   @blur="tooShort = $el.value.length > 0 && $el.value.length < 8; isDuplicate = $el.value.length >= 8 && Array.from(document.querySelectorAll('input[data-pwfield]')).filter(el => el !== $el).map(el => el.value).filter(v => v.length >= 8).includes($el.value)"
+                                   @blur="
+                                     tooShort = $el.value.length > 0 && $el.value.length < 8;
+                                     isDuplicate = $el.value.length >= 8 && Array.from(document.querySelectorAll('input[data-pwfield]')).filter(el => el !== $el).map(el => el.value).filter(v => v.length >= 8).includes($el.value);
+                                     if ($el.value.length >= 8) {
+                                       fetch('{{ route('mandant.pwlist.check') }}', {
+                                         method: 'POST',
+                                         headers: {
+                                           'Content-Type': 'application/json',
+                                           'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                                         },
+                                         body: JSON.stringify({ password: $el.value })
+                                       }).then(r => r.json()).then(data => { isUnavailable = !data.available })
+                                     } else {
+                                       isUnavailable = false;
+                                     }
+                                   "
                                    value="{{ old('pw4', $pwlist->pw4 ?? '') }}"
                                    class="block w-full rounded-md border-gray-300
                                           shadow-sm text-sm pr-16
@@ -367,10 +441,14 @@
                            class="text-sm text-red-600 mt-1">
                             ⚠️ Dieses Passwort ist bereits in der Liste vorhanden.
                         </p>
+                        <p x-show="isUnavailable" x-cloak
+                           class="text-sm text-red-600 mt-1">
+                            ⚠️ Dieses Passwort ist bereits von einem anderen Galerist:in vergeben.
+                        </p>
                     </div>
 
                     {{-- pw5 --}}
-                    <div x-data="{ show: false, tooShort: false, isDuplicate: false }">
+                    <div x-data="{ show: false, tooShort: false, isDuplicate: false, isUnavailable: false }">
                         <label for="pw5"
                                class="block text-sm font-medium text-gray-700">
                             Passwort Stufe 5
@@ -379,7 +457,22 @@
                             <input id="pw5" name="pw5" data-pwfield="5" x-ref="pw"
                                    :type="show ? 'text' : 'password'"
                                    autocomplete="off"
-                                   @blur="tooShort = $el.value.length > 0 && $el.value.length < 8; isDuplicate = $el.value.length >= 8 && Array.from(document.querySelectorAll('input[data-pwfield]')).filter(el => el !== $el).map(el => el.value).filter(v => v.length >= 8).includes($el.value)"
+                                   @blur="
+                                     tooShort = $el.value.length > 0 && $el.value.length < 8;
+                                     isDuplicate = $el.value.length >= 8 && Array.from(document.querySelectorAll('input[data-pwfield]')).filter(el => el !== $el).map(el => el.value).filter(v => v.length >= 8).includes($el.value);
+                                     if ($el.value.length >= 8) {
+                                       fetch('{{ route('mandant.pwlist.check') }}', {
+                                         method: 'POST',
+                                         headers: {
+                                           'Content-Type': 'application/json',
+                                           'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                                         },
+                                         body: JSON.stringify({ password: $el.value })
+                                       }).then(r => r.json()).then(data => { isUnavailable = !data.available })
+                                     } else {
+                                       isUnavailable = false;
+                                     }
+                                   "
                                    value="{{ old('pw5', $pwlist->pw5 ?? '') }}"
                                    class="block w-full rounded-md border-gray-300
                                           shadow-sm text-sm pr-16
@@ -423,10 +516,14 @@
                            class="text-sm text-red-600 mt-1">
                             ⚠️ Dieses Passwort ist bereits in der Liste vorhanden.
                         </p>
+                        <p x-show="isUnavailable" x-cloak
+                           class="text-sm text-red-600 mt-1">
+                            ⚠️ Dieses Passwort ist bereits von einem anderen Galerist:in vergeben.
+                        </p>
                     </div>
 
                     {{-- pw6 --}}
-                    <div x-data="{ show: false, tooShort: false, isDuplicate: false }">
+                    <div x-data="{ show: false, tooShort: false, isDuplicate: false, isUnavailable: false }">
                         <label for="pw6"
                                class="block text-sm font-medium text-gray-700">
                             Passwort Stufe 6
@@ -435,7 +532,22 @@
                             <input id="pw6" name="pw6" data-pwfield="6" x-ref="pw"
                                    :type="show ? 'text' : 'password'"
                                    autocomplete="off"
-                                   @blur="tooShort = $el.value.length > 0 && $el.value.length < 8; isDuplicate = $el.value.length >= 8 && Array.from(document.querySelectorAll('input[data-pwfield]')).filter(el => el !== $el).map(el => el.value).filter(v => v.length >= 8).includes($el.value)"
+                                   @blur="
+                                     tooShort = $el.value.length > 0 && $el.value.length < 8;
+                                     isDuplicate = $el.value.length >= 8 && Array.from(document.querySelectorAll('input[data-pwfield]')).filter(el => el !== $el).map(el => el.value).filter(v => v.length >= 8).includes($el.value);
+                                     if ($el.value.length >= 8) {
+                                       fetch('{{ route('mandant.pwlist.check') }}', {
+                                         method: 'POST',
+                                         headers: {
+                                           'Content-Type': 'application/json',
+                                           'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                                         },
+                                         body: JSON.stringify({ password: $el.value })
+                                       }).then(r => r.json()).then(data => { isUnavailable = !data.available })
+                                     } else {
+                                       isUnavailable = false;
+                                     }
+                                   "
                                    value="{{ old('pw6', $pwlist->pw6 ?? '') }}"
                                    class="block w-full rounded-md border-gray-300
                                           shadow-sm text-sm pr-16
@@ -478,6 +590,10 @@
                         <p x-show="isDuplicate" x-cloak
                            class="text-sm text-red-600 mt-1">
                             ⚠️ Dieses Passwort ist bereits in der Liste vorhanden.
+                        </p>
+                        <p x-show="isUnavailable" x-cloak
+                           class="text-sm text-red-600 mt-1">
+                            ⚠️ Dieses Passwort ist bereits von einem anderen Galerist:in vergeben.
                         </p>
                     </div>
 

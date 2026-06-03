@@ -1,5 +1,5 @@
 git add .
-git commit -m "feat: Session-Bereinigung bei Login + 5% Wahrscheinlichkeit bei Timeout"
-git tag p4_session_cleanup_ok
+git commit -m "feat: pw_list Kollisionsschutz — lockForUpdate() Transaktion + AJAX-Prüfung"
+git tag p4_pwlist_collision_ok
 git push
 git push --tags

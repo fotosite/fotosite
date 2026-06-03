@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/SessionDb/MandantPwListController.php
- * VERSION:     1.6.0
+ * VERSION:     1.8.0
  * AUTOR:       Martin Wagner
  * DATUM:       2026-05-30
  *
@@ -13,13 +13,20 @@
  *                          pw1–pw6 vor der Übergabe an die View; ungültige
  *                          Cipher-Werte werden als '' behandelt.
  *                          Reads: sessiondb.pw_list.*
- *              update() — Validiert pw1–pw6 (Klartext), prüft Eindeutigkeit,
- *                          verschlüsselt sie vor dem Speichern; schreibt valid_from, valid_until.
- *                          Writes: sessiondb.pw_list.pw1–pw6, valid_from, valid_until
+ *              update()        — Validiert pw1–pw6 (Klartext), prüft lokale Eindeutigkeit,
+ *                                dann Kollisionsprüfung gegen aktive Listen anderer Mandanten
+ *                                (lockForUpdate innerhalb DB-Transaktion); verschlüsselt
+ *                                und speichert. Bei Kollision: RuntimeException → Rollback.
+ *                                Reads:  sessiondb.pw_list.mand_id, pw1–pw6, valid_until
+ *                                Writes: sessiondb.pw_list.pw1–pw6, valid_from, valid_until
+ *              checkPassword() — Prüft ob ein Passwort bereits in einer aktiven pw_list
+ *                                eines anderen Mandanten vorkommt. Gibt JSON zurück.
+ *                                Reads: sessiondb.pw_list.mand_id, pw1–pw6, valid_until
  *
  * CALLS:       App\Models\SessionDb\PwList::where()
  *              App\Models\SessionDb\PwList::updateOrCreate()
  *              encrypt() / decrypt()  — Laravel-Helpers (APP_KEY)
+ *              Illuminate\Support\Facades\DB::connection('sessiondb')->transaction()
  *
  * DB ACCESS:   sessiondb.pw_list.pwlist_id, mand_id, pw1, pw2, pw3, pw4, pw5, pw6,
  *              valid_from, valid_until
@@ -29,8 +36,10 @@ namespace App\Http\Controllers\SessionDb;
 
 use App\Models\SessionDb\PwList;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class MandantPwListController extends SessionDbController
@@ -118,18 +127,91 @@ class MandantPwListController extends SessionDbController
                 ->with('error', 'Nicht gespeichert — Fehler liegen vor.');
         }
 
-        PwList::updateOrCreate(['mand_id' => $mandId], [
-            'pw1'         => encrypt($validated['pw1']),
-            'pw2'         => encrypt($validated['pw2']),
-            'pw3'         => encrypt($validated['pw3']),
-            'pw4'         => encrypt($validated['pw4']),
-            'pw5'         => encrypt($validated['pw5']),
-            'pw6'         => encrypt($validated['pw6']),
-            'valid_from'  => $validated['valid_from'],
-            'valid_until' => $validated['valid_until'],
-        ]);
+        try {
+            DB::connection('sessiondb')->transaction(function () use ($mandId, $validated) {
 
-        return redirect()->back()
-            ->with('status', 'Passwortliste gespeichert.');
+                $activeLists = PwList::where('mand_id', '!=', $mandId)
+                    ->where('valid_until', '>=', now())
+                    ->lockForUpdate()
+                    ->get();
+
+                $myPasswords = [
+                    $validated['pw1'], $validated['pw2'],
+                    $validated['pw3'], $validated['pw4'],
+                    $validated['pw5'], $validated['pw6'],
+                ];
+
+                foreach ($activeLists as $list) {
+                    foreach (['pw1', 'pw2', 'pw3', 'pw4', 'pw5', 'pw6'] as $field) {
+                        try {
+                            $existing = decrypt($list->$field);
+                        } catch (\Exception $e) {
+                            continue;
+                        }
+                        if (in_array($existing, $myPasswords, true)) {
+                            throw new \RuntimeException(
+                                'Passwort bereits von einem anderen Galerist:in vergeben: ' . $field
+                            );
+                        }
+                    }
+                }
+
+                PwList::updateOrCreate(['mand_id' => $mandId], [
+                    'pw1'         => encrypt($validated['pw1']),
+                    'pw2'         => encrypt($validated['pw2']),
+                    'pw3'         => encrypt($validated['pw3']),
+                    'pw4'         => encrypt($validated['pw4']),
+                    'pw5'         => encrypt($validated['pw5']),
+                    'pw6'         => encrypt($validated['pw6']),
+                    'valid_from'  => $validated['valid_from'],
+                    'valid_until' => $validated['valid_until'],
+                ]);
+            });
+
+            return redirect()->back()
+                ->with('status', 'Passwortliste gespeichert.');
+
+        } catch (\RuntimeException $e) {
+            return back()
+                ->withInput()
+                ->withErrors(['passwords' => $e->getMessage()])
+                ->with('error', 'Nicht gespeichert — Kollision mit anderem Galerist:in.');
+        }
+    }
+
+    public function checkPassword(Request $request): JsonResponse
+    {
+        $mandId = $request->session()->get('_mand_id');
+
+        if (! $mandId) {
+            return response()->json(['available' => false, 'message' => '']);
+        }
+
+        $pw = $request->input('password', '');
+
+        if (strlen($pw) < 8) {
+            return response()->json(['available' => true, 'message' => '']);
+        }
+
+        $lists = PwList::where('mand_id', '!=', $mandId)
+            ->where('valid_until', '>=', now())
+            ->get();
+
+        foreach ($lists as $list) {
+            foreach (['pw1', 'pw2', 'pw3', 'pw4', 'pw5', 'pw6'] as $field) {
+                try {
+                    if (decrypt($list->$field) === $pw) {
+                        return response()->json([
+                            'available' => false,
+                            'message'   => 'Passwort bereits vergeben.',
+                        ]);
+                    }
+                } catch (\Exception) {
+                    // Ungültiger Cipher — überspringen
+                }
+            }
+        }
+
+        return response()->json(['available' => true, 'message' => '']);
     }
 }

@@ -45,10 +45,12 @@ Route::middleware(['web', 'role:mand'])->prefix('mandant')->name('mandant.')->gr
     Route::patch('/konto/passwort', [MandantSelfController::class, 'updatePassword'])
         ->name('konto.password');
 
-    Route::get('/passwortliste',   [MandantPwListController::class, 'edit'])
+    Route::get('/passwortliste',             [MandantPwListController::class, 'edit'])
         ->name('pwlist');
-    Route::patch('/passwortliste', [MandantPwListController::class, 'update'])
+    Route::patch('/passwortliste',           [MandantPwListController::class, 'update'])
         ->name('pwlist.update');
+    Route::post('/passwortliste/pruefen',    [MandantPwListController::class, 'checkPassword'])
+        ->name('pwlist.check');
 
     Route::get('/kunden',                    [MandantCustController::class, 'index'])
         ->name('kunden.index');
