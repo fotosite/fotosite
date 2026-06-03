@@ -1,10 +1,10 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustRegisterController.php
- * VERSION:     1.4.0
+ * VERSION:     1.5.0
  * AUTHOR:      Martin Wagner
  * DATE:        2026-05-30
- * PURPOSE:     Kunden-Registrierung per Einladungs-Token
+ * PURPOSE:     Mitglieder-Registrierung per Einladungs-Token
  *
  * FUNCTIONS:   show()   — Validiert Token; prüft ob E-Mail bereits in cust_user existiert;
  *                          übergibt $alreadyExists an View.

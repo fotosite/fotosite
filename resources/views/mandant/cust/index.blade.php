@@ -1,12 +1,12 @@
 {{--
     FILE:    resources/views/mandant/cust/index.blade.php
-    VERSION: 3.0.0
+    VERSION: 3.2.0
     AUTHOR:  Martin Wagner
     DATE:    2026-05-30
 
     DESCRIPTION:
-      Kundenliste des eingeloggten Mandanten.
-      Zeigt alle CustPcode-Einträge. Spalte "Kunde" zeigt cust_alias + E-Mail (grau).
+      Mitgliederliste des eingeloggten Mandanten.
+      Zeigt alle CustPcode-Einträge. Spalte "Mitglied" zeigt cust_alias + E-Mail (grau).
       Alias und Sicherheitsstufe gemeinsam editierbar (PATCH). Eintrag entfernbar (DELETE).
 
     DATA FROM CONTROLLER:
@@ -25,12 +25,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>Kundenliste · Fotosite V8</title>
+    <title>Mitgliederliste · Fotosite V8</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
 <body class="min-h-screen bg-gray-50 text-gray-900 antialiased"
       x-data>
+
+    @php $mandUname = \App\Models\UserDb\MandUser::find(session('_mand_id'))?->mand_uname ?? ''; @endphp
 
     {{-- ══════════════════════════════════════════════════════
          TOP BAR
@@ -50,6 +52,7 @@
                              uppercase text-indigo-600">
                     Mandant
                 </span>
+                <span class="text-sm text-indigo-200">{{ $mandUname }}</span>
             </div>
 
             {{-- Logout --}}
@@ -76,10 +79,10 @@
         <div class="mb-8 flex items-center justify-between">
             <div>
                 <h1 class="text-xl font-semibold tracking-tight text-gray-800">
-                    Kundenliste
+                    Mitgliederliste
                 </h1>
                 <p class="mt-1.5 text-sm text-zinc-600">
-                    Ihre eingeladenen Kunden — Alias und Sicherheitsstufe editierbar.
+                    Ihre eingeladenen Mitglieder — Alias und Sicherheitsstufe editierbar.
                 </p>
             </div>
             <a href="{{ route('mandant.kunden.invite') }}"
@@ -88,7 +91,7 @@
                       text-sm font-medium text-indigo-700
                       hover:bg-indigo-100 hover:border-indigo-400
                       transition-colors duration-150">
-                Kunden einladen
+                Mitglieder einladen
             </a>
         </div>
 
@@ -104,7 +107,7 @@
         @if($custs->isEmpty())
             <div class="rounded-xl border border-dashed border-gray-300
                         bg-white px-6 py-12 text-center text-sm text-gray-400">
-                Noch keine Kunden eingeladen.
+                Noch keine Mitglieder eingeladen.
             </div>
         @else
             <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
@@ -113,7 +116,7 @@
                         <tr class="border-b border-gray-100 bg-gray-50 text-left">
                             <th class="px-4 py-3 font-medium text-gray-600 text-xs uppercase
                                        tracking-wide w-44">
-                                Kunde
+                                Mitglied
                             </th>
                             <th class="px-4 py-3 font-medium text-gray-600 text-xs uppercase
                                        tracking-wide">
@@ -129,7 +132,7 @@
                         @foreach($custs as $cust)
                             <tr class="hover:bg-gray-50 transition-colors duration-100">
 
-                                {{-- Kunde: Alias + E-Mail --}}
+                                {{-- Mitglied: Alias + E-Mail --}}
                                 <td class="px-4 py-3">
                                     <div class="font-medium text-gray-800">
                                         {{ $cust->cust_alias ?: '—' }}
@@ -163,12 +166,12 @@
                                                        focus:outline-none focus:ring-2 focus:ring-indigo-400">
                                             @php
                                                 $levels = [
-                                                    1 => 'Bekannte / Kollegen',
-                                                    2 => 'Freunde',
-                                                    3 => 'Großfamilie',
-                                                    4 => 'Kernfamilie + enge Freunde',
-                                                    5 => 'Beziehung',
-                                                    6 => 'Intim',
+                                                    1 => 'Bekannte',
+                                                    2 => 'Großfamilie',
+                                                    3 => 'Freunde',
+                                                    4 => 'Enge Freunde & Kernfamilie',
+                                                    5 => 'Vertraulich',
+                                                    6 => 'Streng vertraulich',
                                                 ];
                                             @endphp
                                             @foreach($levels as $val => $label)
@@ -196,7 +199,7 @@
                                     <form method="POST"
                                           action="{{ route('mandant.kunden.destroy', $cust->pcode_id) }}"
                                           @submit.prevent="
-                                              if (confirm('Kunden wirklich entfernen?'))
+                                              if (confirm('Mitglied wirklich entfernen?'))
                                                   $el.submit()
                                           ">
                                         @csrf

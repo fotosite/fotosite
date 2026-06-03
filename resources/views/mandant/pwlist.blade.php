@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/pwlist.blade.php
-    VERSION: 1.14.0
+    VERSION: 1.15.0
 
     DESCRIPTION:
       Mandant Passwortliste — pw1–pw6 und Gültigkeitszeitraum bearbeiten.
@@ -32,6 +32,8 @@
 <body class="min-h-screen bg-gray-50 text-gray-900 antialiased"
       x-data>
 
+    @php $mandUname = \App\Models\UserDb\MandUser::find(session('_mand_id'))?->mand_uname ?? ''; @endphp
+
     {{-- ══════════════════════════════════════════════════════
          TOP BAR
     ══════════════════════════════════════════════════════ --}}
@@ -50,6 +52,7 @@
                              uppercase text-indigo-600">
                     Mandant
                 </span>
+                <span class="text-sm text-indigo-200">{{ $mandUname }}</span>
             </div>
 
             {{-- Logout --}}

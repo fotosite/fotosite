@@ -1,10 +1,10 @@
 <?php
 /**
  * FILE:        app/Mail/CustInviteMail.php
- * VERSION:     1.1.0
+ * VERSION:     1.2.0
  * AUTHOR:      Martin Wagner
  * DATE:        2026-05-30
- * PURPOSE:     Einladungs-E-Mail an neuen Kunden — enthält Registrierungslink (48 h gültig)
+ * PURPOSE:     Einladungs-E-Mail an neues Mitglied — enthält Registrierungslink (48 h gültig)
  *
  * FUNCTIONS:   __construct()   — Nimmt $registerUrl und $mandUname entgegen
  *              envelope()      — Betreff: "Einladung zu Fotosite"

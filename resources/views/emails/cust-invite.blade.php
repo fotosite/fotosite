@@ -82,7 +82,7 @@
         </div>
 
         <div class="body">
-            <p>Sie wurden von <strong>{{ $mandUname }}</strong> eingeladen, auf Fotosite zuzugreifen.<br>
+            <p>Sie wurden zu <strong>{{ genitivName($mandUname) }}</strong> Fotogalerie eingeladen.<br>
                Klicken Sie auf den folgenden Link, um Ihren Account zu erstellen:</p>
 
             <a href="{{ $registerUrl }}" class="btn">Jetzt registrieren</a>

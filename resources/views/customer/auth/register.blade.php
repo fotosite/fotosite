@@ -1,11 +1,11 @@
 {{--
     FILE:    resources/views/customer/auth/register.blade.php
-    VERSION: 1.1.0
+    VERSION: 1.3.0
     AUTHOR:  Martin Wagner
     DATE:    2026-05-30
 
     DESCRIPTION:
-      Kunden-Registrierungsformular — wird per Einladungs-Token aufgerufen.
+      Mitglieder-Registrierungsformular — wird per Einladungs-Token aufgerufen.
       Zwei Modi:
         $alreadyExists = true  → Kompaktform für bereits registrierte User
         $alreadyExists = false → Vollständiges Registrierungsformular
@@ -25,7 +25,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>Registrierung · Fotosite V8</title>
+    <title>Mitglieder-Konto erstellen · Fotosite V8</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
@@ -41,7 +41,7 @@
                 Fotosite&thinsp;V8
             </p>
             <h1 class="text-xl font-semibold text-gray-800">
-                {{ $alreadyExists ? 'Einladung annehmen' : 'Konto erstellen' }}
+                {{ $alreadyExists ? 'Einladung annehmen' : 'Mitglieder-Konto erstellen' }}
             </h1>
         </div>
 
@@ -283,7 +283,7 @@
                                text-white hover:bg-indigo-700
                                transition-colors duration-150
                                focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                    Konto erstellen
+                    Mitglieder-Konto erstellen
                 </button>
             </div>
 

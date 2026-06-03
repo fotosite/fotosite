@@ -78,7 +78,7 @@
                        anzulegen. Klicken Sie auf den folgenden Link — er ist 24 Stunden
                        gültig:</p>
                 @elseif($userType === 'cust')
-                    <p>Sie wurden eingeladen, einen Kunden-Account für Fotosite V8
+                    <p>Sie wurden eingeladen, einen Mitglieder-Account für Fotosite V8
                        anzulegen. Klicken Sie auf den folgenden Link — er ist 24 Stunden
                        gültig:</p>
                 @else

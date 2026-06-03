@@ -1,16 +1,16 @@
 {{--
     FILE:    resources/views/mandant/cust/einladen.blade.php
-    VERSION: 1.1.0
+    VERSION: 1.3.0
     AUTHOR:  Martin Wagner
     DATE:    2026-05-30
 
     DESCRIPTION:
-      Einladungsformular für neue Kunden.
+      Einladungsformular für neue Mitglieder.
       POST zu route('mandant.kunden.store').
 
     ROUTES USED:
       POST /mandant/kunden/einladen — Einladung senden (route('mandant.kunden.store'))
-      GET  /mandant/kunden          — Kundenliste (route('mandant.kunden.index'))
+      GET  /mandant/kunden          — Mitgliederliste (route('mandant.kunden.index'))
       POST /mandant/logout          — Mandant-Logout (route('mandant.logout'))
 --}}
 <!DOCTYPE html>
@@ -19,12 +19,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>Kunden einladen · Fotosite V8</title>
+    <title>Mitglieder einladen · Fotosite V8</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
 <body class="min-h-screen bg-gray-50 text-gray-900 antialiased"
       x-data>
+
+    @php $mandUname = \App\Models\UserDb\MandUser::find(session('_mand_id'))?->mand_uname ?? ''; @endphp
 
     {{-- ══════════════════════════════════════════════════════
          TOP BAR
@@ -44,6 +46,7 @@
                              uppercase text-indigo-600">
                     Mandant
                 </span>
+                <span class="text-sm text-indigo-200">{{ $mandUname }}</span>
             </div>
 
             {{-- Logout --}}
@@ -69,10 +72,10 @@
         {{-- Seitenüberschrift --}}
         <div class="mb-8">
             <h1 class="text-xl font-semibold tracking-tight text-gray-800">
-                Kunden einladen
+                Mitglieder einladen
             </h1>
             <p class="mt-1.5 text-sm text-zinc-600">
-                Einladungs-E-Mail an einen neuen Kunden senden.
+                Einladungs-E-Mail an ein neues Mitglied senden.
             </p>
         </div>
 
@@ -115,7 +118,7 @@
             <div>
                 <label for="cust_alias"
                        class="block text-sm font-medium text-gray-700 mb-1.5">
-                    Ihr interner Name für diesen Kunden
+                    Ihr interner Name für dieses Mitglied
                 </label>
                 <input type="text"
                        id="cust_alias"
@@ -151,22 +154,22 @@
                         — bitte wählen —
                     </option>
                     <option value="1" {{ old('sec_level') == '1' ? 'selected' : '' }}>
-                        1 — Bekannte / Kollegen
+                        1 — Bekannte
                     </option>
                     <option value="2" {{ old('sec_level') == '2' ? 'selected' : '' }}>
-                        2 — Freunde
+                        2 — Großfamilie
                     </option>
                     <option value="3" {{ old('sec_level') == '3' ? 'selected' : '' }}>
-                        3 — Großfamilie
+                        3 — Freunde
                     </option>
                     <option value="4" {{ old('sec_level') == '4' ? 'selected' : '' }}>
-                        4 — Kernfamilie + enge Freunde
+                        4 — Enge Freunde &amp; Kernfamilie
                     </option>
                     <option value="5" {{ old('sec_level') == '5' ? 'selected' : '' }}>
-                        5 — Beziehung
+                        5 — Vertraulich
                     </option>
                     <option value="6" {{ old('sec_level') == '6' ? 'selected' : '' }}>
-                        6 — Intim
+                        6 — Streng vertraulich
                     </option>
                 </select>
                 @error('sec_level')
@@ -192,7 +195,7 @@
             <a href="{{ route('mandant.kunden.index') }}"
                class="text-xs text-gray-400 hover:text-indigo-600
                       transition-colors duration-150 tracking-wide">
-                ← Zurück zur Kundenliste
+                ← Zurück zur Mitgliederliste
             </a>
         </div>
 

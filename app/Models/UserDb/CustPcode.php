@@ -1,10 +1,10 @@
 <?php
 /**
  * FILE:        app/Models/UserDb/CustPcode.php
- * VERSION:     1.1.0
+ * VERSION:     1.2.0
  * AUTHOR:      Martin Wagner
  * DATE:        2026-05-30
- * PURPOSE:     Mandant-Kunden-Zuordnung mit Sicherheitsstufe und internem Alias
+ * PURPOSE:     Mandant-Mitglieder-Zuordnung mit Sicherheitsstufe und internem Alias
  *
  * FUNCTIONS:   mandUser() — belongsTo MandUser via mand_id
  *              custUser() — belongsTo CustUser via cust_id

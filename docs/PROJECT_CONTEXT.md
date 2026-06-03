@@ -15,12 +15,12 @@ Multi-tenant photo website. Each tenant (Mandant) manages their own photo conten
 | Level | Bedeutung | Speicherung |
 |---|---|---|
 | 0 | Public — sichtbar für alle, einschließlich anon | Datei |
-| 1 | Bekannte / Kollegen | Datei |
-| 2 | Freunde | Datei |
-| 3 | Großfamilie | Datei |
-| 4 | Kernfamilie + enge Freunde | Datei |
-| 5 | Beziehung | Datei |
-| 6 | Intim | BLOB in `fotoblobdb` |
+| 1 | Bekannte | Datei |
+| 2 | Großfamilie | Datei |
+| 3 | Freunde | Datei |
+| 4 | Enge Freunde & Kernfamilie | Datei |
+| 5 | Vertraulich | Datei |
+| 6 | Streng vertraulich | BLOB in `fotoblobdb` |
 
 > Stufe 6 wird als BLOB in der Datenbank (`fotoblobdb.foto_obj_db`) gespeichert. Alle anderen Stufen (0–5) werden als Datei im Dateisystem abgelegt.
 

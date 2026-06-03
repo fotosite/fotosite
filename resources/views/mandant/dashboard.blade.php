@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/dashboard.blade.php
-    VERSION: 2.4.0
+    VERSION: 2.5.0
 
     DESCRIPTION:
       Mandanten-Dashboard — Einstiegsseite nach erfolgreichem Mand-Login + 2FA.
@@ -28,6 +28,8 @@
 <body class="min-h-screen bg-gray-50 text-gray-900 antialiased"
       x-data>
 
+    @php $mandUname = \App\Models\UserDb\MandUser::find(session('_mand_id'))?->mand_uname ?? ''; @endphp
+
     {{-- ══════════════════════════════════════════════════════
          TOP BAR
     ══════════════════════════════════════════════════════ --}}
@@ -46,6 +48,7 @@
                              uppercase text-indigo-600">
                     Mandant
                 </span>
+                <span class="text-sm text-indigo-200">{{ $mandUname }}</span>
             </div>
 
             {{-- Logout --}}
@@ -190,7 +193,7 @@
                 </span>
             </div>
 
-            {{-- 3. Kunden --}}
+            {{-- 3. Mitglieder --}}
             <a href="{{ route('mandant.kunden.index') }}"
                class="relative flex flex-col gap-5 rounded-xl
                       border border-indigo-100 bg-white p-6
@@ -216,10 +219,10 @@
 
                 <div>
                     <h2 class="text-sm font-semibold text-gray-800 tracking-wide mb-1">
-                        Kunden
+                        Mitglieder
                     </h2>
                     <p class="text-xs text-gray-500 leading-relaxed">
-                        Kunden anlegen, Passcodes<br>verwalten, löschen
+                        Mitglieder einladen, Passcodes<br>verwalten, löschen
                     </p>
                 </div>
 

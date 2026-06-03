@@ -1,12 +1,12 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/MandantCustController.php
- * VERSION:     1.5.0
+ * VERSION:     1.6.0
  * AUTHOR:      Martin Wagner
  * DATE:        2026-05-30
  * PURPOSE:     Cust-Verwaltung durch Mandant — Einladen, Alias/Passcode-Verwaltung, Löschen
  *
- * FUNCTIONS:   index()   — Listet Kunden des eingeloggten Mandanten
+ * FUNCTIONS:   index()   — Listet Mitglieder des eingeloggten Mandanten
  *                           Reads: userdb.cust_pcode.mand_id, cust_id, cust_passcode,
  *                                  pcode_prefstat, cust_alias
  *                                  userdb.cust_user.cust_id, cust_firstname,
@@ -25,7 +25,7 @@
  *              update()  — Aktualisiert cust_alias + Sicherheitsstufe (cust_passcode)
  *                           Reads:  userdb.cust_pcode.pcode_id, mand_id
  *                           Writes: userdb.cust_pcode.cust_passcode, cust_alias
- *              destroy() — Entfernt Kunden-Zuordnung des Mandanten; löscht CustUser
+ *              destroy() — Entfernt Mitglieder-Zuordnung des Mandanten; löscht CustUser
  *                           wenn keine weitere Mand-Zuordnung existiert.
  *                           Reads:  userdb.cust_pcode.pcode_id, mand_id, cust_id
  *                           Writes: userdb.cust_pcode (DELETE)
@@ -104,7 +104,7 @@ class MandantCustController extends UserDbController
                 ->exists();
             if ($alreadyLinked) {
                 return back()
-                    ->withErrors(['cust_email' => 'Dieser Kunde ist bereits eingeladen.'])
+                    ->withErrors(['cust_email' => 'Dieses Mitglied ist bereits eingeladen.'])
                     ->withInput();
             }
         }
@@ -178,6 +178,6 @@ class MandantCustController extends UserDbController
         }
 
         return redirect()->route('mandant.kunden.index')
-            ->with('status', 'Kunde wurde entfernt.');
+            ->with('status', 'Mitglied wurde entfernt.');
     }
 }

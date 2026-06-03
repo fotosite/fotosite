@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/konto.blade.php
-    VERSION: 1.2.0
+    VERSION: 1.3.0
 
     DESCRIPTION:
       Mandant Eigenverwaltung — Kontaktdaten und Passwort bearbeiten.
@@ -29,6 +29,8 @@
 <body class="min-h-screen bg-gray-50 text-gray-900 antialiased"
       x-data>
 
+    @php $mandUname = \App\Models\UserDb\MandUser::find(session('_mand_id'))?->mand_uname ?? ''; @endphp
+
     {{-- ══════════════════════════════════════════════════════
          TOP BAR
     ══════════════════════════════════════════════════════ --}}
@@ -47,6 +49,7 @@
                              uppercase text-indigo-600">
                     Mandant
                 </span>
+                <span class="text-sm text-indigo-200">{{ $mandUname }}</span>
             </div>
 
             {{-- Logout --}}

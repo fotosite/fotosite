@@ -1,5 +1,5 @@
 git add .
-git commit -m "feat: pwlist komplett — Duplikat-Prüfung, Datum-Validierung, 2-Spalten-Layout"
-git tag p4_pwlist_final_ok
+git commit -m "refactor: Kunde/Kunden → Mitglied/Mitglieder — konsistente Terminologie"
+git tag p4_terminology_ok
 git push
 git push --tags
