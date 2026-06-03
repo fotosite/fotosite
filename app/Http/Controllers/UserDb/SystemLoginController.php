@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/SystemLoginController.php
- * VERSION:     1.2.0
+ * VERSION:     1.3.0
  *
  * FUNCTIONS:   login()           — Zeigt das System-Login-Formular an.
  *                                  Reads: —
@@ -27,9 +27,11 @@
  *              App\Mail\TwoFactorCodeMail
  *              Illuminate\Support\Facades\Hash::check()
  *              Illuminate\Support\Facades\Mail::to()->send()
+ *              Illuminate\Support\Facades\DB::connection('sessiondb')->table()->delete()
  *
  * DB ACCESS:   userdb.syst_user.syst_id, syst_email, syst_pw_hash, syst_firstname
  *              sessiondb.twofa_code.* (via TwofaService)
+ *              sessiondb.session.expires_at (DELETE bei Login)
  */
 
 namespace App\Http\Controllers\UserDb;
@@ -40,6 +42,7 @@ use App\Services\SessionDb\TwofaService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 
@@ -96,6 +99,11 @@ class SystemLoginController extends UserDbController
         $request->session()->put('_user_type', 'syst');
         $request->session()->put('_syst_id', $systId);
         $request->session()->forget('2fa_syst_id');
+
+        DB::connection('sessiondb')
+            ->table('session')
+            ->where('expires_at', '<', now())
+            ->delete();
 
         return redirect('/system/dashboard');
     }

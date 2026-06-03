@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Middleware/SessionIdleTimeout.php
- * VERSION:     1.0.4
+ * VERSION:     1.0.5
  * AUTOR:       Martin Wagner
  * DATUM:       2026-05-26
  *
@@ -24,14 +24,16 @@
  *              Illuminate\Http\Request::session()::invalidate()
  *              Illuminate\Http\Request::session()::regenerateToken()
  *              Illuminate\Support\Facades\config()
+ *              Illuminate\Support\Facades\DB::connection('sessiondb')->table()->delete()
  *
- * DB ACCESS:   none
+ * DB ACCESS:   sessiondb.session.expires_at (DELETE, probabilistisch 5 %)
  */
 
 namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
 class SessionIdleTimeout
@@ -64,6 +66,13 @@ class SessionIdleTimeout
         if ($lastActivity > 0 && (time() - $lastActivity) > $timeout) {
             $request->session()->invalidate();
             $request->session()->regenerateToken();
+
+            if (rand(1, 100) <= 5) {
+                DB::connection('sessiondb')
+                    ->table('session')
+                    ->where('expires_at', '<', now())
+                    ->delete();
+            }
 
             return redirect(self::REDIRECT_TARGETS[$userType])
                 ->with('error', self::TIMEOUT_MESSAGES[$userType]);

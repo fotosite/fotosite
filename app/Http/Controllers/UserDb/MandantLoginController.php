@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/MandantLoginController.php
- * VERSION:     1.6
+ * VERSION:     1.7
  * AUTOR:       Martin Wagner
  * DATUM:       2026-05-28
  *
@@ -37,9 +37,11 @@
  *              App\Services\SessionDb\SessionIntegrityService::buildSessionData()
  *              Illuminate\Support\Facades\Hash::check()
  *              Illuminate\Support\Facades\Mail::to()->send()
+ *              Illuminate\Support\Facades\DB::connection('sessiondb')->table()->delete()
  *
  * DB ACCESS:   userdb.mand_user.mand_id, mand_email, mand_pw_hash, mand_firstname
  *              sessiondb.twofa_code.* (via TwofaService)
+ *              sessiondb.session.expires_at (DELETE bei Login)
  */
 
 namespace App\Http\Controllers\UserDb;
@@ -51,6 +53,7 @@ use App\Services\SessionDb\TwofaService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 
@@ -130,6 +133,11 @@ class MandantLoginController extends UserDbController
         $request->session()->put('_user_type', $sessionData['user_type']);
         $request->session()->put('_mand_id',   $sessionData['mand_id']);
         $request->session()->forget('pending_mand_id');
+
+        DB::connection('sessiondb')
+            ->table('session')
+            ->where('expires_at', '<', now())
+            ->delete();
 
         return redirect()->route('mandant.dashboard');
     }
