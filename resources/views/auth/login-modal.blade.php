@@ -14,7 +14,7 @@
         Formular-Submit mit Validierungsfehler die richtige Seite / der
         richtige Tab direkt sichtbar ist (kein Zurückspringen zum Default).
     --}}
-    <div x-data="{ page: '{{ session('login_page', 'cust') }}', custTab: '{{ old('_tab', 'anon') }}' }"
+    <div x-data="{ page: '{{ session('login_page', 'cust') }}', custTab: '{{ session('cust_tab', 'anon') }}' }"
          class="w-full max-w-md bg-white rounded-2xl shadow-2xl px-8 py-10">
 
         {{-- Flash: abgelaufene Session --}}
@@ -28,6 +28,13 @@
         @if (session('error'))
             <div class="mb-5 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
                 {{ session('error') }}
+            </div>
+        @endif
+
+        {{-- Flash: Status (nach Logout, Registrierung etc.) --}}
+        @if (session('status'))
+            <div class="mb-5 rounded-lg bg-indigo-50 border border-indigo-200 px-4 py-3 text-sm text-indigo-700">
+                {{ session('status') }}
             </div>
         @endif
 
@@ -62,23 +69,21 @@
 
             {{-- Tab: Anonym --}}
             <div x-show="custTab === 'anon'" x-cloak>
-                <form method="POST" action="/customer/login/anon">
+                <form method="POST" action="{{ route('customer.login.anon') }}">
                     @csrf
-                    <input type="hidden" name="_form" value="cust">
-                    <input type="hidden" name="_tab"  value="anon">
 
-                    @error('pw_code')
+                    @error('password')
                         <div class="mb-3 text-sm text-red-600">{{ $message }}</div>
                     @enderror
 
                     <div>
-                        <label for="pw_code"
+                        <label for="anon_password"
                                class="block text-sm font-medium text-gray-700 mb-1">
                             Passwort
                         </label>
-                        <input id="pw_code"
+                        <input id="anon_password"
                                type="password"
-                               name="pw_code"
+                               name="password"
                                class="block w-full rounded-lg border-gray-300 shadow-sm
                                       focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                required autofocus>
@@ -99,30 +104,25 @@
 
             {{-- Tab: Registriert --}}
             <div x-show="custTab === 'reg'" x-cloak>
-                <form method="POST" action="/customer/login">
+                <form method="POST" action="{{ route('customer.login.handle') }}">
                     @csrf
-                    <input type="hidden" name="_form" value="cust">
-                    <input type="hidden" name="_tab"  value="reg">
 
-                    @error('username')
+                    @error('credentials')
                         <div class="mb-3 text-sm text-red-600">{{ $message }}</div>
                     @enderror
                     @error('password')
                         <div class="mb-3 text-sm text-red-600">{{ $message }}</div>
                     @enderror
-                    @error('credentials')
-                        <div class="mb-3 text-sm text-red-600">{{ $message }}</div>
-                    @enderror
 
                     <div>
-                        <label for="cust_uname"
+                        <label for="cust_email"
                                class="block text-sm font-medium text-gray-700 mb-1">
-                            Benutzername
+                            E-Mail-Adresse
                         </label>
-                        <input id="cust_uname"
-                               type="text"
-                               name="username"
-                               value="{{ old('username') }}"
+                        <input id="cust_email"
+                               type="email"
+                               name="cust_email"
+                               value="{{ old('cust_email') }}"
                                class="block w-full rounded-lg border-gray-300 shadow-sm
                                       focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                required>
