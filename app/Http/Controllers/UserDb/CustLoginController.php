@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustLoginController.php
- * VERSION:     1.3.0
+ * VERSION:     1.4.0
  * AUTOR:       Martin Wagner
  * DATUM:       2026-06-03
  *
@@ -32,8 +32,9 @@
  *                                  bei Erfolg: Session aufbauen, pending_* vergessen,
  *                                  Redirect zu customer.dashboard.
  *                                  Reads: sessiondb.twofa_code.* (via TwofaService)
- *              logout()          — [Stub] Invalidiert Session, Redirect zu login.
- *                                  Reads: —
+ *              logout()          — Invalidiert Session, bereinigt abgelaufene Sessions,
+ *                                  Redirect zu home mit status-Flash.
+ *                                  Writes: sessiondb.session (DELETE expires_at < now)
  *
  * CALLS:       App\Models\UserDb\CustUser::where()->first()
  *              App\Models\UserDb\CustPcode::where()->orderByDesc()->first()
@@ -52,6 +53,7 @@
  *              sessiondb.pw_list.mand_id, pw1, pw2, pw3, pw4, pw5, pw6,
  *              valid_from, valid_until
  *              sessiondb.twofa_code.* (via TwofaService)
+ *              sessiondb.session.expires_at (DELETE bei Logout)
  */
 
 namespace App\Http\Controllers\UserDb;
@@ -67,6 +69,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 
@@ -236,8 +239,17 @@ class CustLoginController extends UserDbController
         return redirect()->route('customer.dashboard');
     }
 
-    public function logout(Request $request): Response
+    public function logout(Request $request): RedirectResponse
     {
-        return response('logout ok');
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        DB::connection('sessiondb')
+            ->table('session')
+            ->where('expires_at', '<', now())
+            ->delete();
+
+        return redirect()->route('home')
+            ->with('status', 'Sie wurden erfolgreich abgemeldet.');
     }
 }
