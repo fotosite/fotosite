@@ -32,6 +32,10 @@ Route::middleware('web')->prefix('mandant')->name('mandant.')->group(function ()
         ->name('login.2fa.verify');
     Route::post('/logout',     [MandantLoginController::class, 'logout'])
         ->name('logout');
+    Route::get('/login/passkey/options', [MandantLoginController::class, 'passkeyOptions'])
+        ->name('login.passkey.options');
+    Route::post('/login/passkey',        [MandantLoginController::class, 'passkeyLogin'])
+        ->name('login.passkey');
 });
 
 // ── Authenticated area ────────────────────────────────────────
