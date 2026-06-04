@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Passkey\CustPasskeyController;
 use App\Http\Controllers\UserDb\CustDashboardController;
 use App\Http\Controllers\UserDb\CustLoginController;
 use App\Http\Controllers\UserDb\CustRegisterController;
@@ -29,6 +30,10 @@ Route::middleware('web')->prefix('customer')->name('customer.')->group(function 
     Route::post('/login/anon',    [CustLoginController::class, 'handleAnonLogin'])
         ->middleware('throttle:5,1')
         ->name('login.anon');
+    Route::get('/login/passkey/options', [CustLoginController::class, 'passkeyOptions'])
+        ->name('login.passkey.options');
+    Route::post('/login/passkey',        [CustLoginController::class, 'passkeyLogin'])
+        ->name('login.passkey');
     Route::get('/login/2fa',      [CustLoginController::class, 'showTwoFactor'])
         ->name('login.2fa');
     Route::post('/login/2fa',     [CustLoginController::class, 'verifyTwoFactor'])
@@ -45,4 +50,16 @@ Route::middleware('web')->prefix('customer')->name('customer.')->group(function 
         ->name('register');
     Route::post('/register/{token}', [CustRegisterController::class, 'store'])
         ->name('register.store');
+
+    // ── Passkey-Verwaltung (authentifiziert, role:cust folgt) ─
+    Route::get('/passkeys',                  [CustPasskeyController::class, 'index'])
+        ->name('passkeys');
+    Route::get('/passkeys/register/options', [CustPasskeyController::class, 'registrationOptions'])
+        ->name('passkeys.options');
+    Route::post('/passkeys/register',        [CustPasskeyController::class, 'register'])
+        ->name('passkeys.register');
+    Route::patch('/passkeys/{id}/rename',    [CustPasskeyController::class, 'rename'])
+        ->name('passkeys.rename');
+    Route::delete('/passkeys/{id}',          [CustPasskeyController::class, 'destroy'])
+        ->name('passkeys.destroy');
 });

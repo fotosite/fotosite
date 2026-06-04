@@ -1,12 +1,12 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustLoginController.php
- * VERSION:     1.4.0
+ * VERSION:     1.5.0
  * AUTOR:       Martin Wagner
- * DATUM:       2026-06-03
+ * DATUM:       2026-06-04
  *
  * ZWECK:       Cust-Login — registrierter Login mit optionaler 2FA,
- *              anonymer Login per Passwort-Sequenz, Logout.
+ *              anonymer Login per Passwort-Sequenz, Passkey-Login, Logout.
  *
  * FUNCTIONS:   showLogin()       — Zeigt das Cust-Login-Formular an.
  *                                  Reads: —
@@ -32,6 +32,19 @@
  *                                  bei Erfolg: Session aufbauen, pending_* vergessen,
  *                                  Redirect zu customer.dashboard.
  *                                  Reads: sessiondb.twofa_code.* (via TwofaService)
+ *              passkeyOptions()  — Erstellt userless PublicKeyCredentialRequestOptions
+ *                                  (discoverable credential flow), speichert Challenge
+ *                                  in Session, gibt JSON zurück.
+ *                                  Reads: —
+ *              passkeyLogin()    — Verifiziert Passkey-Assertion; sucht Passkey per
+ *                                  credential_id; lädt bevorzugten Mandanten via
+ *                                  CustPcode; aktualisiert sign_count + last_used_at;
+ *                                  baut Session auf; gibt JSON mit redirect zurück.
+ *                                  Reads:  userdb.passkey.credential_id, public_key,
+ *                                          user_type, user_id, sign_count
+ *                                          userdb.cust_pcode.mand_id, cust_passcode,
+ *                                          pcode_prefstat, pcode_id
+ *                                  Writes: userdb.passkey.sign_count, last_used_at
  *              logout()          — Invalidiert Session, bereinigt abgelaufene Sessions,
  *                                  Redirect zu home mit status-Flash.
  *                                  Writes: sessiondb.session (DELETE expires_at < now)
@@ -39,17 +52,26 @@
  * CALLS:       App\Models\UserDb\CustUser::where()->first()
  *              App\Models\UserDb\CustPcode::where()->orderByDesc()->first()
  *              App\Models\UserDb\MandUser::find()
+ *              App\Models\UserDb\Passkey::where()->first()
  *              App\Models\SessionDb\PwList::where()->get()
  *              App\Mail\TwoFactorCodeMail
  *              App\Services\SessionDb\TwofaService::generateCode()
  *              App\Services\SessionDb\TwofaService::verifyCode()
  *              App\Services\SessionDb\SessionIntegrityService::buildSessionData()
+ *              App\Services\Passkey\PasskeyRepository::findOneByCredentialId()
+ *              App\Services\Passkey\PasskeySessionStorage::store()
+ *              App\Services\Passkey\PasskeySessionStorage::get()
+ *              App\Services\Passkey\PasskeySessionStorage::clear()
+ *              Webauthn\AuthenticatorAssertionResponseValidator::check()
+ *              Webauthn\CeremonyStep\CeremonyStepManagerFactory::requestCeremony()
  *              Illuminate\Support\Facades\Hash::check()
  *              Illuminate\Support\Facades\Mail::to()->send()
  *
  * DB ACCESS:   userdb.cust_user.cust_id, cust_email, cust_pw_hash, cust_firstname
  *              userdb.cust_pcode.pcode_id, cust_id, mand_id, cust_passcode, pcode_prefstat
  *              userdb.mand_user.mand_id, mand_cust_2fa
+ *              userdb.passkey.credential_id, public_key, user_type, user_id,
+ *              sign_count, last_used_at
  *              sessiondb.pw_list.mand_id, pw1, pw2, pw3, pw4, pw5, pw6,
  *              valid_from, valid_until
  *              sessiondb.twofa_code.* (via TwofaService)
@@ -63,22 +85,44 @@ use App\Models\SessionDb\PwList;
 use App\Models\UserDb\CustPcode;
 use App\Models\UserDb\CustUser;
 use App\Models\UserDb\MandUser;
+use App\Models\UserDb\Passkey;
+use App\Services\Passkey\PasskeyRepository;
+use App\Services\Passkey\PasskeySessionStorage;
 use App\Services\SessionDb\SessionIntegrityService;
 use App\Services\SessionDb\TwofaService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use ParagonIE\ConstantTime\Base64UrlSafe;
+use Symfony\Component\Serializer\SerializerInterface;
+use Throwable;
+use Webauthn\AttestationStatement\AttestationStatementSupportManager;
+use Webauthn\AuthenticatorAssertionResponse;
+use Webauthn\AuthenticatorAssertionResponseValidator;
+use Webauthn\CeremonyStep\CeremonyStepManagerFactory;
+use Webauthn\Denormalizer\WebauthnSerializerFactory;
+use Webauthn\PublicKeyCredential;
+use Webauthn\PublicKeyCredentialRequestOptions;
 
 class CustLoginController extends UserDbController
 {
+    private SerializerInterface $serializer;
+
     public function __construct(
-        private readonly TwofaService $twofaService,
+        private readonly TwofaService           $twofaService,
         private readonly SessionIntegrityService $sessionIntegrityService,
-    ) {}
+        private readonly PasskeyRepository       $passkeyRepository,
+        private readonly PasskeySessionStorage   $passkeySessionStorage,
+    ) {
+        $this->serializer = (new WebauthnSerializerFactory(
+            AttestationStatementSupportManager::create()
+        ))->create();
+    }
 
     public function showLogin(): Response
     {
@@ -123,7 +167,7 @@ class CustLoginController extends UserDbController
         }
 
         $secLevel  = (int) $pcode->cust_passcode;
-        $threshold = $mand->mand_cust_2fa; // cast to int via model
+        $threshold = $mand->mand_cust_2fa;
 
         if ($secLevel >= $threshold && $threshold < 7) {
             $code = $this->twofaService->generateCode('cust', $cust->cust_id, 0);
@@ -237,6 +281,141 @@ class CustLoginController extends UserDbController
         $request->session()->forget(['pending_cust_id', 'pending_mand_id', 'pending_sec_level']);
 
         return redirect()->route('customer.dashboard');
+    }
+
+    /**
+     * Liefert PublicKeyCredentialRequestOptions für den userless/discoverable flow.
+     */
+    public function passkeyOptions(Request $request): JsonResponse
+    {
+        $options = PublicKeyCredentialRequestOptions::create(
+            challenge:        random_bytes(32),
+            rpId:             parse_url(config('app.url'), PHP_URL_HOST),
+            allowCredentials: [],
+            userVerification: PublicKeyCredentialRequestOptions::USER_VERIFICATION_REQUIREMENT_REQUIRED,
+            timeout:          60000,
+        );
+
+        $this->passkeySessionStorage->store($request, $options);
+
+        return response()->json(
+            json_decode($this->serializer->serialize($options, 'json'), true)
+        );
+    }
+
+    /**
+     * Verifiziert eine Passkey-Assertion und baut die Cust-Session auf.
+     * Lädt bevorzugten Mandanten + Sicherheitsstufe aus CustPcode.
+     */
+    public function passkeyLogin(Request $request): JsonResponse
+    {
+        $requestOptions = $this->passkeySessionStorage->get($request);
+        if (! $requestOptions instanceof PublicKeyCredentialRequestOptions) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Keine aktive Challenge. Bitte die Seite neu laden.',
+            ]);
+        }
+
+        try {
+            $credentialJson = json_encode(
+                $request->only(['id', 'rawId', 'type', 'response'])
+            );
+
+            /** @var PublicKeyCredential $publicKeyCredential */
+            $publicKeyCredential = $this->serializer->deserialize(
+                $credentialJson,
+                PublicKeyCredential::class,
+                'json'
+            );
+
+            if (! $publicKeyCredential->response instanceof AuthenticatorAssertionResponse) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ungültiger Response-Typ.',
+                ]);
+            }
+
+            // Gespeicherten Credential-Record für Signatur-Prüfung laden
+            $credentialSource = $this->passkeyRepository->findOneByCredentialId(
+                $publicKeyCredential->rawId
+            );
+
+            if ($credentialSource === null) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Passkey nicht gefunden.',
+                ]);
+            }
+
+            // Assertion verifizieren
+            $factory = new CeremonyStepManagerFactory();
+            $factory->setAllowedOrigins([config('app.url')]);
+
+            $validator = AuthenticatorAssertionResponseValidator::create(
+                $factory->requestCeremony()
+            );
+
+            $host = parse_url(config('app.url'), PHP_URL_HOST);
+
+            $updatedRecord = $validator->check(
+                $credentialSource,
+                $publicKeyCredential->response,
+                $requestOptions,
+                $host,
+                null,
+            );
+
+            // Passkey-Datensatz für user_id + sign_count-Update
+            $credentialIdEncoded = Base64UrlSafe::encodeUnpadded($publicKeyCredential->rawId);
+            $passkey = Passkey::where('credential_id', $credentialIdEncoded)->first();
+
+            if ($passkey === null || $passkey->user_type !== 'cust') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Passkey gehört keinem Kunden.',
+                ]);
+            }
+
+            $userId = (int) $passkey->user_id;
+
+            // Replay-Schutz: sign_count + last_used_at aktualisieren
+            $passkey->update([
+                'sign_count'   => $updatedRecord->counter,
+                'last_used_at' => now(),
+            ]);
+
+            // Bevorzugten Mandanten + Sicherheitsstufe aus CustPcode laden
+            $pcode = CustPcode::where('cust_id', $userId)
+                ->orderByDesc('pcode_prefstat')
+                ->orderByDesc('pcode_id')
+                ->first();
+
+            // Session aufbauen (gleiche Struktur wie handleLogin)
+            $sessionData = $this->sessionIntegrityService->buildSessionData('cust', $userId);
+
+            $request->session()->regenerate();
+            $request->session()->put('_user_type',     $sessionData['user_type']);
+            $request->session()->put('_cust_id',       $userId);
+            $request->session()->put('_mand_id',       $pcode?->mand_id);
+            $request->session()->put('_sec_level',     $pcode?->cust_passcode);
+            $request->session()->put('_last_activity', time());
+
+            $this->passkeySessionStorage->clear($request);
+
+            DB::connection('sessiondb')
+                ->table('session')
+                ->where('expires_at', '<', now())
+                ->delete();
+
+            return response()->json([
+                'success'  => true,
+                'redirect' => route('customer.dashboard'),
+            ]);
+
+        } catch (Throwable $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()]);
+        }
     }
 
     public function logout(Request $request): RedirectResponse

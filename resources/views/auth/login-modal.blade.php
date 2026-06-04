@@ -105,6 +105,36 @@
 
             {{-- Tab: Registriert --}}
             <div x-show="custTab === 'reg'" x-cloak>
+
+                {{-- Cust Passkey-Button (zunächst versteckt) --}}
+                <button id="cust-passkey-btn"
+                        type="button"
+                        onclick="loginWithCustPasskey()"
+                        class="hidden w-full rounded-lg border border-indigo-300 bg-indigo-50
+                               px-4 py-2.5 text-sm font-semibold text-indigo-700
+                               hover:bg-indigo-100 focus:outline-none focus:ring-2
+                               focus:ring-indigo-500 focus:ring-offset-2 transition-colors
+                               flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4 shrink-0" xmlns="http://www.w3.org/2000/svg"
+                         fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5
+                                 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1
+                                 .43-1.563A6 6 0 0 1 21.75 8.25Z"/>
+                    </svg>
+                    Mit Passkey anmelden
+                </button>
+
+                {{-- Trennlinie --}}
+                <div id="cust-passkey-divider" class="hidden relative my-5">
+                    <div class="absolute inset-0 flex items-center">
+                        <hr class="w-full border-gray-200">
+                    </div>
+                    <div class="relative flex justify-center">
+                        <span class="bg-white px-3 text-xs text-gray-400">oder</span>
+                    </div>
+                </div>
+
                 <form method="POST" action="{{ route('customer.login.handle') }}">
                     @csrf
 
@@ -124,6 +154,7 @@
                                type="email"
                                name="cust_email"
                                value="{{ old('cust_email') }}"
+                               autocomplete="username webauthn"
                                class="block w-full rounded-lg border-gray-300 shadow-sm
                                       focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                required>
@@ -296,19 +327,82 @@
             return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
         }
 
-        // Passkey-Button einblenden wenn Platform Authenticator verfügbar
+        // Passkey-Buttons einblenden wenn Platform Authenticator verfügbar
         document.addEventListener('DOMContentLoaded', async () => {
             if (window.PublicKeyCredential) {
                 try {
                     const available = await PublicKeyCredential
                         .isUserVerifyingPlatformAuthenticatorAvailable();
                     if (available) {
+                        // Mand-Passkey-Button
                         document.getElementById('passkey-btn').classList.remove('hidden');
                         document.getElementById('passkey-divider').classList.remove('hidden');
+                        // Cust-Passkey-Button
+                        document.getElementById('cust-passkey-btn')?.classList.remove('hidden');
+                        document.getElementById('cust-passkey-divider')?.classList.remove('hidden');
                     }
-                } catch (_) { /* Kein WebAuthn-Support — Button bleibt versteckt */ }
+                } catch (_) { /* Kein WebAuthn-Support — Buttons bleiben versteckt */ }
             }
         });
+
+        async function loginWithCustPasskey() {
+            try {
+                // 1. Options holen
+                const optRes = await fetch(
+                    '{{ route("customer.login.passkey.options") }}',
+                    { headers: { 'X-CSRF-TOKEN': csrfToken } }
+                );
+                if (!optRes.ok) {
+                    alert('Fehler beim Abrufen der Passkey-Optionen.');
+                    return;
+                }
+                const options = await optRes.json();
+
+                options.challenge = base64urlToBuffer(options.challenge);
+
+                if (options.allowCredentials && options.allowCredentials.length > 0) {
+                    options.allowCredentials = options.allowCredentials.map(c => ({
+                        ...c,
+                        id: base64urlToBuffer(c.id),
+                    }));
+                }
+
+                // 2. Assertion durchführen
+                const credential = await navigator.credentials.get({ publicKey: options });
+
+                // 3. An Server senden
+                const res = await fetch('{{ route("customer.login.passkey") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    body: JSON.stringify({
+                        id:    credential.id,
+                        rawId: bufferToBase64url(credential.rawId),
+                        type:  credential.type,
+                        response: {
+                            clientDataJSON:    bufferToBase64url(credential.response.clientDataJSON),
+                            authenticatorData: bufferToBase64url(credential.response.authenticatorData),
+                            signature:         bufferToBase64url(credential.response.signature),
+                            userHandle: credential.response.userHandle
+                                ? bufferToBase64url(credential.response.userHandle)
+                                : null,
+                        },
+                    }),
+                });
+
+                const result = await res.json();
+                if (result.success) {
+                    window.location.href = result.redirect;
+                } else {
+                    alert('Passkey-Anmeldung fehlgeschlagen: ' + result.message);
+                }
+            } catch (err) {
+                if (err.name === 'NotAllowedError') return;
+                alert('Fehler: ' + err.message);
+            }
+        }
 
         async function loginWithPasskey() {
             try {
