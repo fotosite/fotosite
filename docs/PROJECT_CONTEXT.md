@@ -419,6 +419,9 @@ CREATE TABLE `passkey` (
 
 `device_name`: Vom User frei benennbar (z.B. „iPhone 15"), damit mehrere registrierte Geräte unterscheidbar sind.
 
+> **Windows — mehrere Rollen auf einem Gerät:**
+> Pro Windows-Konto kann ein Passkey für ein Mitglied und zusätzlich ein Passkey für einen Galerist:in registriert werden. Windows zeigt beim Login ein Auswahlmenü (identifiziert per E-Mail + Fotosite-Username). Dies ermöglicht dem Galerist:in parallel die Mitglieder-Ansicht zu testen.
+
 ### Passkey-Verwaltung im User-Profil
 Jeder Nutzer (mand, cust) kann im eigenen Profil:
 - Passkey registrieren (Gerät hinzufügen, Namen vergeben)

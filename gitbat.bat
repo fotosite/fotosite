@@ -1,4 +1,4 @@
 git add .
-git commit -m "feat: Passkey Hinweistext — Windows Hello, Firefox, Chrome, iPhone/iPad"
+git commit -m "docs+feat: Passkey Hinweistext Windows Hello korrigiert, PROJECT_CONTEXT aktualisiert"
 git push
 git push --tags

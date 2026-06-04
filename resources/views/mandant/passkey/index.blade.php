@@ -116,10 +116,11 @@
         {{-- Hinweis --}}
         <div class="text-sm text-gray-500 mb-4 bg-gray-50 rounded-lg p-3 space-y-2">
             <p><strong>Windows Hello (Edge / systemeigen):</strong>
-            Der Passkey wird lokal auf diesem Gerät gespeichert und ist nur auf diesem
-            Gerät verfügbar. Pro Windows-Konto kann ein Passkey für einen
-            Fotosite-Account eingerichtet werden. Verwenden Sie für die Windows-Anmeldung
-            und für Fotosite dasselbe Authentifizierungsmerkmal (z.B. denselben
+            Der Passkey wird lokal auf diesem Gerät gespeichert.
+            Pro Windows-Konto kann ein Passkey für ein Mitglied und zusätzlich ein Passkey
+            für einen Galerist:in eingerichtet werden. Beim Login fragt Windows welcher
+            Account verwendet werden soll. Verwenden Sie für die Windows-Anmeldung und
+            für Fotosite dasselbe Authentifizierungsmerkmal (z.B. denselben
             Fingerabdruck).</p>
             <p><strong>Firefox:</strong>
             Der Passkey wird lokal in Firefox gespeichert und ist nur in diesem Browser
