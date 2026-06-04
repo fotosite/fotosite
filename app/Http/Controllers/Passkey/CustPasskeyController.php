@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/Passkey/CustPasskeyController.php
- * VERSION:     1.0.0
+ * VERSION:     1.1.0
  * AUTOR:       Martin Wagner
  * DATUM:       2026-06-04
  *
@@ -122,8 +122,9 @@ class CustPasskeyController extends Controller
                 PublicKeyCredentialParameters::create('public-key', Algorithms::COSE_ALGORITHM_RS256),
             ],
             authenticatorSelection: AuthenticatorSelectionCriteria::create(
-                userVerification: AuthenticatorSelectionCriteria::USER_VERIFICATION_REQUIREMENT_REQUIRED,
-                residentKey:      AuthenticatorSelectionCriteria::RESIDENT_KEY_REQUIREMENT_REQUIRED,
+                authenticatorAttachment: AuthenticatorSelectionCriteria::AUTHENTICATOR_ATTACHMENT_PLATFORM,
+                userVerification:        AuthenticatorSelectionCriteria::USER_VERIFICATION_REQUIREMENT_REQUIRED,
+                residentKey:             AuthenticatorSelectionCriteria::RESIDENT_KEY_REQUIREMENT_REQUIRED,
             ),
             timeout: 60000,
         );

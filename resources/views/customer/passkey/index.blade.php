@@ -112,6 +112,26 @@
             </button>
         </div>
 
+        {{-- Hinweis --}}
+        <div class="text-sm text-gray-500 mb-4 bg-gray-50 rounded-lg p-3 space-y-2">
+            <p><strong>Windows Hello (Edge / systemeigen):</strong>
+            Der Passkey wird lokal auf diesem Gerät gespeichert und ist nur auf diesem
+            Gerät verfügbar. Pro Windows-Konto kann ein Passkey für einen
+            Fotosite-Account eingerichtet werden. Verwenden Sie für die Windows-Anmeldung
+            und für Fotosite dasselbe Authentifizierungsmerkmal (z.B. denselben
+            Fingerabdruck).</p>
+            <p><strong>Firefox:</strong>
+            Der Passkey wird lokal in Firefox gespeichert und ist nur in diesem Browser
+            verfügbar.</p>
+            <p><strong>Chrome (Windows + Android):</strong>
+            Der Passkey wird im Google Passwort-Manager gespeichert. Wenn Sie in Chrome
+            mit Ihrem Google-Konto angemeldet sind, steht der Passkey auf allen Geräten
+            mit demselben Google-Konto zur Verfügung (Windows + Android).</p>
+            <p><strong>iPhone / iPad (Safari):</strong>
+            Der Passkey wird im iCloud-Schlüsselbund gespeichert und steht auf allen
+            Apple-Geräten mit derselben Apple-ID zur Verfügung.</p>
+        </div>
+
         {{-- Flash: Status-Meldung --}}
         @if(session('status'))
             <div class="mb-6 rounded-lg border border-indigo-200

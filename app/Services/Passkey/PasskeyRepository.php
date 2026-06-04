@@ -1,13 +1,13 @@
 <?php
 /**
  * FILE:        app/Services/Passkey/PasskeyRepository.php
- * VERSION:     1.0.0
+ * VERSION:     1.1.0
  *
  * FUNCTIONS:   findOneByCredentialId(string $publicKeyCredentialId)
  *                  — Sucht Credential via credential_id (base64url); liest userdb.passkey.public_key
  *              findAllForUserEntity(PublicKeyCredentialUserEntity $userEntity): array
  *                  — Gibt alle Passkeys eines Users zurück; liest userdb.passkey per user_type+user_id
- *              saveCredentialSource(PublicKeyCredentialSource $credentialSource): void
+ *              saveCredentialSource(CredentialRecord $credentialSource): void
  *                  — Insert oder Update; schreibt userdb.passkey.*
  *
  * CALLS:       App\Models\UserDb\Passkey (Model)
@@ -29,7 +29,7 @@ use ParagonIE\ConstantTime\Base64UrlSafe;
 use Symfony\Component\Serializer\SerializerInterface;
 use Webauthn\AttestationStatement\AttestationStatementSupportManager;
 use Webauthn\Denormalizer\WebauthnSerializerFactory;
-use Webauthn\PublicKeyCredentialSource;
+use Webauthn\CredentialRecord;
 use Webauthn\PublicKeyCredentialUserEntity;
 
 class PasskeyRepository
@@ -43,7 +43,7 @@ class PasskeyRepository
         ))->create();
     }
 
-    public function findOneByCredentialId(string $publicKeyCredentialId): ?PublicKeyCredentialSource
+    public function findOneByCredentialId(string $publicKeyCredentialId): ?CredentialRecord
     {
         $credentialIdEncoded = Base64UrlSafe::encodeUnpadded($publicKeyCredentialId);
         $record = $this->model->where('credential_id', $credentialIdEncoded)->first();
@@ -54,13 +54,13 @@ class PasskeyRepository
 
         return $this->serializer->deserialize(
             $record->public_key,
-            PublicKeyCredentialSource::class,
+            CredentialRecord::class,
             'json'
         );
     }
 
     /**
-     * @return PublicKeyCredentialSource[]
+     * @return CredentialRecord[]
      */
     public function findAllForUserEntity(PublicKeyCredentialUserEntity $userEntity): array
     {
@@ -74,13 +74,13 @@ class PasskeyRepository
             ->get()
             ->map(fn ($r) => $this->serializer->deserialize(
                 $r->public_key,
-                PublicKeyCredentialSource::class,
+                CredentialRecord::class,
                 'json'
             ))
             ->all();
     }
 
-    public function saveCredentialSource(PublicKeyCredentialSource $credentialSource): void
+    public function saveCredentialSource(CredentialRecord $credentialSource): void
     {
         $credentialIdEncoded = Base64UrlSafe::encodeUnpadded($credentialSource->publicKeyCredentialId);
         $userHandleEncoded   = Base64UrlSafe::encodeUnpadded($credentialSource->userHandle);

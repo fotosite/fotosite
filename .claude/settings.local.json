@@ -7,7 +7,12 @@
       "Bash(New-Item -ItemType Directory -Force \"D:\\\\mwa\\\\Projekte\\\\fotosite\\\\Fotosite_V08\\\\claudescode\\\\fotosite\\\\resources\\\\views\\\\mandant\\\\kunden\")",
       "Bash(Out-Null)",
       "Bash(Write-Output \"ok\")",
-      "Bash(git worktree *)"
+      "Bash(git worktree *)",
+      "WebFetch(domain:webauthn-doc.spomky-labs.com)",
+      "Bash(composer config *)",
+      "Bash(findstr /i \"curl.cainfo\\\\|openssl.cafile\\\\|cainfo\\\\|cafile\")",
+      "Bash(Select-String -Pattern \"cainfo|cafile\")",
+      "Bash(xargs grep -l \"serialize\\\\|jsonSerialize\\\\|Serializable\")"
     ]
   }
 }
