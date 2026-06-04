@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Passkey\MandPasskeyController;
 use App\Http\Controllers\SessionDb\MandantPwListController;
 use App\Http\Controllers\UserDb\MandantCustController;
 use App\Http\Controllers\UserDb\MandantLoginController;
@@ -62,4 +63,15 @@ Route::middleware(['web', 'role:mand'])->prefix('mandant')->name('mandant.')->gr
         ->name('kunden.passcode');
     Route::delete('/kunden/{id}',            [MandantCustController::class, 'destroy'])
         ->name('kunden.destroy');
+
+    Route::get('/passkeys',                  [MandPasskeyController::class, 'index'])
+        ->name('passkeys');
+    Route::get('/passkeys/register/options', [MandPasskeyController::class, 'registrationOptions'])
+        ->name('passkeys.options');
+    Route::post('/passkeys/register',        [MandPasskeyController::class, 'register'])
+        ->name('passkeys.register');
+    Route::patch('/passkeys/{id}/rename',    [MandPasskeyController::class, 'rename'])
+        ->name('passkeys.rename');
+    Route::delete('/passkeys/{id}',          [MandPasskeyController::class, 'destroy'])
+        ->name('passkeys.destroy');
 });
