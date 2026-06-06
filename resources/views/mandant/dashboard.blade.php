@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/dashboard.blade.php
-    VERSION: 2.5.0
+    VERSION: 2.6.0
 
     DESCRIPTION:
       Mandanten-Dashboard — Einstiegsseite nach erfolgreichem Mand-Login + 2FA.
@@ -87,6 +87,63 @@
                         bg-indigo-50 px-4 py-3 text-sm text-indigo-700">
                 {{ session('status') }}
             </div>
+        @endif
+
+        {{-- Passkey-Aufforderung nach Login --}}
+        @if(session('_prompt_passkey'))
+        <div x-data="{ show: true }"
+             x-show="show"
+             x-cloak
+             class="fixed inset-0 bg-black bg-opacity-50
+                    flex items-center justify-center z-50">
+            <div class="bg-white rounded-xl p-6 max-w-md
+                        shadow-xl">
+                <h2 class="text-lg font-semibold text-gray-900
+                           mb-2">
+                    Passkey einrichten
+                </h2>
+                <p class="text-sm text-gray-600 mb-4">
+                    Mit einem Passkey können Sie sich schnell
+                    und sicher per Fingerabdruck oder Gesicht
+                    anmelden — ohne 2FA-Code per E-Mail.
+                </p>
+                <div id="passkey-prompt-area">
+                    <p class="text-sm text-gray-400 mb-4"
+                       id="passkey-checking">
+                        Prüfe Gerät...
+                    </p>
+                </div>
+                <div class="flex gap-3 justify-end">
+                    <button @click="show = false"
+                            class="text-sm text-gray-500
+                                   hover:text-gray-700">
+                        Später
+                    </button>
+                    <a href="{{ route('mandant.passkeys') }}"
+                       id="passkey-register-btn"
+                       class="hidden px-4 py-2 bg-indigo-600
+                              text-white text-sm rounded-lg
+                              hover:bg-indigo-700">
+                        Jetzt einrichten
+                    </a>
+                </div>
+            </div>
+        </div>
+        <script>
+        (async () => {
+            const supported = window.PublicKeyCredential &&
+                await PublicKeyCredential
+                    .isUserVerifyingPlatformAuthenticatorAvailable();
+            const checking = document.getElementById('passkey-checking');
+            const btn = document.getElementById('passkey-register-btn');
+            if (supported) {
+                checking.textContent = 'Ihr Gerät unterstützt Passkeys.';
+                btn.classList.remove('hidden');
+            } else {
+                checking.textContent = 'Ihr Gerät unterstützt keine Passkeys.';
+            }
+        })();
+        </script>
         @endif
 
         {{-- Passwortliste: Status-Hinweise --}}

@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/customer/dashboard.blade.php
-    VERSION: 1.0.0
+    VERSION: 1.1.0
     AUTHOR:  Martin Wagner
     DATE:    2026-06-03
 
@@ -81,6 +81,56 @@
                         bg-indigo-50 px-4 py-3 text-sm text-indigo-700">
                 {{ session('status') }}
             </div>
+        @endif
+
+        {{-- Passkey-Aufforderung Banner (nur cust) --}}
+        @if(session('_prompt_passkey') &&
+            isset($userType) && $userType === 'cust')
+        <div x-data="{ show: true }"
+             x-show="show"
+             x-cloak
+             id="passkey-banner"
+             class="bg-indigo-50 border border-indigo-200
+                    rounded-lg p-4 mb-4 flex items-center
+                    justify-between">
+            <div>
+                <p class="text-sm font-medium text-indigo-800">
+                    Passkey einrichten
+                </p>
+                <p class="text-sm text-indigo-600">
+                    Melden Sie sich künftig schnell per
+                    Fingerabdruck an.
+                </p>
+            </div>
+            <div class="flex gap-3 items-center">
+                <a href="{{ route('customer.passkeys') }}"
+                   id="cust-passkey-btn"
+                   class="hidden px-3 py-1.5 bg-indigo-600
+                          text-white text-sm rounded-lg
+                          hover:bg-indigo-700">
+                    Einrichten
+                </a>
+                <button @click="show = false"
+                        class="text-sm text-indigo-400
+                               hover:text-indigo-600">
+                    ✕
+                </button>
+            </div>
+        </div>
+        <script>
+        (async () => {
+            const supported = window.PublicKeyCredential &&
+                await PublicKeyCredential
+                    .isUserVerifyingPlatformAuthenticatorAvailable();
+            if (supported) {
+                document.getElementById('cust-passkey-btn')
+                    ?.classList.remove('hidden');
+            } else {
+                document.getElementById('passkey-banner')
+                    ?.remove();
+            }
+        })();
+        </script>
         @endif
 
         @if($userType === 'anon')

@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/MandantLoginController.php
- * VERSION:     1.8.0
+ * VERSION:     1.9.0
  * AUTOR:       Martin Wagner
  * DATUM:       2026-06-04
  *
@@ -25,7 +25,8 @@
  *                                  pending_mand_id aus Session; delegiert Prüfung
  *                                  an TwofaService::verify(); bei Erfolg: Session
  *                                  regenerieren, _user_type und _mand_id schreiben,
- *                                  pending_mand_id löschen, Redirect zu mandant.dashboard.
+ *                                  _prompt_passkey setzen, pending_mand_id löschen,
+ *                                  Redirect zu mandant.dashboard.
  *                                  Reads: sessiondb.twofa_code.* (via TwofaService)
  *              passkeyOptions()  — Erstellt userless PublicKeyCredentialRequestOptions
  *                                  (discoverable credential flow), speichert Challenge
@@ -33,7 +34,8 @@
  *                                  Reads: —
  *              passkeyLogin()    — Verifiziert Passkey-Assertion; sucht Passkey per
  *                                  credential_id; aktualisiert sign_count + last_used_at;
- *                                  baut Session auf; gibt JSON mit redirect zurück.
+ *                                  baut Session auf; setzt _prompt_passkey = false;
+ *                                  gibt JSON mit redirect zurück.
  *                                  Reads:  userdb.passkey.credential_id, public_key,
  *                                          user_type, user_id, sign_count
  *                                          userdb.mand_user.mand_id
@@ -178,6 +180,11 @@ class MandantLoginController extends UserDbController
         $request->session()->put('_mand_id',   $sessionData['mand_id']);
         $request->session()->forget('pending_mand_id');
 
+        $hasPasskey = Passkey::where('user_type', 'mand')
+            ->where('user_id', $mandId)
+            ->exists();
+        $request->session()->put('_prompt_passkey', !$hasPasskey);
+
         DB::connection('sessiondb')
             ->table('session')
             ->where('expires_at', '<', now())
@@ -304,6 +311,7 @@ class MandantLoginController extends UserDbController
             $request->session()->regenerate();
             $request->session()->put('_user_type', $sessionData['user_type']);
             $request->session()->put('_mand_id',   $sessionData['mand_id']);
+            $request->session()->put('_prompt_passkey', false);
 
             $this->passkeySessionStorage->clear($request);
 

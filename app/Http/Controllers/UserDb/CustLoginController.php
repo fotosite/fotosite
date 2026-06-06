@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustLoginController.php
- * VERSION:     1.5.0
+ * VERSION:     1.6.0
  * AUTOR:       Martin Wagner
  * DATUM:       2026-06-04
  *
@@ -13,7 +13,8 @@
  *              handleLogin()     — Validiert cust_email + password; sucht CustUser;
  *                                  ermittelt bevorzugten Mandanten via CustPcode;
  *                                  prüft 2FA-Pflicht via mand_cust_2fa; baut Session
- *                                  direkt oder leitet zu customer.login.2fa.
+ *                                  direkt (setzt _prompt_passkey) oder leitet zu
+ *                                  customer.login.2fa.
  *                                  Reads: userdb.cust_user.cust_id, cust_email,
  *                                         cust_pw_hash, cust_firstname
  *                                         userdb.cust_pcode.pcode_id, cust_id, mand_id,
@@ -29,8 +30,8 @@
  *                                  Reads: —
  *              verifyTwoFactor() — Validiert tfa_code (digits:6); liest pending_*
  *                                  aus Session; delegiert an TwofaService::verifyCode();
- *                                  bei Erfolg: Session aufbauen, pending_* vergessen,
- *                                  Redirect zu customer.dashboard.
+ *                                  bei Erfolg: Session aufbauen, _prompt_passkey setzen,
+ *                                  pending_* vergessen, Redirect zu customer.dashboard.
  *                                  Reads: sessiondb.twofa_code.* (via TwofaService)
  *              passkeyOptions()  — Erstellt userless PublicKeyCredentialRequestOptions
  *                                  (discoverable credential flow), speichert Challenge
@@ -39,7 +40,8 @@
  *              passkeyLogin()    — Verifiziert Passkey-Assertion; sucht Passkey per
  *                                  credential_id; lädt bevorzugten Mandanten via
  *                                  CustPcode; aktualisiert sign_count + last_used_at;
- *                                  baut Session auf; gibt JSON mit redirect zurück.
+ *                                  baut Session auf; setzt _prompt_passkey = false;
+ *                                  gibt JSON mit redirect zurück.
  *                                  Reads:  userdb.passkey.credential_id, public_key,
  *                                          user_type, user_id, sign_count
  *                                          userdb.cust_pcode.mand_id, cust_passcode,
@@ -191,6 +193,11 @@ class CustLoginController extends UserDbController
         $request->session()->put('_sec_level',     $pcode->cust_passcode);
         $request->session()->put('_last_activity', time());
 
+        $hasPasskey = Passkey::where('user_type', 'cust')
+            ->where('user_id', $cust->cust_id)
+            ->exists();
+        $request->session()->put('_prompt_passkey', !$hasPasskey);
+
         return redirect()->route('customer.dashboard');
     }
 
@@ -278,6 +285,12 @@ class CustLoginController extends UserDbController
         $request->session()->put('_mand_id',       $mandId);
         $request->session()->put('_sec_level',     $secLevel);
         $request->session()->put('_last_activity', time());
+
+        $hasPasskey = Passkey::where('user_type', 'cust')
+            ->where('user_id', $custId)
+            ->exists();
+        $request->session()->put('_prompt_passkey', !$hasPasskey);
+
         $request->session()->forget(['pending_cust_id', 'pending_mand_id', 'pending_sec_level']);
 
         return redirect()->route('customer.dashboard');
@@ -400,6 +413,7 @@ class CustLoginController extends UserDbController
             $request->session()->put('_mand_id',       $pcode?->mand_id);
             $request->session()->put('_sec_level',     $pcode?->cust_passcode);
             $request->session()->put('_last_activity', time());
+            $request->session()->put('_prompt_passkey', false);
 
             $this->passkeySessionStorage->clear($request);
 
