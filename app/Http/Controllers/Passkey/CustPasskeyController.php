@@ -1,16 +1,19 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/Passkey/CustPasskeyController.php
- * VERSION:     1.2.0
+ * VERSION:     1.3.0
  * AUTOR:       Martin Wagner
  * DATUM:       2026-06-07
  *
  * ZWECK:       Passkey-Registrierung für Kunden — Liste, Options, Register,
  *              Umbenennen, Löschen, Passkey-Prompt dauerhaft abweisen.
  *
- * FUNCTIONS:   index()               — Passkey-Liste für eingeloggten Kunden
+ * FUNCTIONS:   index()               — Passkey-Liste für eingeloggten Kunden;
+ *                                      ermittelt $passkeyOs für plattformspezifischen
+ *                                      Hinweistext in der View
  *                                      Reads: userdb.passkey.pk_id, device_name,
  *                                             created_at, last_used_at
+ *                                      Reads: session._passkey_os
  *              registrationOptions() — Erstellt PublicKeyCredentialCreationOptions,
  *                                      speichert Challenge in Session, gibt JSON zurück
  *                                      Reads: userdb.cust_user.cust_email,
@@ -45,6 +48,11 @@
  *              public_key, sign_count, device_name, created_at, last_used_at
  *              userdb.cust_user.cust_email, cust_firstname, cust_lastname
  *              userdb.passkey_dismissed.user_type, user_id, os, ua_hash, created_at
+ *
+ * SESSION ACCESS: _cust_id, _passkey_os, _passkey_uahash, _user_type (read)
+ *                 _prompt_passkey (read + reset, in dismiss())
+ *
+ * VIEW DATA:   customer.passkey.index — passkeys, $passkeyOs
  */
 
 namespace App\Http\Controllers\Passkey;
@@ -97,7 +105,12 @@ class CustPasskeyController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        return view('customer.passkey.index', ['passkeys' => $passkeys]);
+        $passkeyOs = session('_passkey_os', 'unknown');
+
+        return view('customer.passkey.index', [
+            'passkeys'  => $passkeys,
+            'passkeyOs' => $passkeyOs,
+        ]);
     }
 
     public function registrationOptions(Request $request): JsonResponse

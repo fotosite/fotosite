@@ -1,6 +1,7 @@
 {{--
     FILE:    resources/views/customer/passkey/index.blade.php
-    VERSION: 1.1.0
+    VERSION: 1.2.0
+    DATE:    2026-06-07
 
     DESCRIPTION:
       Passkey-Verwaltung für Kunden — Liste aller registrierten Passkeys,
@@ -8,7 +9,9 @@
       Standalone (kein Layout-Erbe), gleiches Strukturmuster wie customer/dashboard.
 
     DATA FROM CONTROLLER:
-      $passkeys — Collection<App\Models\UserDb\Passkey>
+      $passkeys  — Collection<App\Models\UserDb\Passkey>
+      $passkeyOs — string, erkanntes OS ('win'|'andr'|'ios'|'unknown')
+                   steuert plattformspezifischen Hinweistext
 
     ROUTES USED:
       GET  /customer/passkeys                  — diese Seite (route('customer.passkeys'))
@@ -111,6 +114,34 @@
                 Neuen Passkey registrieren
             </button>
         </div>
+
+        {{-- Plattformspezifischer Hinweis --}}
+        @if($passkeyOs === 'win')
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+            <p class="text-xs text-blue-700">
+                <strong>Windows Hello:</strong> Der Passkey wird lokal gespeichert
+                — nur auf diesem Gerät verfügbar. Pro Windows-Konto ein
+                Fotosite-Account. Bitte melden Sie sich beim Login mit demselben
+                Windows-Konto an.
+            </p>
+        </div>
+        @elseif($passkeyOs === 'ios')
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+            <p class="text-xs text-blue-700">
+                <strong>iPhone / iPad:</strong> Der Passkey wird in Ihrer iCloud
+                Keychain gespeichert und steht auf allen Ihren Apple-Geräten
+                zur Verfügung.
+            </p>
+        </div>
+        @elseif($passkeyOs === 'andr')
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+            <p class="text-xs text-blue-700">
+                <strong>Android:</strong> Der Passkey wird im Google
+                Passwort-Manager gespeichert und steht auf allen Android-Geräten
+                mit demselben Google-Konto zur Verfügung.
+            </p>
+        </div>
+        @endif
 
         {{-- Hinweis --}}
         <div class="text-sm text-gray-500 mb-4 bg-gray-50 rounded-lg p-3 space-y-2">
