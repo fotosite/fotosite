@@ -1,3 +1,3 @@
 git add .
-git commit -m "feat: OS-Erkennung + Passkey-Prompt-Logik in Login-Controller (mand + cust)"
+git commit -m "feat: passkey_dismissed-Tabelle + Model + Login-Controller angepasst (mand + cust)"
 git push

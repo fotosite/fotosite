@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustLoginController.php
- * VERSION:     1.7.0
+ * VERSION:     1.8.0
  * AUTOR:       Martin Wagner
  * DATUM:       2026-06-07
  *
@@ -13,17 +13,18 @@
  *              handleLogin()     — Validiert cust_email + password; sucht CustUser;
  *                                  ermittelt bevorzugten Mandanten via CustPcode;
  *                                  prüft 2FA-Pflicht via mand_cust_2fa; baut Session
- *                                  direkt (OS via detectOsPlatform() erkennen,
- *                                  _prompt_passkey/_passkey_os anhand vorhandenem
- *                                  Passkey und never_ask_passkey_* setzen) oder
- *                                  leitet zu customer.login.2fa.
+ *                                  direkt (OS via detectOsPlatform() erkennen, ua_hash
+ *                                  berechnen, _prompt_passkey/_passkey_os/
+ *                                  _passkey_uahash anhand vorhandenem Passkey und
+ *                                  passkey_dismissed-Eintrag setzen) oder leitet zu
+ *                                  customer.login.2fa.
  *                                  Reads: userdb.cust_user.cust_id, cust_email,
- *                                         cust_pw_hash, cust_firstname,
- *                                         never_ask_passkey_win, never_ask_passkey_andr,
- *                                         never_ask_passkey_ios
+ *                                         cust_pw_hash, cust_firstname
  *                                         userdb.cust_pcode.pcode_id, cust_id, mand_id,
  *                                         cust_passcode, pcode_prefstat
  *                                         userdb.mand_user.mand_id, mand_cust_2fa
+ *                                         userdb.passkey_dismissed.user_type, user_id,
+ *                                         os, ua_hash
  *              handleAnonLogin() — Validiert Passwort gegen alle aktiven pw_lists;
  *                                  ermittelt Mandant + Sicherheitsstufe; baut anonyme
  *                                  Session ohne cust_id.
@@ -35,13 +36,14 @@
  *              verifyTwoFactor() — Validiert tfa_code (digits:6); liest pending_*
  *                                  aus Session; delegiert an TwofaService::verifyCode();
  *                                  bei Erfolg: Session aufbauen, OS via
- *                                  detectOsPlatform() erkennen, Passkey-Prompt
- *                                  (_prompt_passkey, _passkey_os) anhand vorhandenem
- *                                  Passkey und never_ask_passkey_* setzen,
- *                                  pending_* vergessen, Redirect zu customer.dashboard.
+ *                                  detectOsPlatform() erkennen, ua_hash berechnen,
+ *                                  Passkey-Prompt (_prompt_passkey, _passkey_os,
+ *                                  _passkey_uahash) anhand vorhandenem Passkey und
+ *                                  passkey_dismissed-Eintrag setzen, pending_*
+ *                                  vergessen, Redirect zu customer.dashboard.
  *                                  Reads: sessiondb.twofa_code.* (via TwofaService)
- *                                         userdb.cust_user.never_ask_passkey_win,
- *                                         never_ask_passkey_andr, never_ask_passkey_ios
+ *                                         userdb.passkey_dismissed.user_type, user_id,
+ *                                         os, ua_hash
  *              passkeyOptions()  — Erstellt userless PublicKeyCredentialRequestOptions
  *                                  (discoverable credential flow), speichert Challenge
  *                                  in Session, gibt JSON zurück.
@@ -65,6 +67,7 @@
  *              App\Models\UserDb\CustPcode::where()->orderByDesc()->first()
  *              App\Models\UserDb\MandUser::find()
  *              App\Models\UserDb\Passkey::where()->first()
+ *              App\Models\UserDb\PasskeyDismissed::where()->exists()
  *              App\Models\SessionDb\PwList::where()->get()
  *              App\Mail\TwoFactorCodeMail
  *              App\Services\SessionDb\TwofaService::generateCode()
@@ -79,12 +82,12 @@
  *              Illuminate\Support\Facades\Hash::check()
  *              Illuminate\Support\Facades\Mail::to()->send()
  *
- * DB ACCESS:   userdb.cust_user.cust_id, cust_email, cust_pw_hash, cust_firstname,
- *              never_ask_passkey_win, never_ask_passkey_andr, never_ask_passkey_ios
+ * DB ACCESS:   userdb.cust_user.cust_id, cust_email, cust_pw_hash, cust_firstname
  *              userdb.cust_pcode.pcode_id, cust_id, mand_id, cust_passcode, pcode_prefstat
  *              userdb.mand_user.mand_id, mand_cust_2fa
  *              userdb.passkey.credential_id, public_key, user_type, user_id,
  *              sign_count, last_used_at
+ *              userdb.passkey_dismissed.user_type, user_id, os, ua_hash
  *              sessiondb.pw_list.mand_id, pw1, pw2, pw3, pw4, pw5, pw6,
  *              valid_from, valid_until
  *              sessiondb.twofa_code.* (via TwofaService)
@@ -212,21 +215,21 @@ class CustLoginController extends UserDbController
             ->where('user_id', $cust->cust_id)
             ->exists();
 
-        // Spaltenname für "nie wieder fragen" ermitteln
-        $neverAskCol = match($os) {
-            'win'   => 'never_ask_passkey_win',
-            'andr'  => 'never_ask_passkey_andr',
-            'ios'   => 'never_ask_passkey_ios',
-            default => null,
-        };
+        // ua_hash berechnen (analog SessionHijackProtection)
+        $uaHash = hash('sha256', $request->userAgent() ?? '');
 
-        // "Nie wieder fragen" für dieses OS gesetzt?
-        $neverAsk = $neverAskCol ? (bool) $cust->{$neverAskCol} : true;
+        // "Nie wieder fragen" für dieses Gerät + OS gesetzt?
+        $neverAsk = \App\Models\UserDb\PasskeyDismissed::where('user_type', 'cust')
+            ->where('user_id', $cust->cust_id)
+            ->where('os', $os)
+            ->where('ua_hash', $uaHash)
+            ->exists();
 
-        // Prompt setzen: nur wenn kein Passkey, nicht dismissed, OS bekannt
+        // Prompt setzen
         session([
             '_prompt_passkey' => !$hasPasskey && !$neverAsk && $os !== 'unknown',
             '_passkey_os'     => $os,
+            '_passkey_uahash' => $uaHash,
         ]);
 
         return redirect()->route('customer.dashboard');
@@ -317,8 +320,6 @@ class CustLoginController extends UserDbController
         $request->session()->put('_sec_level',     $secLevel);
         $request->session()->put('_last_activity', time());
 
-        $custUser = CustUser::find((int) $custId);
-
         // OS erkennen
         $os = detectOsPlatform($request->userAgent());
 
@@ -327,21 +328,21 @@ class CustLoginController extends UserDbController
             ->where('user_id', $custId)
             ->exists();
 
-        // Spaltenname für "nie wieder fragen" ermitteln
-        $neverAskCol = match($os) {
-            'win'   => 'never_ask_passkey_win',
-            'andr'  => 'never_ask_passkey_andr',
-            'ios'   => 'never_ask_passkey_ios',
-            default => null,
-        };
+        // ua_hash berechnen (analog SessionHijackProtection)
+        $uaHash = hash('sha256', $request->userAgent() ?? '');
 
-        // "Nie wieder fragen" für dieses OS gesetzt?
-        $neverAsk = $neverAskCol ? (bool) $custUser->{$neverAskCol} : true;
+        // "Nie wieder fragen" für dieses Gerät + OS gesetzt?
+        $neverAsk = \App\Models\UserDb\PasskeyDismissed::where('user_type', 'cust')
+            ->where('user_id', $custId)
+            ->where('os', $os)
+            ->where('ua_hash', $uaHash)
+            ->exists();
 
-        // Prompt setzen: nur wenn kein Passkey, nicht dismissed, OS bekannt
+        // Prompt setzen
         session([
             '_prompt_passkey' => !$hasPasskey && !$neverAsk && $os !== 'unknown',
             '_passkey_os'     => $os,
+            '_passkey_uahash' => $uaHash,
         ]);
 
         $request->session()->forget(['pending_cust_id', 'pending_mand_id', 'pending_sec_level']);

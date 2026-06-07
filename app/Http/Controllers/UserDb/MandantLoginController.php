@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/MandantLoginController.php
- * VERSION:     1.10.0
+ * VERSION:     1.11.0
  * AUTOR:       Martin Wagner
  * DATUM:       2026-06-07
  *
@@ -25,13 +25,14 @@
  *                                  pending_mand_id aus Session; delegiert Prüfung
  *                                  an TwofaService::verify(); bei Erfolg: Session
  *                                  regenerieren, _user_type und _mand_id schreiben,
- *                                  OS via detectOsPlatform() erkennen, Passkey-Prompt
- *                                  (_prompt_passkey, _passkey_os) anhand vorhandenem
- *                                  Passkey und never_ask_passkey_* setzen,
+ *                                  OS via detectOsPlatform() erkennen, ua_hash
+ *                                  berechnen, Passkey-Prompt (_prompt_passkey,
+ *                                  _passkey_os, _passkey_uahash) anhand vorhandenem
+ *                                  Passkey und passkey_dismissed-Eintrag setzen,
  *                                  pending_mand_id löschen, Redirect zu mandant.dashboard.
  *                                  Reads: sessiondb.twofa_code.* (via TwofaService)
- *                                         userdb.mand_user.never_ask_passkey_win,
- *                                         never_ask_passkey_andr, never_ask_passkey_ios
+ *                                         userdb.passkey_dismissed.user_type, user_id,
+ *                                         os, ua_hash
  *              passkeyOptions()  — Erstellt userless PublicKeyCredentialRequestOptions
  *                                  (discoverable credential flow), speichert Challenge
  *                                  in Session, gibt JSON zurück.
@@ -52,6 +53,7 @@
  *              App\Models\UserDb\MandUser::find()
  *              detectOsPlatform() (app/helpers.php)
  *              App\Models\UserDb\Passkey::where()->first()
+ *              App\Models\UserDb\PasskeyDismissed::where()->exists()
  *              App\Mail\TwoFactorCodeMail
  *              App\Services\SessionDb\TwofaService::generate()
  *              App\Services\SessionDb\TwofaService::verify()
@@ -66,10 +68,10 @@
  *              Illuminate\Support\Facades\Mail::to()->send()
  *              Illuminate\Support\Facades\DB::connection('sessiondb')->table()->delete()
  *
- * DB ACCESS:   userdb.mand_user.mand_id, mand_email, mand_pw_hash, mand_firstname,
- *              never_ask_passkey_win, never_ask_passkey_andr, never_ask_passkey_ios
+ * DB ACCESS:   userdb.mand_user.mand_id, mand_email, mand_pw_hash, mand_firstname
  *              userdb.passkey.credential_id, public_key, user_type, user_id,
  *              sign_count, last_used_at
+ *              userdb.passkey_dismissed.user_type, user_id, os, ua_hash
  *              sessiondb.twofa_code.* (via TwofaService)
  *              sessiondb.session.expires_at (DELETE bei Login)
  */
@@ -186,8 +188,6 @@ class MandantLoginController extends UserDbController
         $request->session()->put('_mand_id',   $sessionData['mand_id']);
         $request->session()->forget('pending_mand_id');
 
-        $mandUser = MandUser::find((int) $mandId);
-
         // OS erkennen
         $os = detectOsPlatform($request->userAgent());
 
@@ -196,21 +196,21 @@ class MandantLoginController extends UserDbController
             ->where('user_id', $mandId)
             ->exists();
 
-        // Spaltenname für "nie wieder fragen" ermitteln
-        $neverAskCol = match($os) {
-            'win'   => 'never_ask_passkey_win',
-            'andr'  => 'never_ask_passkey_andr',
-            'ios'   => 'never_ask_passkey_ios',
-            default => null,
-        };
+        // ua_hash berechnen (analog SessionHijackProtection)
+        $uaHash = hash('sha256', $request->userAgent() ?? '');
 
-        // "Nie wieder fragen" für dieses OS gesetzt?
-        $neverAsk = $neverAskCol ? (bool) $mandUser->{$neverAskCol} : true;
+        // "Nie wieder fragen" für dieses Gerät + OS gesetzt?
+        $neverAsk = \App\Models\UserDb\PasskeyDismissed::where('user_type', 'mand')
+            ->where('user_id', $mandId)
+            ->where('os', $os)
+            ->where('ua_hash', $uaHash)
+            ->exists();
 
-        // Prompt setzen: nur wenn kein Passkey, nicht dismissed, OS bekannt
+        // Prompt setzen
         session([
             '_prompt_passkey' => !$hasPasskey && !$neverAsk && $os !== 'unknown',
             '_passkey_os'     => $os,
+            '_passkey_uahash' => $uaHash,
         ]);
 
         DB::connection('sessiondb')
