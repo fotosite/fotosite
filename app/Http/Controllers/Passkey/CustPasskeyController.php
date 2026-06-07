@@ -1,12 +1,12 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/Passkey/CustPasskeyController.php
- * VERSION:     1.1.0
+ * VERSION:     1.2.0
  * AUTOR:       Martin Wagner
- * DATUM:       2026-06-04
+ * DATUM:       2026-06-07
  *
  * ZWECK:       Passkey-Registrierung für Kunden — Liste, Options, Register,
- *              Umbenennen, Löschen.
+ *              Umbenennen, Löschen, Passkey-Prompt dauerhaft abweisen.
  *
  * FUNCTIONS:   index()               — Passkey-Liste für eingeloggten Kunden
  *                                      Reads: userdb.passkey.pk_id, device_name,
@@ -21,11 +21,19 @@
  *                                      Writes: userdb.passkey.device_name
  *              destroy()             — Löscht einen Passkey
  *                                      Writes: userdb.passkey (DELETE)
+ *              dismiss()             — "Nie wieder fragen" für dieses Gerät + OS;
+ *                                      legt passkey_dismissed-Eintrag an, setzt
+ *                                      _prompt_passkey auf false
+ *                                      Reads:  session._passkey_os, _passkey_uahash,
+ *                                              _user_type, _cust_id
+ *                                      Writes: userdb.passkey_dismissed.*,
+ *                                              session._prompt_passkey
  *
  * CALLS:       App\Models\UserDb\CustUser::find()
  *              App\Models\UserDb\Passkey::where()->get()
  *              App\Models\UserDb\Passkey::create()
  *              App\Models\UserDb\Passkey::where()->firstOrFail()
+ *              App\Models\UserDb\PasskeyDismissed::firstOrCreate()
  *              App\Services\Passkey\PasskeySessionStorage::store()
  *              App\Services\Passkey\PasskeySessionStorage::get()
  *              App\Services\Passkey\PasskeySessionStorage::clear()
@@ -36,6 +44,7 @@
  * DB ACCESS:   userdb.passkey.pk_id, user_type, user_id, credential_id,
  *              public_key, sign_count, device_name, created_at, last_used_at
  *              userdb.cust_user.cust_email, cust_firstname, cust_lastname
+ *              userdb.passkey_dismissed.user_type, user_id, os, ua_hash, created_at
  */
 
 namespace App\Http\Controllers\Passkey;
@@ -230,5 +239,33 @@ class CustPasskeyController extends Controller
 
         return redirect()->route('customer.passkeys')
             ->with('status', 'Passkey wurde erfolgreich gelöscht.');
+    }
+
+    public function dismiss(Request $request): JsonResponse
+    {
+        $os     = session('_passkey_os', 'unknown');
+        $uaHash = session('_passkey_uahash', '');
+
+        if ($os === 'unknown' || $uaHash === '') {
+            return response()->json(['success' => false, 'message' => 'OS nicht erkannt']);
+        }
+
+        $userType = session('_user_type');
+        $userId   = $userType === 'mand'
+            ? session('_mand_id')
+            : session('_cust_id');
+
+        \App\Models\UserDb\PasskeyDismissed::firstOrCreate([
+            'user_type' => $userType,
+            'user_id'   => (int) $userId,
+            'os'        => $os,
+            'ua_hash'   => $uaHash,
+        ], [
+            'created_at' => now()->format('Y-m-d H:i:s'),
+        ]);
+
+        session(['_prompt_passkey' => false]);
+
+        return response()->json(['success' => true]);
     }
 }

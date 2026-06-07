@@ -79,4 +79,6 @@ Route::middleware(['web', 'role:mand'])->prefix('mandant')->name('mandant.')->gr
         ->name('passkeys.rename');
     Route::delete('/passkeys/{id}',          [MandPasskeyController::class, 'destroy'])
         ->name('passkeys.destroy');
+    Route::post('/passkeys/dismiss',         [MandPasskeyController::class, 'dismiss'])
+        ->name('passkeys.dismiss');
 });

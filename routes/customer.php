@@ -62,4 +62,6 @@ Route::middleware('web')->prefix('customer')->name('customer.')->group(function 
         ->name('passkeys.rename');
     Route::delete('/passkeys/{id}',          [CustPasskeyController::class, 'destroy'])
         ->name('passkeys.destroy');
+    Route::post('/passkeys/dismiss',         [CustPasskeyController::class, 'dismiss'])
+        ->name('passkeys.dismiss');
 });
