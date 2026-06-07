@@ -3,6 +3,7 @@
 use App\Http\Controllers\Passkey\MandPasskeyController;
 use App\Http\Controllers\SessionDb\MandantPwListController;
 use App\Http\Controllers\UserDb\MandantCustController;
+use App\Http\Controllers\UserDb\MandantDashboardController;
 use App\Http\Controllers\UserDb\MandantLoginController;
 use App\Http\Controllers\UserDb\MandantSelfController;
 use Illuminate\Support\Facades\Route;
@@ -40,7 +41,7 @@ Route::middleware('web')->prefix('mandant')->name('mandant.')->group(function ()
 
 // ── Authenticated area ────────────────────────────────────────
 Route::middleware(['web', 'role:mand'])->prefix('mandant')->name('mandant.')->group(function () {
-    Route::get('/dashboard', fn() => view('mandant.dashboard'))
+    Route::get('/dashboard', [MandantDashboardController::class, 'index'])
         ->name('dashboard');
 
     Route::get('/konto',            [MandantSelfController::class, 'edit'])
