@@ -1,8 +1,8 @@
 {{--
     FILE:    resources/views/customer/dashboard.blade.php
-    VERSION: 1.1.0
+    VERSION: 1.2.0
     AUTHOR:  Martin Wagner
-    DATE:    2026-06-03
+    DATE:    2026-06-07
 
     DESCRIPTION:
       Kunden-Dashboard — Einstiegsseite für registrierte Mitglieder (cust)
@@ -10,14 +10,18 @@
       Standalone (kein Layout-Erbe). Accent-Farbe: indigo.
 
     DATA FROM CONTROLLER:
-      $userType — 'cust' oder 'anon'
-      $mand     — MandUser (aktive/einzige Galerie)
-      $secLevel — int (Sicherheitsstufe dieser Session)
-      $cust     — CustUser|null (nur für cust)
-      $pcodes   — Collection<CustPcode>|null (nur für cust, mit mandUser)
+      $userType          — 'cust' oder 'anon'
+      $mand              — MandUser (aktive/einzige Galerie)
+      $secLevel          — int (Sicherheitsstufe dieser Session)
+      $cust              — CustUser|null (nur für cust)
+      $pcodes            — Collection<CustPcode>|null (nur für cust, mit mandUser)
+      $showPasskeyPrompt — bool, einmaliger Passkey-Prompt-Flag (CustDashboardController)
+      $passkeyOs         — string, erkanntes OS ('win'|'andr'|'ios'|'unknown')
 
     ROUTES USED:
-      POST customer.logout — Abmelden
+      POST customer.logout            — Abmelden
+      GET  customer.passkeys          — Passkey-Verwaltung
+      POST customer.passkeys.dismiss  — "Nie wieder fragen"
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -83,54 +87,55 @@
             </div>
         @endif
 
-        {{-- Passkey-Aufforderung Banner (nur cust) --}}
-        @if(session('_prompt_passkey') &&
-            isset($userType) && $userType === 'cust')
-        <div x-data="{ show: true }"
-             x-show="show"
-             x-cloak
-             id="passkey-banner"
-             class="bg-indigo-50 border border-indigo-200
-                    rounded-lg p-4 mb-4 flex items-center
-                    justify-between">
-            <div>
+        {{-- Passkey-Aufforderung Banner --}}
+        @if($showPasskeyPrompt)
+        <div x-data="{ open: true }" x-show="open" x-cloak
+             class="bg-indigo-50 border border-indigo-200 rounded-lg
+                    p-4 mb-4 flex items-start gap-4">
+            <div class="flex-1">
                 <p class="text-sm font-medium text-indigo-800">
-                    Passkey einrichten
+                    Passkey einrichten — schneller und sicherer anmelden
                 </p>
-                <p class="text-sm text-indigo-600">
-                    Melden Sie sich künftig schnell per
-                    Fingerabdruck an.
+                <p class="text-xs text-indigo-600 mt-1">
+                    @if($passkeyOs === 'win')
+                        Der Passkey wird lokal gespeichert und ist an dieses
+                        Windows-Konto gebunden.
+                    @elseif($passkeyOs === 'ios')
+                        Der Passkey wird in Ihrer iCloud Keychain gespeichert —
+                        auf allen Apple-Geräten verfügbar.
+                    @elseif($passkeyOs === 'andr')
+                        Der Passkey wird im Google Passwort-Manager gespeichert —
+                        auf allen Android-Geräten mit demselben Google-Konto
+                        verfügbar.
+                    @endif
                 </p>
             </div>
-            <div class="flex gap-3 items-center">
+            <div class="flex gap-2 shrink-0">
                 <a href="{{ route('customer.passkeys') }}"
-                   id="cust-passkey-btn"
-                   class="hidden px-3 py-1.5 bg-indigo-600
-                          text-white text-sm rounded-lg
-                          hover:bg-indigo-700">
+                   class="px-3 py-1.5 bg-indigo-600 text-white text-xs
+                          rounded-lg hover:bg-indigo-700">
                     Einrichten
                 </a>
-                <button @click="show = false"
-                        class="text-sm text-indigo-400
-                               hover:text-indigo-600">
-                    ✕
+                <button @click="
+                    open = false;
+                    fetch('{{ route('customer.passkeys.dismiss') }}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Content-Type': 'application/json'
+                        }
+                    })"
+                    class="px-3 py-1.5 text-xs text-gray-500
+                           border border-gray-300 rounded-lg hover:bg-gray-50">
+                    Nie wieder
+                </button>
+                <button @click="open = false"
+                        class="px-3 py-1.5 text-xs text-gray-400
+                               hover:text-gray-600">
+                    Später
                 </button>
             </div>
         </div>
-        <script>
-        (async () => {
-            const supported = window.PublicKeyCredential &&
-                await PublicKeyCredential
-                    .isUserVerifyingPlatformAuthenticatorAvailable();
-            if (supported) {
-                document.getElementById('cust-passkey-btn')
-                    ?.classList.remove('hidden');
-            } else {
-                document.getElementById('passkey-banner')
-                    ?.remove();
-            }
-        })();
-        </script>
         @endif
 
         @if($userType === 'anon')

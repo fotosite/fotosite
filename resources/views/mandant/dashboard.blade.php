@@ -1,6 +1,7 @@
 {{--
     FILE:    resources/views/mandant/dashboard.blade.php
-    VERSION: 2.6.0
+    VERSION: 2.7.0
+    DATE:    2026-06-07
 
     DESCRIPTION:
       Mandanten-Dashboard — Einstiegsseite nach erfolgreichem Mand-Login + 2FA.
@@ -8,12 +9,15 @@
       Accent-Farbe: indigo (passend zum Login-Modal).
 
     DATA FROM CONTROLLER:
-      (keine — Route-Closure übergibt noch keine Variablen)
+      $showPasskeyPrompt — bool, einmaliger Passkey-Prompt-Flag (MandantDashboardController)
+      $passkeyOs         — string, erkanntes OS ('win'|'andr'|'ios'|'unknown')
 
     ROUTES USED:
-      POST /mandant/logout  — Mandant-Logout (route('mandant.logout'))
-      GET  /mandant/konto          — Konto-Verwaltung (route('mandant.konto'))
-      GET  /mandant/passwortliste — Passwortliste (route('mandant.pwlist'))
+      POST /mandant/logout          — Mandant-Logout (route('mandant.logout'))
+      GET  /mandant/konto           — Konto-Verwaltung (route('mandant.konto'))
+      GET  /mandant/passwortliste   — Passwortliste (route('mandant.pwlist'))
+      GET  /mandant/passkeys        — Passkey-Verwaltung (route('mandant.passkeys'))
+      POST /mandant/passkeys/dismiss — "Nie wieder fragen" (route('mandant.passkeys.dismiss'))
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -90,60 +94,61 @@
         @endif
 
         {{-- Passkey-Aufforderung nach Login --}}
-        @if(session('_prompt_passkey'))
-        <div x-data="{ show: true }"
-             x-show="show"
-             x-cloak
-             class="fixed inset-0 bg-black bg-opacity-50
-                    flex items-center justify-center z-50">
-            <div class="bg-white rounded-xl p-6 max-w-md
-                        shadow-xl">
-                <h2 class="text-lg font-semibold text-gray-900
-                           mb-2">
+        @if($showPasskeyPrompt)
+        <div x-data="{ open: true }" x-show="open" x-cloak
+             class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-xl p-6 max-w-sm w-full shadow-xl">
+                <h3 class="font-semibold text-gray-800 mb-2">
                     Passkey einrichten
-                </h2>
-                <p class="text-sm text-gray-600 mb-4">
-                    Mit einem Passkey können Sie sich schnell
-                    und sicher per Fingerabdruck oder Gesicht
-                    anmelden — ohne 2FA-Code per E-Mail.
+                </h3>
+                <p class="text-sm text-gray-600 mb-1">
+                    Mit einem Passkey entfällt der 2FA-Schritt beim nächsten Login —
+                    einfach per Fingerabdruck oder Gesichtserkennung anmelden.
                 </p>
-                <div id="passkey-prompt-area">
-                    <p class="text-sm text-gray-400 mb-4"
-                       id="passkey-checking">
-                        Prüfe Gerät...
-                    </p>
-                </div>
-                <div class="flex gap-3 justify-end">
-                    <button @click="show = false"
-                            class="text-sm text-gray-500
-                                   hover:text-gray-700">
+                @if($passkeyOs === 'win')
+                <p class="text-xs text-gray-400 mb-4">
+                    Der Passkey wird lokal gespeichert und ist an dieses
+                    Windows-Konto gebunden.
+                </p>
+                @elseif($passkeyOs === 'ios')
+                <p class="text-xs text-gray-400 mb-4">
+                    Der Passkey wird in Ihrer iCloud Keychain gespeichert und
+                    steht auf allen Ihren Apple-Geräten zur Verfügung.
+                </p>
+                @elseif($passkeyOs === 'andr')
+                <p class="text-xs text-gray-400 mb-4">
+                    Der Passkey wird im Google Passwort-Manager gespeichert und
+                    steht auf allen Android-Geräten mit demselben Google-Konto
+                    zur Verfügung.
+                </p>
+                @endif
+                <div class="flex flex-col gap-2">
+                    <a href="{{ route('mandant.passkeys') }}"
+                       class="w-full text-center px-4 py-2 bg-indigo-600
+                              text-white text-sm rounded-lg hover:bg-indigo-700">
+                        Passkey einrichten
+                    </a>
+                    <button @click="
+                        open = false;
+                        fetch('{{ route('mandant.passkeys.dismiss') }}', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Content-Type': 'application/json'
+                            }
+                        })"
+                        class="w-full px-4 py-2 text-sm text-gray-500
+                               border border-gray-300 rounded-lg hover:bg-gray-50">
+                        Nie wieder fragen
+                    </button>
+                    <button @click="open = false"
+                            class="w-full px-4 py-2 text-sm text-gray-400
+                                   hover:text-gray-600">
                         Später
                     </button>
-                    <a href="{{ route('mandant.passkeys') }}"
-                       id="passkey-register-btn"
-                       class="hidden px-4 py-2 bg-indigo-600
-                              text-white text-sm rounded-lg
-                              hover:bg-indigo-700">
-                        Jetzt einrichten
-                    </a>
                 </div>
             </div>
         </div>
-        <script>
-        (async () => {
-            const supported = window.PublicKeyCredential &&
-                await PublicKeyCredential
-                    .isUserVerifyingPlatformAuthenticatorAvailable();
-            const checking = document.getElementById('passkey-checking');
-            const btn = document.getElementById('passkey-register-btn');
-            if (supported) {
-                checking.textContent = 'Ihr Gerät unterstützt Passkeys.';
-                btn.classList.remove('hidden');
-            } else {
-                checking.textContent = 'Ihr Gerät unterstützt keine Passkeys.';
-            }
-        })();
-        </script>
         @endif
 
         {{-- Passwortliste: Status-Hinweise --}}
