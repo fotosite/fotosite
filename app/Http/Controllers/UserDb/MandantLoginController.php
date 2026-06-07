@@ -1,9 +1,9 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/MandantLoginController.php
- * VERSION:     1.9.0
+ * VERSION:     1.10.0
  * AUTOR:       Martin Wagner
- * DATUM:       2026-06-04
+ * DATUM:       2026-06-07
  *
  * ZWECK:       Mand-Login mit 2FA und Passkey — Formular anzeigen, Credentials prüfen,
  *              2FA-Code verifizieren, Passkey-Options liefern, Passkey-Assertion prüfen,
@@ -25,9 +25,13 @@
  *                                  pending_mand_id aus Session; delegiert Prüfung
  *                                  an TwofaService::verify(); bei Erfolg: Session
  *                                  regenerieren, _user_type und _mand_id schreiben,
- *                                  _prompt_passkey setzen, pending_mand_id löschen,
- *                                  Redirect zu mandant.dashboard.
+ *                                  OS via detectOsPlatform() erkennen, Passkey-Prompt
+ *                                  (_prompt_passkey, _passkey_os) anhand vorhandenem
+ *                                  Passkey und never_ask_passkey_* setzen,
+ *                                  pending_mand_id löschen, Redirect zu mandant.dashboard.
  *                                  Reads: sessiondb.twofa_code.* (via TwofaService)
+ *                                         userdb.mand_user.never_ask_passkey_win,
+ *                                         never_ask_passkey_andr, never_ask_passkey_ios
  *              passkeyOptions()  — Erstellt userless PublicKeyCredentialRequestOptions
  *                                  (discoverable credential flow), speichert Challenge
  *                                  in Session, gibt JSON zurück.
@@ -46,6 +50,7 @@
  *
  * CALLS:       App\Models\UserDb\MandUser::where()->first()
  *              App\Models\UserDb\MandUser::find()
+ *              detectOsPlatform() (app/helpers.php)
  *              App\Models\UserDb\Passkey::where()->first()
  *              App\Mail\TwoFactorCodeMail
  *              App\Services\SessionDb\TwofaService::generate()
@@ -61,7 +66,8 @@
  *              Illuminate\Support\Facades\Mail::to()->send()
  *              Illuminate\Support\Facades\DB::connection('sessiondb')->table()->delete()
  *
- * DB ACCESS:   userdb.mand_user.mand_id, mand_email, mand_pw_hash, mand_firstname
+ * DB ACCESS:   userdb.mand_user.mand_id, mand_email, mand_pw_hash, mand_firstname,
+ *              never_ask_passkey_win, never_ask_passkey_andr, never_ask_passkey_ios
  *              userdb.passkey.credential_id, public_key, user_type, user_id,
  *              sign_count, last_used_at
  *              sessiondb.twofa_code.* (via TwofaService)
@@ -180,10 +186,32 @@ class MandantLoginController extends UserDbController
         $request->session()->put('_mand_id',   $sessionData['mand_id']);
         $request->session()->forget('pending_mand_id');
 
+        $mandUser = MandUser::find((int) $mandId);
+
+        // OS erkennen
+        $os = detectOsPlatform($request->userAgent());
+
+        // Passkey für dieses OS und diesen User bereits vorhanden?
         $hasPasskey = Passkey::where('user_type', 'mand')
             ->where('user_id', $mandId)
             ->exists();
-        $request->session()->put('_prompt_passkey', !$hasPasskey);
+
+        // Spaltenname für "nie wieder fragen" ermitteln
+        $neverAskCol = match($os) {
+            'win'   => 'never_ask_passkey_win',
+            'andr'  => 'never_ask_passkey_andr',
+            'ios'   => 'never_ask_passkey_ios',
+            default => null,
+        };
+
+        // "Nie wieder fragen" für dieses OS gesetzt?
+        $neverAsk = $neverAskCol ? (bool) $mandUser->{$neverAskCol} : true;
+
+        // Prompt setzen: nur wenn kein Passkey, nicht dismissed, OS bekannt
+        session([
+            '_prompt_passkey' => !$hasPasskey && !$neverAsk && $os !== 'unknown',
+            '_passkey_os'     => $os,
+        ]);
 
         DB::connection('sessiondb')
             ->table('session')

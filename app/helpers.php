@@ -1,12 +1,13 @@
 <?php
 /**
  * FILE:        app/helpers.php
- * VERSION:     1.0.0
+ * VERSION:     1.1.0
  * AUTHOR:      Martin Wagner
- * DATE:        2026-05-30
+ * DATE:        2026-06-07
  * PURPOSE:     Globale Helper-Funktionen
  *
- * FUNCTIONS:   genitivName()   — Bildet den Genitiv eines Eigennamens (deutsch)
+ * FUNCTIONS:   genitivName()      — Bildet den Genitiv eines Eigennamens (deutsch)
+ *              detectOsPlatform() — Erkennt die Client-Plattform anhand des User-Agent-Strings
  *
  * CALLS:       (none)
  *
@@ -25,5 +26,20 @@ if (! function_exists('genitivName')) {
         }
 
         return $name . 's';
+    }
+}
+
+if (! function_exists('detectOsPlatform')) {
+    /**
+     * Erkennt die Client-Plattform anhand des User-Agent-Strings.
+     * Rückgabewerte: 'win', 'andr', 'ios', 'unknown'
+     */
+    function detectOsPlatform(string $userAgent): string
+    {
+        if (stripos($userAgent, 'android') !== false) return 'andr';
+        if (stripos($userAgent, 'iphone')  !== false) return 'ios';
+        if (stripos($userAgent, 'ipad')    !== false) return 'ios';
+        if (stripos($userAgent, 'windows') !== false) return 'win';
+        return 'unknown';
     }
 }

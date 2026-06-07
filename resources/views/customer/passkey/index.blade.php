@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/customer/passkey/index.blade.php
-    VERSION: 1.0.0
+    VERSION: 1.1.0
 
     DESCRIPTION:
       Passkey-Verwaltung für Kunden — Liste aller registrierten Passkeys,
@@ -30,7 +30,7 @@
 </head>
 
 <body class="min-h-screen bg-gray-50 text-gray-900 antialiased"
-      x-data>
+      x-data="{ showNameModal: false, deviceName: '' }">
 
     @php $cust = \App\Models\UserDb\CustUser::find(session('_cust_id')); @endphp
 
@@ -98,7 +98,7 @@
                     Registrierte Passkeys für passwortlosen Login.
                 </p>
             </div>
-            <button onclick="registerPasskey()"
+            <button @click="showNameModal = true"
                     class="shrink-0 inline-flex items-center gap-2 rounded-lg
                            bg-indigo-600 px-4 py-2 text-sm font-medium text-white
                            hover:bg-indigo-700 active:bg-indigo-800
@@ -140,6 +140,32 @@
                 {{ session('status') }}
             </div>
         @endif
+
+        {{-- Gerätename-Modal --}}
+        <div x-show="showNameModal" x-cloak
+             class="fixed inset-0 bg-black bg-opacity-50
+                    flex items-center justify-center z-50">
+            <div class="bg-white rounded-xl p-6 max-w-sm shadow-xl">
+                <h3 class="font-semibold mb-3">Gerätename vergeben</h3>
+                <p class="text-sm text-gray-500 mb-3">
+                    Geben Sie diesem Gerät einen Namen
+                    (z.B. "iPhone 15", "Windows Büro").
+                </p>
+                <input type="text" x-model="deviceName"
+                       placeholder="Mein Gerät"
+                       class="w-full border rounded-lg px-3 py-2 text-sm mb-4">
+                <div class="flex gap-3 justify-end">
+                    <button @click="showNameModal = false"
+                            class="text-sm text-gray-500">
+                        Abbrechen
+                    </button>
+                    <button @click="showNameModal = false; registerPasskey(deviceName)"
+                            class="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg">
+                        Weiter
+                    </button>
+                </div>
+            </div>
+        </div>
 
         {{-- Passkey-Tabelle --}}
         @if($passkeys->isEmpty())
@@ -291,7 +317,8 @@
             return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
         }
 
-        async function registerPasskey() {
+        async function registerPasskey(deviceName) {
+            const name = (deviceName || '').trim() || 'Mein Gerät';
             try {
                 // 1. Options holen
                 const optRes = await fetch('{{ route("customer.passkeys.options") }}');
@@ -314,14 +341,7 @@
                 // 2. Credential erstellen
                 const credential = await navigator.credentials.create({ publicKey: options });
 
-                // 3. Device Name abfragen
-                const deviceName = prompt(
-                    'Name für dieses Gerät:',
-                    navigator.platform || 'Mein Gerät'
-                );
-                if (deviceName === null) return;
-
-                // 4. An Server senden
+                // 3. An Server senden
                 const regRes = await fetch('{{ route("customer.passkeys.register") }}', {
                     method: 'POST',
                     headers: {
@@ -338,7 +358,7 @@
                                 attestationObject: bufferToBase64url(credential.response.attestationObject),
                             },
                         },
-                        device_name: deviceName,
+                        device_name: name,
                     }),
                 });
 
