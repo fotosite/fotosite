@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/cust/index.blade.php
-    VERSION: 3.2.1
+    VERSION: 3.2.2
     AUTHOR:  Martin Wagner
     DATE:    2026-06-08
 
@@ -74,6 +74,21 @@
          MAIN
     ══════════════════════════════════════════════════════ --}}
     <main class="mx-auto max-w-5xl px-6 pt-14 pb-24">
+
+        {{-- Zurück-Link --}}
+        <div class="mt-4 mb-6">
+            <a href="{{ route('mandant.dashboard') }}"
+               class="inline-flex items-center gap-1.5 text-xs text-indigo-500
+                      hover:text-indigo-700 transition-colors">
+                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg"
+                     fill="none" viewBox="0 0 24 24" stroke-width="2"
+                     stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M15.75 19.5 8.25 12l7.5-7.5"/>
+                </svg>
+                Dashboard
+            </a>
+        </div>
 
         {{-- Seitenüberschrift --}}
         <div class="mb-8 flex items-center justify-between">
@@ -221,15 +236,6 @@
                 </table>
             </div>
         @endif
-
-        {{-- Zurück --}}
-        <div class="mt-8">
-            <a href="{{ route('mandant.dashboard') }}"
-               class="text-xs text-gray-400 hover:text-indigo-600
-                      transition-colors duration-150 tracking-wide">
-                ← Zurück zum Dashboard
-            </a>
-        </div>
 
     </main>
 

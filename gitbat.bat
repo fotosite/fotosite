@@ -1,3 +1,3 @@
 git add .
-git commit -m "fix: UI-Texte — Passwortliste→Passcodeliste, Fotosite/Fotosite V8→Fotogalerie (22 Views)"
+git commit -m "fix: Zurück-Dashboard-Link in mandant/cust/index an korrekte Position verschoben"
 git push
