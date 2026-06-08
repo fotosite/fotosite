@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/customer/passkey/index.blade.php
-    VERSION: 1.2.1
+    VERSION: 1.2.3
     DATE:    2026-06-08
 
     DESCRIPTION:
@@ -401,6 +401,21 @@
                 }
             } catch (err) {
                 if (err.name === 'NotAllowedError') return;
+                if (
+                    err.name === 'InvalidStateError' ||
+                    err.name === 'UnknownError' ||
+                    (err.message && err.message.toLowerCase().includes('transient'))
+                ) {
+                    alert('Erzeugen eines Passkeys nicht möglich.\nBitte stellen Sie sicher, dass Windows Hello auf diesem Gerät eingerichtet ist.');
+                    fetch('{{ route("customer.passkeys.dismiss") }}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    return;
+                }
                 alert('Fehler: ' + err.message);
             }
         }

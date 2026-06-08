@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/system/users/index.blade.php
-    VERSION: 1.0.1
+    VERSION: 1.0.2
     DATE:    2026-06-08
 
     DESCRIPTION:
@@ -76,11 +76,17 @@
     <main class="mx-auto max-w-4xl px-6 pt-14 pb-24">
 
         {{-- Back link --}}
-        <div class="mb-6">
+        <div class="mt-4 mb-6">
             <a href="{{ route('system.dashboard') }}"
-               class="text-xs text-gray-400 hover:text-gray-600
-                      transition-colors duration-150 tracking-wide">
-                ← Dashboard
+               class="inline-flex items-center gap-1.5 text-xs text-indigo-500
+                      hover:text-indigo-700 transition-colors">
+                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg"
+                     fill="none" viewBox="0 0 24 24" stroke-width="2"
+                     stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M15.75 19.5 8.25 12l7.5-7.5"/>
+                </svg>
+                Dashboard
             </a>
         </div>
 

@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/passkey/index.blade.php
-    VERSION: 1.2.1
+    VERSION: 1.2.3
     DATE:    2026-06-08
 
     DESCRIPTION:
@@ -405,6 +405,21 @@
             } catch (e) {
                 console.error('WebAuthn Fehler:', e.name, e.message, e);
                 if (e.name === 'NotAllowedError') return;
+                if (
+                    e.name === 'InvalidStateError' ||
+                    e.name === 'UnknownError' ||
+                    (e.message && e.message.toLowerCase().includes('transient'))
+                ) {
+                    alert('Erzeugen eines Passkeys nicht möglich.\nBitte stellen Sie sicher, dass Windows Hello auf diesem Gerät eingerichtet ist.');
+                    fetch('{{ route("mandant.passkeys.dismiss") }}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    return;
+                }
                 alert('Fehler: ' + e.name + ': ' + e.message);
             }
         }

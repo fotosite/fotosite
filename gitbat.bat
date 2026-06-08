@@ -1,3 +1,3 @@
 git add .
-git commit -m "fix: Zurück-Dashboard-Link in mandant/cust/index an korrekte Position verschoben"
+git commit -m "fix: Auto-dismiss nach fehlgeschlagenem Passkey-Erzeugen (mand + cust)"
 git push
