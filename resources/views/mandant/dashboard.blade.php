@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/mandant/dashboard.blade.php
-    VERSION: 2.7.0
-    DATE:    2026-06-07
+    VERSION: 2.7.1
+    DATE:    2026-06-08
 
     DESCRIPTION:
       Mandanten-Dashboard — Einstiegsseite nach erfolgreichem Mand-Login + 2FA.
@@ -25,7 +25,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>Mandanten-Dashboard · Fotosite V8</title>
+    <title>Mandanten-Dashboard · Fotogalerie</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
@@ -45,7 +45,7 @@
             <div class="flex items-center gap-3">
                 <span class="text-[11px] font-mono tracking-widest
                              uppercase text-gray-400">
-                    Fotosite&thinsp;V8
+                    Fotogalerie
                 </span>
                 <span class="text-zinc-800 select-none">|</span>
                 <span class="text-sm font-semibold tracking-widest
@@ -164,17 +164,17 @@
         @if($pwExpired)
             <div class="p-4 rounded-lg mb-4 text-sm
                         bg-amber-50 border border-amber-300 text-amber-800">
-                ⚠️ Der Gültigkeitszeitraum für Ihre Passwortliste ist abgelaufen.
+                ⚠️ Der Gültigkeitszeitraum für Ihre Passcodeliste ist abgelaufen.
                 Bitte aktualisieren Sie die
                 <a href="{{ route('mandant.pwlist') }}"
-                   class="font-semibold underline hover:no-underline">Passwortliste</a>.
+                   class="font-semibold underline hover:no-underline">Passcodeliste</a>.
             </div>
         @endif
 
         @if($pwMissing)
             <div class="p-4 rounded-lg mb-4 text-sm
                         bg-blue-50 border border-blue-300 text-blue-800">
-                ℹ️ Sie haben noch keine Passwortliste angelegt.
+                ℹ️ Sie haben noch keine Passcodeliste angelegt.
                 <a href="{{ route('mandant.pwlist') }}"
                    class="font-semibold underline hover:no-underline">Jetzt anlegen</a>.
             </div>
@@ -375,7 +375,7 @@
 
                 <div>
                     <h2 class="text-sm font-semibold text-gray-800 tracking-wide mb-1">
-                        Passwortliste
+                        Passcodeliste
                     </h2>
                     <p class="text-xs text-gray-500 leading-relaxed">
                         Passwörter und Gültigkeit<br>verwalten
@@ -396,7 +396,7 @@
                     flex items-center justify-between">
             <span class="text-[10px] font-mono tracking-widest
                          uppercase text-gray-400">
-                Fotosite V8 · Mandanten-Bereich
+                Fotogalerie · Mandanten-Bereich
             </span>
             <span class="text-[10px] text-gray-400">
                 Session aktiv

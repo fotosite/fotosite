@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fotosite V8</title>
+    <title>Fotogalerie</title>
     <style>
         body {
             font-family: Arial, Helvetica, sans-serif;
@@ -68,21 +68,21 @@
 <body>
     <div class="wrapper">
         <div class="header">
-            <h1>Fotosite V8</h1>
+            <h1>Fotogalerie</h1>
         </div>
 
         <div class="body">
             @if($type === 'register')
                 @if($userType === 'mand')
-                    <p>Sie wurden eingeladen, einen Mandanten-Account für Fotosite V8
+                    <p>Sie wurden eingeladen, einen Mandanten-Account für Fotogalerie
                        anzulegen. Klicken Sie auf den folgenden Link — er ist 24 Stunden
                        gültig:</p>
                 @elseif($userType === 'cust')
-                    <p>Sie wurden eingeladen, einen Mitglieder-Account für Fotosite V8
+                    <p>Sie wurden eingeladen, einen Mitglieder-Account für Fotogalerie
                        anzulegen. Klicken Sie auf den folgenden Link — er ist 24 Stunden
                        gültig:</p>
                 @else
-                    <p>Sie wurden eingeladen, einen System-Account für Fotosite V8
+                    <p>Sie wurden eingeladen, einen System-Account für Fotogalerie
                        anzulegen. Klicken Sie auf den folgenden Link — er ist 24 Stunden
                        gültig:</p>
                 @endif
@@ -92,7 +92,7 @@
                 <p class="note">Falls Sie diese Einladung nicht erwartet haben,
                    können Sie diese E-Mail ignorieren.</p>
             @else
-                <p>Es wurde eine Passwort-Zurücksetzung für Ihren Fotosite V8
+                <p>Es wurde eine Passwort-Zurücksetzung für Ihren Fotogalerie
                    System-Account angefordert. Klicken Sie auf den folgenden Link —
                    er ist 24 Stunden gültig:</p>
 
@@ -104,7 +104,7 @@
         </div>
 
         <div class="footer">
-            Diese E-Mail wurde automatisch von Fotosite versandt. Bitte antworten Sie nicht auf diese E-Mail.
+            Diese E-Mail wurde automatisch von Fotogalerie versandt. Bitte antworten Sie nicht auf diese E-Mail.
         </div>
     </div>
 </body>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Einladung zu Fotosite</title>
+    <title>Einladung zu Fotogalerie</title>
     <style>
         body {
             font-family: Arial, Helvetica, sans-serif;
@@ -78,7 +78,7 @@
     <div class="wrapper">
 
         <div class="header">
-            <h1>Fotosite V8</h1>
+            <h1>Fotogalerie</h1>
         </div>
 
         <div class="body">
@@ -101,7 +101,7 @@
         </div>
 
         <div class="footer">
-            Diese E-Mail wurde automatisch von Fotosite versandt. Bitte antworten Sie nicht auf diese E-Mail.
+            Diese E-Mail wurde automatisch von Fotogalerie versandt. Bitte antworten Sie nicht auf diese E-Mail.
         </div>
 
     </div>

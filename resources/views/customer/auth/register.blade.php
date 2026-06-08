@@ -1,8 +1,8 @@
 {{--
     FILE:    resources/views/customer/auth/register.blade.php
-    VERSION: 1.3.0
+    VERSION: 1.3.1
     AUTHOR:  Martin Wagner
-    DATE:    2026-05-30
+    DATE:    2026-06-08
 
     DESCRIPTION:
       Mitglieder-Registrierungsformular — wird per Einladungs-Token aufgerufen.
@@ -25,7 +25,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>Mitglieder-Konto erstellen · Fotosite V8</title>
+    <title>Mitglieder-Konto erstellen · Fotogalerie</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
@@ -38,7 +38,7 @@
         {{-- Kopfzeile --}}
         <div class="mb-7">
             <p class="text-[11px] font-mono tracking-widest uppercase text-gray-400 mb-1">
-                Fotosite&thinsp;V8
+                Fotogalerie
             </p>
             <h1 class="text-xl font-semibold text-gray-800">
                 {{ $alreadyExists ? 'Einladung annehmen' : 'Mitglieder-Konto erstellen' }}

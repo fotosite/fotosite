@@ -1,6 +1,7 @@
 {{--
     FILE:    resources/views/system/dashboard.blade.php
-    VERSION: 1.5.0
+    VERSION: 1.5.1
+    DATE:    2026-06-08
 
     DESCRIPTION:
       System-Dashboard — landing page after successful system login + 2FA.
@@ -29,7 +30,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>System-Dashboard · Fotosite V8</title>
+    <title>System-Dashboard · Fotogalerie</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
@@ -47,7 +48,7 @@
             <div class="flex items-center gap-3">
                 <span class="text-[11px] font-mono tracking-widest
                              uppercase text-gray-400">
-                    Fotosite&thinsp;V8
+                    Fotogalerie
                 </span>
                 <span class="text-zinc-800 select-none">|</span>
                 <span class="text-sm font-semibold tracking-widest
@@ -252,7 +253,7 @@
                     flex items-center justify-between">
             <span class="text-[10px] font-mono tracking-widest
                          uppercase text-gray-400">
-                Fotosite V8 · System-Bereich
+                Fotogalerie · System-Bereich
             </span>
             <span class="text-[10px] text-gray-400">
                 Session aktiv

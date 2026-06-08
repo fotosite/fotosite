@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/customer/passkey/index.blade.php
-    VERSION: 1.2.0
-    DATE:    2026-06-07
+    VERSION: 1.2.1
+    DATE:    2026-06-08
 
     DESCRIPTION:
       Passkey-Verwaltung für Kunden — Liste aller registrierten Passkeys,
@@ -28,7 +28,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Passkeys · Fotosite V8</title>
+    <title>Passkeys · Fotogalerie</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
@@ -48,7 +48,7 @@
             <div class="flex items-center gap-3">
                 <span class="text-[11px] font-mono tracking-widest
                              uppercase text-gray-400">
-                    Fotosite&thinsp;V8
+                    Fotogalerie
                 </span>
                 <span class="text-zinc-800 select-none">|</span>
                 <span class="text-sm font-semibold tracking-widest
@@ -121,7 +121,7 @@
             <p class="text-xs text-blue-700">
                 <strong>Windows Hello:</strong> Der Passkey wird lokal gespeichert
                 — nur auf diesem Gerät verfügbar. Pro Windows-Konto ein
-                Fotosite-Account. Bitte melden Sie sich beim Login mit demselben
+                Fotogalerie-Account. Bitte melden Sie sich beim Login mit demselben
                 Windows-Konto an.
             </p>
         </div>
@@ -150,7 +150,7 @@
             Pro Windows-Konto kann ein Passkey für ein Mitglied und zusätzlich ein Passkey
             für einen Galerist:in eingerichtet werden. Beim Login fragt Windows welcher
             Account verwendet werden soll. Verwenden Sie für die Windows-Anmeldung und
-            für Fotosite dasselbe Authentifizierungsmerkmal (z.B. denselben
+            für Fotogalerie dasselbe Authentifizierungsmerkmal (z.B. denselben
             Fingerabdruck).</p>
             <p><strong>Firefox:</strong>
             Der Passkey wird lokal in Firefox gespeichert und ist nur in diesem Browser
@@ -316,7 +316,7 @@
                     flex items-center justify-between">
             <span class="text-[10px] font-mono tracking-widest
                          uppercase text-gray-400">
-                Fotosite V8 · Mitglieder-Bereich
+                Fotogalerie · Mitglieder-Bereich
             </span>
             <span class="text-[10px] text-gray-400">
                 Session aktiv

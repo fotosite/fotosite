@@ -1,6 +1,7 @@
 {{--
     FILE:    resources/views/system/users/register.blade.php
-    VERSION: 1.1.0
+    VERSION: 1.1.1
+    DATE:    2026-06-08
 
     DESCRIPTION:
       Standalone registration page for invited system users.
@@ -20,7 +21,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>System-Account erstellen · Fotosite V8</title>
+    <title>System-Account erstellen · Fotogalerie</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
@@ -34,7 +35,7 @@
             <div class="flex items-center gap-3 mb-8">
                 <span class="text-[11px] font-mono tracking-widest
                              uppercase text-gray-400">
-                    Fotosite&thinsp;V8
+                    Fotogalerie
                 </span>
                 <span class="text-zinc-800 select-none">|</span>
                 <span class="text-sm font-semibold tracking-widest

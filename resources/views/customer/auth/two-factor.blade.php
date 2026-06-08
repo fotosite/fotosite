@@ -1,8 +1,8 @@
 {{--
     FILE:    resources/views/customer/auth/two-factor.blade.php
-    VERSION: 1.0.0
+    VERSION: 1.0.1
     AUTHOR:  Martin Wagner
-    DATE:    2026-06-03
+    DATE:    2026-06-08
 
     DESCRIPTION:
       Cust-Login 2FA — 6-stelliger Bestätigungscode-Eingabe.
@@ -19,7 +19,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Bestätigungscode · Fotosite V8</title>
+    <title>Bestätigungscode · Fotogalerie</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-gray-100 font-sans antialiased">
@@ -28,7 +28,7 @@
     <div class="w-full max-w-sm bg-white rounded-lg shadow-md px-8 py-8">
 
         <p class="text-[11px] font-mono tracking-widest uppercase text-gray-400 mb-1">
-            Fotosite&thinsp;V8
+            Fotogalerie
         </p>
         <h1 class="text-xl font-semibold text-gray-800 mb-6">Bestätigungscode</h1>
 

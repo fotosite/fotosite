@@ -1,6 +1,7 @@
 {{--
     FILE:    resources/views/mandant/pwlist.blade.php
-    VERSION: 1.16.0
+    VERSION: 1.16.1
+    DATE:    2026-06-08
 
     DESCRIPTION:
       Mandant Passwortliste — pw1–pw6 und Gültigkeitszeitraum bearbeiten.
@@ -25,7 +26,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Passwortliste · Fotosite V8</title>
+    <title>Passcodeliste · Fotogalerie</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -47,7 +48,7 @@
             <div class="flex items-center gap-3">
                 <span class="text-[11px] font-mono tracking-widest
                              uppercase text-gray-400">
-                    Fotosite&thinsp;V8
+                    Fotogalerie
                 </span>
                 <span class="text-zinc-800 select-none">|</span>
                 <span class="text-sm font-semibold tracking-widest
@@ -89,7 +90,7 @@
         {{-- Seitenüberschrift --}}
         <div class="mb-8">
             <h1 class="text-xl font-semibold tracking-tight text-gray-800">
-                Passwortliste
+                Passcodeliste
             </h1>
             <p class="mt-1.5 text-sm text-zinc-600">
                 Passwörter und Gültigkeitszeitraum verwalten.
@@ -670,7 +671,7 @@
                                    hover:bg-indigo-700 focus:outline-none
                                    focus:ring-2 focus:ring-indigo-500
                                    focus:ring-offset-2 transition-colors">
-                        Passwortliste speichern
+                        Passcodeliste speichern
                     </button>
                 </div>
 
@@ -687,7 +688,7 @@
                     flex items-center justify-between">
             <span class="text-[10px] font-mono tracking-widest
                          uppercase text-gray-400">
-                Fotosite V8 · Mandanten-Bereich
+                Fotogalerie · Mandanten-Bereich
             </span>
             <span class="text-[10px] text-gray-400">
                 Session aktiv

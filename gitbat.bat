@@ -1,4 +1,3 @@
-# PowerShell
 git add .
-git commit -m "fix: helpers.php in composer.json autoload files registriert"
+git commit -m "fix: UI-Texte — Passwortliste→Passcodeliste, Fotosite/Fotosite V8→Fotogalerie (22 Views)"
 git push
