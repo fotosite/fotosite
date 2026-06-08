@@ -1,9 +1,9 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/MandantLoginController.php
- * VERSION:     1.11.0
+ * VERSION:     1.11.1
  * AUTOR:       Martin Wagner
- * DATUM:       2026-06-07
+ * DATUM:       2026-06-08
  *
  * ZWECK:       Mand-Login mit 2FA und Passkey — Formular anzeigen, Credentials prüfen,
  *              2FA-Code verifizieren, Passkey-Options liefern, Passkey-Assertion prüfen,
@@ -67,13 +67,15 @@
  *              Illuminate\Support\Facades\Hash::check()
  *              Illuminate\Support\Facades\Mail::to()->send()
  *              Illuminate\Support\Facades\DB::connection('sessiondb')->table()->delete()
+ *              App\Models\SessionDb\Session::where()->delete()
  *
  * DB ACCESS:   userdb.mand_user.mand_id, mand_email, mand_pw_hash, mand_firstname
  *              userdb.passkey.credential_id, public_key, user_type, user_id,
  *              sign_count, last_used_at
  *              userdb.passkey_dismissed.user_type, user_id, os, ua_hash
  *              sessiondb.twofa_code.* (via TwofaService)
- *              sessiondb.session.expires_at (DELETE bei Login)
+ *              sessiondb.session.expires_at (DELETE abgelaufene Sessions bei Login)
+ *              sessiondb.session.sess_token (DELETE eigene Session bei Logout)
  */
 
 namespace App\Http\Controllers\UserDb;
@@ -215,9 +217,8 @@ class MandantLoginController extends UserDbController
             '_passkey_uahash' => $uaHash,
         ]);
 
-        DB::connection('sessiondb')
-            ->table('session')
-            ->where('expires_at', '<', now())
+        // Abgelaufene Sessions bereinigen
+        \App\Models\SessionDb\Session::where('expires_at', '<', now())
             ->delete();
 
         return redirect()->route('mandant.dashboard');
@@ -362,6 +363,11 @@ class MandantLoginController extends UserDbController
 
     public function logout(Request $request): RedirectResponse
     {
+        // Eigene Session aus DB löschen
+        $sessToken = session()->getId();
+        \App\Models\SessionDb\Session::where('sess_token', $sessToken)
+            ->delete();
+
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

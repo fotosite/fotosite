@@ -1,7 +1,8 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/SystemLoginController.php
- * VERSION:     1.3.0
+ * VERSION:     1.3.1
+ * DATUM:       2026-06-08
  *
  * FUNCTIONS:   login()           — Zeigt das System-Login-Formular an.
  *                                  Reads: —
@@ -28,10 +29,12 @@
  *              Illuminate\Support\Facades\Hash::check()
  *              Illuminate\Support\Facades\Mail::to()->send()
  *              Illuminate\Support\Facades\DB::connection('sessiondb')->table()->delete()
+ *              App\Models\SessionDb\Session::where()->delete()
  *
  * DB ACCESS:   userdb.syst_user.syst_id, syst_email, syst_pw_hash, syst_firstname
  *              sessiondb.twofa_code.* (via TwofaService)
- *              sessiondb.session.expires_at (DELETE bei Login)
+ *              sessiondb.session.expires_at (DELETE abgelaufene Sessions bei Login)
+ *              sessiondb.session.sess_token (DELETE eigene Session bei Logout)
  */
 
 namespace App\Http\Controllers\UserDb;
@@ -110,6 +113,11 @@ class SystemLoginController extends UserDbController
 
     public function logout(Request $request): RedirectResponse
     {
+        // Eigene Session aus DB löschen
+        $sessToken = session()->getId();
+        \App\Models\SessionDb\Session::where('sess_token', $sessToken)
+            ->delete();
+
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

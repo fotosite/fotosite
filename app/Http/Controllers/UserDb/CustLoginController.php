@@ -1,9 +1,9 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustLoginController.php
- * VERSION:     1.8.0
+ * VERSION:     1.8.1
  * AUTOR:       Martin Wagner
- * DATUM:       2026-06-07
+ * DATUM:       2026-06-08
  *
  * ZWECK:       Cust-Login — registrierter Login mit optionaler 2FA,
  *              anonymer Login per Passwort-Sequenz, Passkey-Login, Logout.
@@ -81,6 +81,7 @@
  *              Webauthn\CeremonyStep\CeremonyStepManagerFactory::requestCeremony()
  *              Illuminate\Support\Facades\Hash::check()
  *              Illuminate\Support\Facades\Mail::to()->send()
+ *              App\Models\SessionDb\Session::where()->delete()
  *
  * DB ACCESS:   userdb.cust_user.cust_id, cust_email, cust_pw_hash, cust_firstname
  *              userdb.cust_pcode.pcode_id, cust_id, mand_id, cust_passcode, pcode_prefstat
@@ -91,7 +92,8 @@
  *              sessiondb.pw_list.mand_id, pw1, pw2, pw3, pw4, pw5, pw6,
  *              valid_from, valid_until
  *              sessiondb.twofa_code.* (via TwofaService)
- *              sessiondb.session.expires_at (DELETE bei Logout)
+ *              sessiondb.session.expires_at (DELETE abgelaufene Sessions bei Login & Logout)
+ *              sessiondb.session.sess_token (DELETE eigene Session bei Logout)
  */
 
 namespace App\Http\Controllers\UserDb;
@@ -234,6 +236,10 @@ class CustLoginController extends UserDbController
             '_passkey_uahash' => $uaHash,
         ]);
 
+        // Abgelaufene Sessions bereinigen
+        \App\Models\SessionDb\Session::where('expires_at', '<', now())
+            ->delete();
+
         return redirect()->route('customer.dashboard');
     }
 
@@ -348,6 +354,10 @@ class CustLoginController extends UserDbController
         ]);
 
         $request->session()->forget(['pending_cust_id', 'pending_mand_id', 'pending_sec_level']);
+
+        // Abgelaufene Sessions bereinigen
+        \App\Models\SessionDb\Session::where('expires_at', '<', now())
+            ->delete();
 
         return redirect()->route('customer.dashboard');
     }
@@ -490,6 +500,11 @@ class CustLoginController extends UserDbController
 
     public function logout(Request $request): RedirectResponse
     {
+        // Eigene Session aus DB löschen
+        $sessToken = session()->getId();
+        \App\Models\SessionDb\Session::where('sess_token', $sessToken)
+            ->delete();
+
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

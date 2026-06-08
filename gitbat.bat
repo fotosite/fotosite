@@ -1,3 +1,3 @@
 git add .
-git commit -m "fix: Auto-dismiss nach fehlgeschlagenem Passkey-Erzeugen (mand + cust)"
+git commit -m "feat: Session-Cleanup beim Login (abgelaufene) + Logout (eigene) — mand, cust, syst"
 git push
