@@ -1,3 +1,4 @@
+# PowerShell
 git add .
-git commit -m "feat: Passkey-Verwaltungsseiten mit OS-Hinweistext (mand + cust)"
+git commit -m "fix: helpers.php in composer.json autoload files registriert"
 git push

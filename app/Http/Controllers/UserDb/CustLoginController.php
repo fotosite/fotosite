@@ -96,6 +96,8 @@
 
 namespace App\Http\Controllers\UserDb;
 
+use function detectOsPlatform;
+
 use App\Mail\TwoFactorCodeMail;
 use App\Models\SessionDb\PwList;
 use App\Models\UserDb\CustPcode;

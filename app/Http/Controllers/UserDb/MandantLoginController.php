@@ -78,6 +78,8 @@
 
 namespace App\Http\Controllers\UserDb;
 
+use function detectOsPlatform;
+
 use App\Mail\TwoFactorCodeMail;
 use App\Models\UserDb\MandUser;
 use App\Models\UserDb\Passkey;

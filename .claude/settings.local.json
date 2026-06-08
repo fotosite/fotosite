@@ -12,7 +12,8 @@
       "Bash(composer config *)",
       "Bash(findstr /i \"curl.cainfo\\\\|openssl.cafile\\\\|cainfo\\\\|cafile\")",
       "Bash(Select-String -Pattern \"cainfo|cafile\")",
-      "Bash(xargs grep -l \"serialize\\\\|jsonSerialize\\\\|Serializable\")"
+      "Bash(xargs grep -l \"serialize\\\\|jsonSerialize\\\\|Serializable\")",
+      "Bash(composer dump-autoload *)"
     ]
   }
 }
