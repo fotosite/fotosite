@@ -1,9 +1,9 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/Passkey/MandPasskeyController.php
- * VERSION:     1.3.0
+ * VERSION:     1.4.0
  * AUTOR:       Martin Wagner
- * DATUM:       2026-06-07
+ * DATUM:       2026-06-08
  *
  * ZWECK:       Passkey-Registrierung für Mandanten — Liste, Options, Register,
  *              Umbenennen, Löschen, Passkey-Prompt dauerhaft abweisen.
@@ -13,7 +13,7 @@
  *                                      Hinweistext in der View
  *                                      Reads: userdb.passkey.pk_id, device_name,
  *                                             created_at, last_used_at
- *                                      Reads: session._passkey_os
+ *                                      Reads: session._passkey_os, _passkey_browser
  *              registrationOptions() — Erstellt PublicKeyCredentialCreationOptions,
  *                                      speichert Challenge in Session, gibt JSON zurück
  *                                      Reads: userdb.mand_user.mand_email,
@@ -49,10 +49,10 @@
  *              userdb.mand_user.mand_email, mand_firstname, mand_lastname
  *              userdb.passkey_dismissed.user_type, user_id, os, ua_hash, created_at
  *
- * SESSION ACCESS: _mand_id, _passkey_os, _passkey_uahash, _user_type (read)
+ * SESSION ACCESS: _mand_id, _passkey_os, _passkey_browser, _passkey_uahash, _user_type (read)
  *                 _prompt_passkey (read + reset, in dismiss())
  *
- * VIEW DATA:   mandant.passkey.index — passkeys, $passkeyOs
+ * VIEW DATA:   mandant.passkey.index — passkeys, $passkeyOs, $passkeyBrowser
  */
 
 namespace App\Http\Controllers\Passkey;
@@ -105,11 +105,13 @@ class MandPasskeyController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        $passkeyOs = session('_passkey_os', 'unknown');
+        $passkeyOs      = session('_passkey_os', 'unknown');
+        $passkeyBrowser = session('_passkey_browser', 'unknown');
 
         return view('mandant.passkey.index', [
-            'passkeys'  => $passkeys,
-            'passkeyOs' => $passkeyOs,
+            'passkeys'       => $passkeys,
+            'passkeyOs'      => $passkeyOs,
+            'passkeyBrowser' => $passkeyBrowser,
         ]);
     }
 
