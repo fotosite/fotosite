@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/MandantLoginController.php
- * VERSION:     1.11.1
+ * VERSION:     1.12.0
  * AUTOR:       Martin Wagner
  * DATUM:       2026-06-08
  *
@@ -25,9 +25,10 @@
  *                                  pending_mand_id aus Session; delegiert Prüfung
  *                                  an TwofaService::verify(); bei Erfolg: Session
  *                                  regenerieren, _user_type und _mand_id schreiben,
- *                                  OS via detectOsPlatform() erkennen, ua_hash
- *                                  berechnen, Passkey-Prompt (_prompt_passkey,
- *                                  _passkey_os, _passkey_uahash) anhand vorhandenem
+ *                                  OS via detectOsPlatform() erkennen, Browser via
+ *                                  detectBrowser() erkennen, ua_hash berechnen,
+ *                                  Passkey-Prompt (_prompt_passkey, _passkey_os,
+ *                                  _passkey_browser, _passkey_uahash) anhand vorhandenem
  *                                  Passkey und passkey_dismissed-Eintrag setzen,
  *                                  pending_mand_id löschen, Redirect zu mandant.dashboard.
  *                                  Reads: sessiondb.twofa_code.* (via TwofaService)
@@ -52,6 +53,7 @@
  * CALLS:       App\Models\UserDb\MandUser::where()->first()
  *              App\Models\UserDb\MandUser::find()
  *              detectOsPlatform() (app/helpers.php)
+ *              detectBrowser() (app/helpers.php)
  *              App\Models\UserDb\Passkey::where()->first()
  *              App\Models\UserDb\PasskeyDismissed::where()->exists()
  *              App\Mail\TwoFactorCodeMail
@@ -81,6 +83,7 @@
 namespace App\Http\Controllers\UserDb;
 
 use function detectOsPlatform;
+use function detectBrowser;
 
 use App\Mail\TwoFactorCodeMail;
 use App\Models\UserDb\MandUser;
@@ -212,9 +215,10 @@ class MandantLoginController extends UserDbController
 
         // Prompt setzen
         session([
-            '_prompt_passkey' => !$hasPasskey && !$neverAsk && $os !== 'unknown',
-            '_passkey_os'     => $os,
-            '_passkey_uahash' => $uaHash,
+            '_prompt_passkey'  => !$hasPasskey && !$neverAsk && $os !== 'unknown',
+            '_passkey_os'      => $os,
+            '_passkey_browser' => detectBrowser($request->userAgent()),
+            '_passkey_uahash'  => $uaHash,
         ]);
 
         // Abgelaufene Sessions bereinigen

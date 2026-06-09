@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustLoginController.php
- * VERSION:     1.8.1
+ * VERSION:     1.9.0
  * AUTOR:       Martin Wagner
  * DATUM:       2026-06-08
  *
@@ -13,8 +13,9 @@
  *              handleLogin()     — Validiert cust_email + password; sucht CustUser;
  *                                  ermittelt bevorzugten Mandanten via CustPcode;
  *                                  prüft 2FA-Pflicht via mand_cust_2fa; baut Session
- *                                  direkt (OS via detectOsPlatform() erkennen, ua_hash
- *                                  berechnen, _prompt_passkey/_passkey_os/
+ *                                  direkt (OS via detectOsPlatform() erkennen, Browser
+ *                                  via detectBrowser() erkennen, ua_hash berechnen,
+ *                                  _prompt_passkey/_passkey_os/_passkey_browser/
  *                                  _passkey_uahash anhand vorhandenem Passkey und
  *                                  passkey_dismissed-Eintrag setzen) oder leitet zu
  *                                  customer.login.2fa.
@@ -38,9 +39,9 @@
  *                                  bei Erfolg: Session aufbauen, OS via
  *                                  detectOsPlatform() erkennen, ua_hash berechnen,
  *                                  Passkey-Prompt (_prompt_passkey, _passkey_os,
- *                                  _passkey_uahash) anhand vorhandenem Passkey und
- *                                  passkey_dismissed-Eintrag setzen, pending_*
- *                                  vergessen, Redirect zu customer.dashboard.
+ *                                  _passkey_browser, _passkey_uahash) anhand vorhandenem
+ *                                  Passkey und passkey_dismissed-Eintrag setzen,
+ *                                  pending_* vergessen, Redirect zu customer.dashboard.
  *                                  Reads: sessiondb.twofa_code.* (via TwofaService)
  *                                         userdb.passkey_dismissed.user_type, user_id,
  *                                         os, ua_hash
@@ -64,6 +65,7 @@
  *
  * CALLS:       App\Models\UserDb\CustUser::where()->first()
  *              detectOsPlatform() (app/helpers.php)
+ *              detectBrowser() (app/helpers.php)
  *              App\Models\UserDb\CustPcode::where()->orderByDesc()->first()
  *              App\Models\UserDb\MandUser::find()
  *              App\Models\UserDb\Passkey::where()->first()
@@ -99,6 +101,7 @@
 namespace App\Http\Controllers\UserDb;
 
 use function detectOsPlatform;
+use function detectBrowser;
 
 use App\Mail\TwoFactorCodeMail;
 use App\Models\SessionDb\PwList;
@@ -231,9 +234,10 @@ class CustLoginController extends UserDbController
 
         // Prompt setzen
         session([
-            '_prompt_passkey' => !$hasPasskey && !$neverAsk && $os !== 'unknown',
-            '_passkey_os'     => $os,
-            '_passkey_uahash' => $uaHash,
+            '_prompt_passkey'  => !$hasPasskey && !$neverAsk && $os !== 'unknown',
+            '_passkey_os'      => $os,
+            '_passkey_browser' => detectBrowser($request->userAgent()),
+            '_passkey_uahash'  => $uaHash,
         ]);
 
         // Abgelaufene Sessions bereinigen
@@ -348,9 +352,10 @@ class CustLoginController extends UserDbController
 
         // Prompt setzen
         session([
-            '_prompt_passkey' => !$hasPasskey && !$neverAsk && $os !== 'unknown',
-            '_passkey_os'     => $os,
-            '_passkey_uahash' => $uaHash,
+            '_prompt_passkey'  => !$hasPasskey && !$neverAsk && $os !== 'unknown',
+            '_passkey_os'      => $os,
+            '_passkey_browser' => detectBrowser($request->userAgent()),
+            '_passkey_uahash'  => $uaHash,
         ]);
 
         $request->session()->forget(['pending_cust_id', 'pending_mand_id', 'pending_sec_level']);
