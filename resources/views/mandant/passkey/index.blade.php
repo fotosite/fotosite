@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/passkey/index.blade.php
-    VERSION: 1.3.0
+    VERSION: 1.4.0
     DATE:    2026-06-08
 
     DESCRIPTION:
@@ -121,12 +121,12 @@
 
         {{-- Passkey-Hinweistexte: allgemein + OS+Browser-spezifisch --}}
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
-            <p class="text-xs text-blue-700 mb-2">
+            <p class="text-sm text-blue-700 mb-2">
                 Du kannst Passkeys am Notebook oder auch auf einem Mobilgerät
                 anlegen. Benutze dabei immer den gleichen Fingerabdruck,
                 den du auch für das Gerät selbst benutzt.
             </p>
-            <p class="text-xs text-blue-600">
+            <p class="text-sm text-blue-600">
                 Android-Nutzer mit Google-Konto und Apple-Nutzer mit Apple-ID
                 können einen Passkey einmal anlegen und auf allen ihren
                 Geräten verwenden.
@@ -135,21 +135,26 @@
 
         @if($passkeyOs !== 'unknown')
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-            <p class="text-xs text-blue-700">
+            <p class="text-sm text-blue-700">
                 @if($passkeyOs === 'win' && $passkeyBrowser === 'chrome')
                     <strong>Chrome (Windows):</strong>
                     Der Passkey wird im Google Passwort-Manager gespeichert.
                     Wenn Sie in Chrome mit Ihrem Google-Konto angemeldet sind,
                     steht der Passkey auf allen Geräten mit demselben
                     Google-Konto zur Verfügung (Windows + Android).
-                @elseif($passkeyOs === 'win')
-                    <strong>Windows Hello (Edge / systemeigen):</strong>
-                    Der Passkey wird lokal gespeichert — nur auf diesem Gerät
-                    verfügbar. Pro Windows-Konto ein Fotogalerie-Account.
-                    <br>
-                    <strong>Firefox:</strong>
+                @elseif($passkeyOs === 'win' && $passkeyBrowser === 'firefox')
+                    <strong>Firefox (Windows):</strong>
                     Der Passkey wird lokal in Firefox gespeichert —
-                    nur in diesem Browser verfügbar.
+                    nur in diesem Browser verfügbar. Pro Windows-Konto
+                    ein Fotogalerie-Account.
+                @elseif($passkeyOs === 'win' && $passkeyBrowser === 'edge')
+                    <strong>Windows Hello (Edge):</strong>
+                    Der Passkey wird lokal gespeichert — nur auf diesem
+                    Gerät verfügbar. Pro Windows-Konto ein Fotogalerie-Account.
+                @elseif($passkeyOs === 'win')
+                    <strong>Windows:</strong>
+                    Der Passkey wird lokal gespeichert — nur auf diesem
+                    Gerät verfügbar. Pro Windows-Konto ein Fotogalerie-Account.
                 @elseif($passkeyOs === 'andr' && $passkeyBrowser === 'firefox')
                     <strong>Firefox (Android):</strong>
                     Der Passkey wird lokal in Firefox gespeichert —
