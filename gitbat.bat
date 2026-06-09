@@ -1,3 +1,3 @@
 git add .
-git commit -m "fix: Passkey-Hinweistext win+firefox/edge aufgesplittet + Schriftgröße erhöht"
+git commit -m "feat: Passkey-Hinweistexte nutzerorientiert überarbeitet — OS+Browser-spezifisch (mand + cust)"
 git push

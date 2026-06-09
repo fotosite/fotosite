@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/passkey/index.blade.php
-    VERSION: 1.4.0
+    VERSION: 1.5.0
     DATE:    2026-06-08
 
     DESCRIPTION:
@@ -119,61 +119,61 @@
             </button>
         </div>
 
-        {{-- Passkey-Hinweistexte: allgemein + OS+Browser-spezifisch --}}
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
+        {{-- Passkey-Hinweistexte --}}
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
             <p class="text-sm text-blue-700 mb-2">
                 Du kannst Passkeys am Notebook oder auch auf einem Mobilgerät
                 anlegen. Benutze dabei immer den gleichen Fingerabdruck,
                 den du auch für das Gerät selbst benutzt.
             </p>
-            <p class="text-sm text-blue-600">
-                Android-Nutzer mit Google-Konto und Apple-Nutzer mit Apple-ID
-                können einen Passkey einmal anlegen und auf allen ihren
-                Geräten verwenden.
+            @if($passkeyBrowser === 'chrome')
+            <p class="text-sm text-blue-700">
+                Chrome-Nutzer mit Google-Konto können einen Passkey einmal
+                anlegen und auf allen ihren Geräten verwenden —
+                egal ob Windows oder Android.
             </p>
+            @elseif($passkeyOs === 'ios')
+            <p class="text-sm text-blue-700">
+                Apple-Nutzer mit Apple-ID können einen Passkey einmal anlegen
+                und auf allen ihren Apple-Geräten verwenden —
+                egal welchen Browser sie verwenden.
+            </p>
+            @elseif($passkeyBrowser === 'firefox')
+            <p class="text-sm text-blue-700">
+                Firefox speichert den Passkey nur auf diesem Gerät.
+                Wir empfehlen, auf jedem Gerät einen eigenen Passkey anzulegen.
+            </p>
+            @elseif($passkeyBrowser === 'edge')
+            <p class="text-sm text-blue-700">
+                Edge speichert den Passkey nur auf diesem Gerät.
+                Wir empfehlen, auf jedem Gerät einen eigenen Passkey anzulegen.
+            </p>
+            @endif
         </div>
 
         @if($passkeyOs !== 'unknown')
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
             <p class="text-sm text-blue-700">
                 @if($passkeyOs === 'win' && $passkeyBrowser === 'chrome')
-                    <strong>Chrome (Windows):</strong>
-                    Der Passkey wird im Google Passwort-Manager gespeichert.
-                    Wenn Sie in Chrome mit Ihrem Google-Konto angemeldet sind,
-                    steht der Passkey auf allen Geräten mit demselben
-                    Google-Konto zur Verfügung (Windows + Android).
+                    Mit Chrome und Google-Konto ist der Passkey auf allen
+                    deinen Windows- und Android-Geräten verfügbar.
                 @elseif($passkeyOs === 'win' && $passkeyBrowser === 'firefox')
-                    <strong>Firefox (Windows):</strong>
-                    Der Passkey wird lokal in Firefox gespeichert —
-                    nur in diesem Browser verfügbar. Pro Windows-Konto
-                    ein Fotogalerie-Account.
+                    Firefox: der Passkey gilt nur auf diesem Gerät.
+                    Wir empfehlen, auf jedem Gerät einen eigenen Passkey anzulegen.
                 @elseif($passkeyOs === 'win' && $passkeyBrowser === 'edge')
-                    <strong>Windows Hello (Edge):</strong>
-                    Der Passkey wird lokal gespeichert — nur auf diesem
-                    Gerät verfügbar. Pro Windows-Konto ein Fotogalerie-Account.
+                    Edge: der Passkey gilt nur auf diesem Gerät.
+                    Wir empfehlen, auf jedem Gerät einen eigenen Passkey anzulegen.
                 @elseif($passkeyOs === 'win')
-                    <strong>Windows:</strong>
-                    Der Passkey wird lokal gespeichert — nur auf diesem
-                    Gerät verfügbar. Pro Windows-Konto ein Fotogalerie-Account.
+                    Der Passkey gilt nur auf diesem Gerät.
                 @elseif($passkeyOs === 'andr' && $passkeyBrowser === 'firefox')
-                    <strong>Firefox (Android):</strong>
-                    Der Passkey wird lokal in Firefox gespeichert —
-                    nur auf diesem Gerät verfügbar. Für geräteübergreifenden
-                    Zugriff empfehlen wir Chrome mit Google-Konto.
-                @elseif($passkeyOs === 'andr' && $passkeyBrowser === 'samsung')
-                    <strong>Samsung Internet:</strong>
-                    Der Passkey wird in Samsung Pass gespeichert —
-                    auf Samsung-Geräten mit demselben Samsung-Konto verfügbar.
+                    Firefox: der Passkey gilt nur auf diesem Gerät.
+                    Wir empfehlen, auf jedem Gerät einen eigenen Passkey anzulegen.
                 @elseif($passkeyOs === 'andr')
-                    <strong>Chrome (Android + Windows):</strong>
-                    Der Passkey wird im Google Passwort-Manager gespeichert —
-                    auf allen Android-Geräten mit demselben Google-Konto
-                    verfügbar.
+                    Mit Chrome und Google-Konto ist der Passkey auf allen
+                    deinen Android- und Windows-Geräten verfügbar.
                 @elseif($passkeyOs === 'ios')
-                    <strong>iPhone / iPad:</strong>
-                    Der Passkey wird in Ihrer iCloud Keychain gespeichert —
-                    auf allen Apple-Geräten mit derselben Apple-ID verfügbar
-                    (iPhone, iPad, Mac).
+                    Der Passkey gilt auf allen deinen Apple-Geräten
+                    mit derselben Apple-ID.
                 @endif
             </p>
         </div>
