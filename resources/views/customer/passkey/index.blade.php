@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/customer/passkey/index.blade.php
-    VERSION: 1.2.3
+    VERSION: 1.3.0
     DATE:    2026-06-08
 
     DESCRIPTION:
@@ -9,9 +9,12 @@
       Standalone (kein Layout-Erbe), gleiches Strukturmuster wie customer/dashboard.
 
     DATA FROM CONTROLLER:
-      $passkeys  — Collection<App\Models\UserDb\Passkey>
-      $passkeyOs — string, erkanntes OS ('win'|'andr'|'ios'|'unknown')
-                   steuert plattformspezifischen Hinweistext
+      $passkeys       — Collection<App\Models\UserDb\Passkey>
+      $passkeyOs      — string, erkanntes OS ('win'|'andr'|'ios'|'unknown')
+                        steuert plattformspezifischen Hinweistext
+      $passkeyBrowser — string, erkannter Browser ('edge'|'samsung'|'chrome'|
+                        'firefox'|'safari'|'unknown')
+                        steuert browserabhängige Variante im OS-Hinweis
 
     ROUTES USED:
       GET  /customer/passkeys                  — diese Seite (route('customer.passkeys'))
@@ -115,54 +118,60 @@
             </button>
         </div>
 
-        {{-- Plattformspezifischer Hinweis --}}
-        @if($passkeyOs === 'win')
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-            <p class="text-xs text-blue-700">
-                <strong>Windows Hello:</strong> Der Passkey wird lokal gespeichert
-                — nur auf diesem Gerät verfügbar. Pro Windows-Konto ein
-                Fotogalerie-Account. Bitte melden Sie sich beim Login mit demselben
-                Windows-Konto an.
+        {{-- Passkey-Hinweistexte: allgemein + OS+Browser-spezifisch --}}
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
+            <p class="text-xs text-blue-700 mb-2">
+                Du kannst Passkeys am Notebook oder auch auf einem Mobilgerät
+                anlegen. Benutze dabei immer den gleichen Fingerabdruck,
+                den du auch für das Gerät selbst benutzt.
+            </p>
+            <p class="text-xs text-blue-600">
+                Android-Nutzer mit Google-Konto und Apple-Nutzer mit Apple-ID
+                können einen Passkey einmal anlegen und auf allen ihren
+                Geräten verwenden.
             </p>
         </div>
-        @elseif($passkeyOs === 'ios')
+
+        @if($passkeyOs !== 'unknown')
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
             <p class="text-xs text-blue-700">
-                <strong>iPhone / iPad:</strong> Der Passkey wird in Ihrer iCloud
-                Keychain gespeichert und steht auf allen Ihren Apple-Geräten
-                zur Verfügung.
-            </p>
-        </div>
-        @elseif($passkeyOs === 'andr')
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-            <p class="text-xs text-blue-700">
-                <strong>Android:</strong> Der Passkey wird im Google
-                Passwort-Manager gespeichert und steht auf allen Android-Geräten
-                mit demselben Google-Konto zur Verfügung.
+                @if($passkeyOs === 'win' && $passkeyBrowser === 'chrome')
+                    <strong>Chrome (Windows):</strong>
+                    Der Passkey wird im Google Passwort-Manager gespeichert.
+                    Wenn Sie in Chrome mit Ihrem Google-Konto angemeldet sind,
+                    steht der Passkey auf allen Geräten mit demselben
+                    Google-Konto zur Verfügung (Windows + Android).
+                @elseif($passkeyOs === 'win')
+                    <strong>Windows Hello (Edge / systemeigen):</strong>
+                    Der Passkey wird lokal gespeichert — nur auf diesem Gerät
+                    verfügbar. Pro Windows-Konto ein Fotogalerie-Account.
+                    <br>
+                    <strong>Firefox:</strong>
+                    Der Passkey wird lokal in Firefox gespeichert —
+                    nur in diesem Browser verfügbar.
+                @elseif($passkeyOs === 'andr' && $passkeyBrowser === 'firefox')
+                    <strong>Firefox (Android):</strong>
+                    Der Passkey wird lokal in Firefox gespeichert —
+                    nur auf diesem Gerät verfügbar. Für geräteübergreifenden
+                    Zugriff empfehlen wir Chrome mit Google-Konto.
+                @elseif($passkeyOs === 'andr' && $passkeyBrowser === 'samsung')
+                    <strong>Samsung Internet:</strong>
+                    Der Passkey wird in Samsung Pass gespeichert —
+                    auf Samsung-Geräten mit demselben Samsung-Konto verfügbar.
+                @elseif($passkeyOs === 'andr')
+                    <strong>Chrome (Android + Windows):</strong>
+                    Der Passkey wird im Google Passwort-Manager gespeichert —
+                    auf allen Android-Geräten mit demselben Google-Konto
+                    verfügbar.
+                @elseif($passkeyOs === 'ios')
+                    <strong>iPhone / iPad:</strong>
+                    Der Passkey wird in Ihrer iCloud Keychain gespeichert —
+                    auf allen Apple-Geräten mit derselben Apple-ID verfügbar
+                    (iPhone, iPad, Mac).
+                @endif
             </p>
         </div>
         @endif
-
-        {{-- Hinweis --}}
-        <div class="text-sm text-gray-500 mb-4 bg-gray-50 rounded-lg p-3 space-y-2">
-            <p><strong>Windows Hello (Edge / systemeigen):</strong>
-            Der Passkey wird lokal auf diesem Gerät gespeichert.
-            Pro Windows-Konto kann ein Passkey für ein Mitglied und zusätzlich ein Passkey
-            für einen Galerist:in eingerichtet werden. Beim Login fragt Windows welcher
-            Account verwendet werden soll. Verwenden Sie für die Windows-Anmeldung und
-            für Fotogalerie dasselbe Authentifizierungsmerkmal (z.B. denselben
-            Fingerabdruck).</p>
-            <p><strong>Firefox:</strong>
-            Der Passkey wird lokal in Firefox gespeichert und ist nur in diesem Browser
-            verfügbar.</p>
-            <p><strong>Chrome (Windows + Android):</strong>
-            Der Passkey wird im Google Passwort-Manager gespeichert. Wenn Sie in Chrome
-            mit Ihrem Google-Konto angemeldet sind, steht der Passkey auf allen Geräten
-            mit demselben Google-Konto zur Verfügung (Windows + Android).</p>
-            <p><strong>iPhone / iPad (Safari):</strong>
-            Der Passkey wird im iCloud-Schlüsselbund gespeichert und steht auf allen
-            Apple-Geräten mit derselben Apple-ID zur Verfügung.</p>
-        </div>
 
         {{-- Flash: Status-Meldung --}}
         @if(session('status'))
