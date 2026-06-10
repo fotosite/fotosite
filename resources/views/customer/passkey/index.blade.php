@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/customer/passkey/index.blade.php
-    VERSION: 1.5.0
+    VERSION: 1.6.0
     DATE:    2026-06-08
 
     DESCRIPTION:
@@ -119,64 +119,82 @@
         </div>
 
         {{-- Passkey-Hinweistexte --}}
+        @php
+            $isFirefox = $passkeyBrowser === 'firefox';
+            $isChrome  = $passkeyBrowser === 'chrome';
+            $isEdge    = $passkeyBrowser === 'edge';
+            $isIos     = $passkeyOs === 'ios';
+            $isAndroid = $passkeyOs === 'andr';
+            $isWin     = $passkeyOs === 'win';
+        @endphp
+
+        {{-- Box 1: allgemein, immer sichtbar --}}
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <p class="text-sm text-blue-700 mb-2">
-                Du kannst Passkeys am Notebook oder auch auf einem Mobilgerät
-                anlegen. Benutze dabei immer den gleichen Fingerabdruck,
-                den du auch für das Gerät selbst benutzt.
+            <p class="text-sm font-semibold text-blue-800 mb-2">
+                Passkey einrichten
             </p>
-            @if($passkeyBrowser === 'chrome')
+            @if($isChrome || $isIos)
             <p class="text-sm text-blue-700">
-                Chrome-Nutzer mit Google-Konto können einen Passkey einmal
-                anlegen und auf allen ihren Geräten verwenden —
-                egal ob Windows oder Android.
+                Mit einem Passkey entfällt die Anmeldung mit dem
+                Sicherheitscode per Email. Du kannst Passkeys am Notebook
+                oder auch auf einem Mobilgerät anlegen. Benutze dabei immer
+                den gleichen Fingerabdruck, den du auch für das Gerät selbst
+                benutzt.
             </p>
-            @elseif($passkeyOs === 'ios')
+            @else
             <p class="text-sm text-blue-700">
-                Apple-Nutzer mit Apple-ID können einen Passkey einmal anlegen
-                und auf allen ihren Apple-Geräten verwenden —
-                egal welchen Browser sie verwenden.
-            </p>
-            @elseif($passkeyBrowser === 'firefox')
-            <p class="text-sm text-blue-700">
-                Firefox speichert den Passkey nur auf diesem Gerät.
-                Wir empfehlen, auf jedem Gerät einen eigenen Passkey anzulegen.
-            </p>
-            @elseif($passkeyBrowser === 'edge')
-            <p class="text-sm text-blue-700">
-                Edge speichert den Passkey nur auf diesem Gerät.
-                Wir empfehlen, auf jedem Gerät einen eigenen Passkey anzulegen.
+                Mit einem Passkey entfällt die Anmeldung mit dem
+                Sicherheitscode per Email. Mit dem Passkey kannst du dich
+                beim nächsten Login einfach per Fingerabdruck oder
+                Gesichtserkennung anmelden.
             </p>
             @endif
         </div>
 
-        @if($passkeyOs !== 'unknown')
+        {{-- Box 2: OS+Browser-spezifisch --}}
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
             <p class="text-sm text-blue-700">
-                @if($passkeyOs === 'win' && $passkeyBrowser === 'chrome')
-                    Mit Chrome und Google-Konto ist der Passkey auf allen
-                    deinen Windows- und Android-Geräten verfügbar.
-                @elseif($passkeyOs === 'win' && $passkeyBrowser === 'firefox')
-                    Firefox: der Passkey gilt nur auf diesem Gerät.
-                    Wir empfehlen, auf jedem Gerät einen eigenen Passkey anzulegen.
-                @elseif($passkeyOs === 'win' && $passkeyBrowser === 'edge')
-                    Edge: der Passkey gilt nur auf diesem Gerät.
-                    Wir empfehlen, auf jedem Gerät einen eigenen Passkey anzulegen.
-                @elseif($passkeyOs === 'win')
-                    Der Passkey gilt nur auf diesem Gerät.
-                @elseif($passkeyOs === 'andr' && $passkeyBrowser === 'firefox')
-                    Firefox: der Passkey gilt nur auf diesem Gerät.
-                    Wir empfehlen, auf jedem Gerät einen eigenen Passkey anzulegen.
-                @elseif($passkeyOs === 'andr')
-                    Mit Chrome und Google-Konto ist der Passkey auf allen
-                    deinen Android- und Windows-Geräten verfügbar.
-                @elseif($passkeyOs === 'ios')
-                    Der Passkey gilt auf allen deinen Apple-Geräten
-                    mit derselben Apple-ID.
+                @if($isEdge)
+                    Der Passkey für den Browser Edge wird lokal gespeichert
+                    und ist an dieses Windows-Konto gebunden. Wenn du auch
+                    andere Geräte verwenden möchtest, lege auf allen Geräten
+                    einen eigenen Passkey an.
+                @elseif($isFirefox && $isWin)
+                    Der Passkey für den Browser Firefox wird lokal gespeichert
+                    und ist an deinen Rechner und an dieses Windows-Konto
+                    gebunden. Wenn du auch andere Geräte verwenden möchtest,
+                    lege auf allen Geräten einen eigenen Passkey an. Dies gilt
+                    für alle Windows- und Android-Geräte, ist aber schnell
+                    gemacht.
+                @elseif($isFirefox && $isAndroid)
+                    Der Passkey für den Browser Firefox wird lokal gespeichert
+                    und ist an dein Mobilgerät gebunden. Leg auf allen deinen
+                    Android-Geräten einen Passkey an, dann brauchst du zum
+                    Login nur deinen Fingerabdruck, um die Fotogalerie
+                    anzusehen. Dies gilt für alle Windows- und Android-Geräte,
+                    ist aber schnell gemacht.
+                @elseif($isChrome)
+                    Chrome-Nutzer mit Google-Konto brauchen den Passkey nur
+                    einmal anlegen und können ihn dann auf allen ihren Geräten
+                    mit dem Browser Chrome verwenden — egal ob Windows oder
+                    Android.
+                @elseif($isIos)
+                    Mit einem Apple-Gerät und einer Apple-ID brauchst du nur
+                    einmal einen Passkey per Fingerabdruck oder
+                    Gesichtserkennung anlegen. Damit kannst du dich dann auf
+                    allen Apple-Geräten mit der gleichen Apple-ID an der
+                    Fotogalerie anmelden.
+                @else
+                    Leider kennen wir deinen Browser nicht und können nicht
+                    sagen, ob das Anlegen eines Passkeys funktionieren wird.
+                    Dies gilt vor allem für Browser mit sehr hohen
+                    Sicherheitsstandards wie z.B. DuckDuckGo. Wenn es nicht
+                    klappen sollte, verwende auf Android und Windows lieber
+                    Firefox. Firefox bietet eine gute Datensicherheit und ist
+                    mit der Fotogalerie kompatibel.
                 @endif
             </p>
         </div>
-        @endif
 
         {{-- Flash: Status-Meldung --}}
         @if(session('status'))
