@@ -1,14 +1,14 @@
 <?php
 /**
  * FILE:        app/Mail/CustInviteMail.php
- * VERSION:     1.2.0
+ * VERSION:     1.3.0
  * AUTHOR:      Martin Wagner
- * DATE:        2026-05-30
+ * DATE:        2026-06-08
  * PURPOSE:     Einladungs-E-Mail an neues Mitglied — enthält Registrierungslink (48 h gültig)
  *
- * FUNCTIONS:   __construct()   — Nimmt $registerUrl und $mandUname entgegen
- *              envelope()      — Betreff: "Einladung zu Fotosite"
- *              content()       — Gibt emails.cust-invite View zurück (mit registerUrl, mandUname)
+ * FUNCTIONS:   __construct()   — Nimmt $invite (CustInvite), $registerUrl und $mandUname entgegen
+ *              envelope()      — Betreff: "Einladung zur Fotogalerie"
+ *              content()       — Gibt emails.cust-invite View zurück (mit registerUrl, mandUname, custName)
  *              attachments()   — Gibt leeres Array zurück
  *
  * CALLS:       (none)
@@ -29,13 +29,14 @@ class CustInviteMail extends Mailable
     use Queueable, SerializesModels;
 
     public function __construct(
+        public readonly \App\Models\SessionDb\CustInvite $invite,
         public readonly string $registerUrl,
         public readonly string $mandUname,
     ) {}
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'Einladung zu Fotosite');
+        return new Envelope(subject: 'Einladung zur Fotogalerie');
     }
 
     public function content(): Content
@@ -45,6 +46,7 @@ class CustInviteMail extends Mailable
             with: [
                 'registerUrl' => $this->registerUrl,
                 'mandUname'   => $this->mandUname,
+                'custName'    => $this->invite->cust_alias ?? 'dort',
             ],
         );
     }

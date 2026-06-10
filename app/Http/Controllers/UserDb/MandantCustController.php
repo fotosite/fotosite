@@ -1,9 +1,9 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/MandantCustController.php
- * VERSION:     1.6.0
+ * VERSION:     1.7.0
  * AUTHOR:      Martin Wagner
- * DATE:        2026-05-30
+ * DATE:        2026-06-08
  * PURPOSE:     Cust-Verwaltung durch Mandant — Einladen, Alias/Passcode-Verwaltung, Löschen
  *
  * FUNCTIONS:   index()   — Listet Mitglieder des eingeloggten Mandanten
@@ -111,7 +111,7 @@ class MandantCustController extends UserDbController
 
         $token = Str::random(64);
 
-        CustInvite::create([
+        $invite = CustInvite::create([
             'mand_id'    => $mandId,
             'cust_email' => $email,
             'cust_alias' => $validated['cust_alias'],
@@ -124,7 +124,7 @@ class MandantCustController extends UserDbController
 
         $registerUrl = route('customer.register', ['token' => $token]);
 
-        Mail::to($email)->send(new CustInviteMail($registerUrl, $mandUname));
+        Mail::to($email)->send(new CustInviteMail($invite, $registerUrl, $mandUname));
 
         return redirect()->route('mandant.kunden.index')
             ->with('status', 'Einladung wurde gesendet.');

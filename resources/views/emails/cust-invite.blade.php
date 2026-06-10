@@ -1,9 +1,23 @@
+{{--
+    FILE:    resources/views/emails/cust-invite.blade.php
+    VERSION: 1.2.0
+    DATE:    2026-06-08
+
+    DESCRIPTION:
+      Einladungs-E-Mail an neues Mitglied — enthält Registrierungslink (48 h gültig)
+      sowie alternativen Zugang über Kurzzeit-Passwort.
+
+    DATA FROM MAILABLE:
+      $registerUrl — string, Registrierungslink (48 h gültig)
+      $mandUname   — string, Benutzername des einladenden Mandanten
+      $custName    — string, interner Alias des Mitglieds (Fallback: 'dort')
+--}}
 <!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Einladung zu Fotogalerie</title>
+    <title>Einladung zur Fotogalerie</title>
     <style>
         body {
             font-family: Arial, Helvetica, sans-serif;
@@ -82,22 +96,24 @@
         </div>
 
         <div class="body">
-            <p>Sie wurden zu <strong>{{ genitivName($mandUname) }}</strong> Fotogalerie eingeladen.<br>
-               Klicken Sie auf den folgenden Link, um Ihren Account zu erstellen:</p>
+            <p>Hallo {{ $custName }},</p>
 
-            <a href="{{ $registerUrl }}" class="btn">Jetzt registrieren</a>
+            <p>diese Mail kommt von Martins Fotogalerie-Website.<br>
+               Die Webadresse der Website ist
+               <a href="https://fotos.martinwagner.de/" style="color:#1a1a2e;">https://fotos.martinwagner.de/</a></p>
 
-            <div class="validity">
-                Dieser Einladungslink ist <strong>48 Stunden</strong> gültig.
-            </div>
+            <p>{{ $mandUname }} lädt dich mit dieser Mail ein, seine Fotogalerie
+               anzusehen. Benutze diesen Link, um ein Konto anzulegen:</p>
 
-            <p>Falls der Button nicht funktioniert, kopieren Sie diesen Link in Ihren Browser:</p>
             <p style="word-break:break-all; font-size:12px; color:#666666;">
                 {{ $registerUrl }}
             </p>
 
-            <p class="note">Falls Sie diese Einladung nicht erwartet haben,
-               können Sie diese E-Mail ignorieren. Ihr Konto bleibt unverändert.</p>
+            <p>Du kannst die Fotogalerie auch besuchen, ohne ein Konto anzulegen.
+               Wenn du kein Konto anlegen möchtest, dann frage {{ $mandUname }}
+               nach einem Kurzzeit-Passwort. Damit bekommst du Zugang zur
+               Fotogalerie mit folgendem Link:<br>
+               <a href="https://fotos.martinwagner.de/" style="color:#1a1a2e;">https://fotos.martinwagner.de/</a></p>
         </div>
 
         <div class="footer">

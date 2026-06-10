@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/cust/einladen.blade.php
-    VERSION: 1.3.1
+    VERSION: 1.3.2
     AUTHOR:  Martin Wagner
     DATE:    2026-06-08
 
@@ -131,6 +131,12 @@
                               text-gray-800 shadow-sm
                               focus:outline-none focus:ring-2 focus:ring-indigo-400
                               @error('cust_alias') border-red-400 bg-red-50 @else border-gray-300 @enderror">
+                <p class="text-xs text-gray-500 mt-1">
+                    Dein interner Name für dieses Mitglied. Dieser Name wird
+                    in der Einladungsmail verwendet. Du kannst ihn später in
+                    der Mitglieder-Administration wieder ändern, um z.B. bei
+                    gleichen Vornamen besser den Überblick zu behalten.
+                </p>
                 <p class="mt-1 text-xs text-gray-400">Nur für Sie sichtbar.</p>
                 @error('cust_alias')
                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
