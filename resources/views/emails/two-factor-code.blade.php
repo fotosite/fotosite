@@ -1,3 +1,15 @@
+{{--
+    FILE:    resources/views/emails/two-factor-code.blade.php
+    VERSION: 1.2.0
+    DATE:    2026-06-08
+
+    DESCRIPTION:
+      2FA-Sicherheitscode-E-Mail — wird bei jeder Mandant/System-Anmeldung gesendet.
+
+    DATA FROM MAILABLE:
+      $code         — string, 6-stelliger Sicherheitscode
+      $validMinutes — int, Gültigkeitsdauer des Codes in Minuten
+--}}
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -87,24 +99,19 @@
         </div>
 
         <div class="body">
-            @if($recipientName)
-                <p class="greeting">Hallo {{ $recipientName }},</p>
-            @else
-                <p class="greeting">Hallo,</p>
-            @endif
+            <p>Du hast eine Anmeldung bei der Fotogalerie begonnen.
+            Hier ist dein Sicherheitscode:</p>
 
-            <p>Sie haben eine Anmeldung angefordert. Bitte geben Sie den folgenden Sicherheitscode ein, um den Vorgang abzuschließen:</p>
-
-            <div class="code-box">
-                <div class="code-label">Ihr Sicherheitscode</div>
-                <div class="code-value">{{ $code }}</div>
-                <div class="validity">Gültig für {{ $validMinutes }} Minuten</div>
-            </div>
-
-            <p class="info">
-                Falls Sie diese Anmeldung nicht angefordert haben, können Sie diese E-Mail ignorieren.<br>
-                Ihr Konto bleibt unverändert.
+            <p style="font-size: 32px; font-weight: bold;
+                      letter-spacing: 8px; text-align: center;">
+                {{ $code }}
             </p>
+
+            <p>Der Code ist {{ $validMinutes }} Minuten gültig.</p>
+
+            <p>Falls du dich gerade nicht bei der Fotogalerie anmeldest,
+            kannst du diese Email ignorieren. Dein Konto bleibt
+            unverändert.</p>
         </div>
 
         <div class="footer">

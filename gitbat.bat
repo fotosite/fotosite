@@ -1,3 +1,3 @@
 git add .
-git commit -m "fix: cust_alias Hilfstext — Mitgliedern korrekt, 'Nur für Sie sichtbar' entfernt"
+git commit -m "fix: 2FA-Mail Text überarbeitet + Betreff aktualisiert, validMinutes dynamisch"
 git push

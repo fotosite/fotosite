@@ -1,7 +1,8 @@
 <?php
 /**
  * FILE:        app/Mail/TwoFactorCodeMail.php
- * VERSION:     1.0.0
+ * VERSION:     1.1.0
+ * DATE:        2026-06-08
  *
  * FUNCTIONS:   __construct()    — Accepts the 6-digit 2FA code and optional recipient name
  *              envelope()       — Sets subject and sender name
@@ -33,7 +34,7 @@ class TwoFactorCodeMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Ihr Sicherheitscode — Fotosite',
+            subject: 'Dein Sicherheitscode für die Fotogalerie',
         );
     }
 
