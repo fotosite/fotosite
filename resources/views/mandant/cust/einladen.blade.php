@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/cust/einladen.blade.php
-    VERSION: 1.3.3
+    VERSION: 1.3.4
     AUTHOR:  Martin Wagner
     DATE:    2026-06-08
 
@@ -135,14 +135,13 @@
                     Dieser Name wird in der Einladungsmail verwendet.
                     Du kannst ihn später in der Mitglieder-Administration
                     wieder ändern, um z.B. bei gleichen Vornamen besser
-                    den Überblick zu behalten. Mitglieder wird der von dir
+                    den Überblick zu behalten. Mitgliedern wird der von dir
                     gewählte Name nur in der Einladungsmail gezeigt. Nach
                     der Registrierung haben Mitglieder keinen Zugriff auf
                     die von dir vergebenen Namen. Wir empfehlen trotzdem,
                     Leute, für die du hässliche Namen verwenden würdest,
                     gar nicht erst einzuladen.
                 </p>
-                <p class="mt-1 text-xs text-gray-400">Nur für Sie sichtbar.</p>
                 @error('cust_alias')
                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                 @enderror

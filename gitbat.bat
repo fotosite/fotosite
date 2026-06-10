@@ -1,3 +1,3 @@
 git add .
-git commit -m "fix: cust_alias Hilfstext überarbeitet — ehrlicher Hinweis für mand"
+git commit -m "fix: cust_alias Hilfstext — Mitgliedern korrekt, 'Nur für Sie sichtbar' entfernt"
 git push
