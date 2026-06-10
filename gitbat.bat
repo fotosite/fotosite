@@ -1,3 +1,3 @@
 git add .
-git commit -m "feat: Einladungsmail überarbeitet — custName aus cust_alias, Betreff + Text aktualisiert"
+git commit -m "fix: cust_alias Hilfstext überarbeitet — ehrlicher Hinweis für mand"
 git push
