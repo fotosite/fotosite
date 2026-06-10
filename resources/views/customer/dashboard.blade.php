@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/customer/dashboard.blade.php
-    VERSION: 1.2.1
+    VERSION: 1.2.2
     AUTHOR:  Martin Wagner
     DATE:    2026-06-08
 
@@ -91,7 +91,7 @@
         @if($showPasskeyPrompt)
         <div x-data="{ open: true }" x-show="open" x-cloak
              class="bg-indigo-50 border border-indigo-200 rounded-lg
-                    p-4 mb-4 flex items-start gap-4">
+                    p-4 mb-4 flex flex-col md:flex-row md:items-start gap-4">
             <div class="flex-1">
                 <p class="text-sm font-medium text-indigo-800">
                     Passkey einrichten — schneller und sicherer anmelden
@@ -110,10 +110,10 @@
                     @endif
                 </p>
             </div>
-            <div class="flex gap-2 shrink-0">
+            <div class="flex flex-col gap-2 md:flex-row md:gap-3 w-full md:w-auto">
                 <a href="{{ route('customer.passkeys') }}"
-                   class="px-3 py-1.5 bg-indigo-600 text-white text-xs
-                          rounded-lg hover:bg-indigo-700">
+                   class="w-full md:w-auto text-center px-4 py-3 md:py-2
+                          bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700">
                     Einrichten
                 </a>
                 <button @click="
@@ -125,12 +125,12 @@
                             'Content-Type': 'application/json'
                         }
                     })"
-                    class="px-3 py-1.5 text-xs text-gray-500
+                    class="w-full md:w-auto px-4 py-3 md:py-2 text-sm text-gray-500
                            border border-gray-300 rounded-lg hover:bg-gray-50">
                     Nie wieder
                 </button>
                 <button @click="open = false"
-                        class="px-3 py-1.5 text-xs text-gray-400
+                        class="w-full md:w-auto px-4 py-3 md:py-2 text-sm text-gray-400
                                hover:text-gray-600">
                     Später
                 </button>

@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/dashboard.blade.php
-    VERSION: 2.7.1
+    VERSION: 2.7.2
     DATE:    2026-06-08
 
     DESCRIPTION:
@@ -122,9 +122,9 @@
                     zur Verfügung.
                 </p>
                 @endif
-                <div class="flex flex-col gap-2">
+                <div class="flex flex-col gap-2 md:flex-row md:gap-3">
                     <a href="{{ route('mandant.passkeys') }}"
-                       class="w-full text-center px-4 py-2 bg-indigo-600
+                       class="w-full text-center px-4 py-3 md:py-2 bg-indigo-600
                               text-white text-sm rounded-lg hover:bg-indigo-700">
                         Passkey einrichten
                     </a>
@@ -137,12 +137,12 @@
                                 'Content-Type': 'application/json'
                             }
                         })"
-                        class="w-full px-4 py-2 text-sm text-gray-500
+                        class="w-full px-4 py-3 md:py-2 text-sm text-gray-500
                                border border-gray-300 rounded-lg hover:bg-gray-50">
                         Nie wieder fragen
                     </button>
                     <button @click="open = false"
-                            class="w-full px-4 py-2 text-sm text-gray-400
+                            class="w-full px-4 py-3 md:py-2 text-sm text-gray-400
                                    hover:text-gray-600">
                         Später
                     </button>

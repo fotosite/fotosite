@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/cust/index.blade.php
-    VERSION: 3.2.2
+    VERSION: 3.2.3
     AUTHOR:  Martin Wagner
     DATE:    2026-06-08
 
@@ -126,7 +126,98 @@
             </div>
         @else
             <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
-                <table class="w-full text-sm">
+
+                {{-- Mobile: Card-Liste --}}
+                <div class="md:hidden divide-y divide-gray-100">
+                    @foreach($custs as $cust)
+                    <div class="p-4">
+
+                        {{-- Zeile 1: Alias + Sicherheitsstufe-Badge --}}
+                        <div class="flex items-center justify-between gap-2 mb-1">
+                            <span class="font-semibold text-sm text-gray-800">
+                                {{ $cust->cust_alias ?: '—' }}
+                            </span>
+                            <span class="shrink-0 inline-flex items-center rounded-full
+                                         bg-indigo-100 px-2.5 py-0.5
+                                         text-xs font-medium text-indigo-700">
+                                Stufe {{ $cust->cust_passcode }}
+                            </span>
+                        </div>
+
+                        {{-- Zeile 2: E-Mail --}}
+                        <div class="text-xs text-gray-400 mb-3">
+                            {{ $cust->custUser?->cust_email ?? '—' }}
+                        </div>
+
+                        {{-- Bearbeiten-Formular --}}
+                        <form method="POST"
+                              action="{{ route('mandant.kunden.passcode', $cust->pcode_id) }}"
+                              class="mb-2">
+                            @csrf
+                            @method('PATCH')
+                            <div class="flex items-center gap-2 flex-wrap mb-2">
+                                <input type="text"
+                                       name="cust_alias"
+                                       value="{{ $cust->cust_alias }}"
+                                       required
+                                       placeholder="Alias"
+                                       class="flex-1 min-w-0 rounded-lg border border-gray-300
+                                              bg-white px-3 h-10 text-sm text-gray-800 shadow-sm
+                                              focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                <select name="sec_level"
+                                        class="rounded-lg border border-gray-300 bg-white
+                                               px-2 h-10 text-sm text-gray-800 shadow-sm
+                                               focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                    @php
+                                        $levels = [
+                                            1 => 'Bekannte',
+                                            2 => 'Großfamilie',
+                                            3 => 'Freunde',
+                                            4 => 'Enge Freunde & Kernfamilie',
+                                            5 => 'Vertraulich',
+                                            6 => 'Streng vertraulich',
+                                        ];
+                                    @endphp
+                                    @foreach($levels as $val => $label)
+                                        <option value="{{ $val }}"
+                                            {{ (int)$cust->cust_passcode === $val ? 'selected' : '' }}>
+                                            {{ $val }} — {{ $label }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <button type="submit"
+                                    class="w-full h-10 rounded-lg border border-indigo-200
+                                           bg-indigo-50 px-4 text-sm font-medium text-indigo-700
+                                           hover:bg-indigo-100 transition-colors duration-150">
+                                Speichern
+                            </button>
+                        </form>
+
+                        {{-- Entfernen --}}
+                        <form method="POST"
+                              action="{{ route('mandant.kunden.destroy', $cust->pcode_id) }}"
+                              x-data
+                              @submit.prevent="
+                                  if (confirm('Mitglied wirklich entfernen?'))
+                                      $el.submit()
+                              ">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit"
+                                    class="w-full h-10 rounded-lg border border-red-200
+                                           bg-red-50 px-4 text-sm font-medium text-red-600
+                                           hover:bg-red-100 transition-colors duration-150">
+                                Entfernen
+                            </button>
+                        </form>
+
+                    </div>
+                    @endforeach
+                </div>
+
+                {{-- Desktop: Tabelle --}}
+                <table class="hidden md:table w-full text-sm">
                     <thead>
                         <tr class="border-b border-gray-100 bg-gray-50 text-left">
                             <th class="px-4 py-3 font-medium text-gray-600 text-xs uppercase
@@ -199,7 +290,7 @@
 
                                         <button type="submit"
                                                 class="rounded-lg border border-indigo-200
-                                                       bg-indigo-50 px-2.5 py-1.5 text-xs
+                                                       bg-indigo-50 px-2.5 h-10 md:h-8 text-xs
                                                        font-medium text-indigo-700
                                                        hover:bg-indigo-100
                                                        transition-colors duration-150">
@@ -221,7 +312,7 @@
                                         @method('DELETE')
                                         <button type="submit"
                                                 class="rounded-lg border border-red-200
-                                                       bg-red-50 px-2.5 py-1.5 text-xs
+                                                       bg-red-50 px-2.5 h-10 md:h-8 text-xs
                                                        font-medium text-red-600
                                                        hover:bg-red-100
                                                        transition-colors duration-150">
@@ -234,6 +325,7 @@
                         @endforeach
                     </tbody>
                 </table>
+
             </div>
         @endif
 

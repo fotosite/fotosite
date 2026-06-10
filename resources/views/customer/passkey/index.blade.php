@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/customer/passkey/index.blade.php
-    VERSION: 1.6.0
+    VERSION: 1.6.1
     DATE:    2026-06-08
 
     DESCRIPTION:
@@ -94,28 +94,14 @@
             </a>
         </div>
 
-        {{-- Seitenüberschrift + Registrieren-Button --}}
-        <div class="mb-8 flex items-start justify-between gap-4">
-            <div>
-                <h1 class="text-xl font-semibold tracking-tight text-gray-800">
-                    Meine Passkeys
-                </h1>
-                <p class="mt-1.5 text-sm text-zinc-600">
-                    Registrierte Passkeys für passwortlosen Login.
-                </p>
-            </div>
-            <button @click="showNameModal = true"
-                    class="shrink-0 inline-flex items-center gap-2 rounded-lg
-                           bg-indigo-600 px-4 py-2 text-sm font-medium text-white
-                           hover:bg-indigo-700 active:bg-indigo-800
-                           transition-colors duration-150 shadow-sm">
-                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg"
-                     fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                          d="M12 4.5v15m7.5-7.5h-15"/>
-                </svg>
-                Neuen Passkey registrieren
-            </button>
+        {{-- Seitenüberschrift --}}
+        <div class="mb-8">
+            <h1 class="text-xl font-semibold tracking-tight text-gray-800">
+                Meine Passkeys
+            </h1>
+            <p class="mt-1.5 text-sm text-zinc-600">
+                Registrierte Passkeys für passwortlosen Login.
+            </p>
         </div>
 
         {{-- Passkey-Hinweistexte --}}
@@ -194,6 +180,23 @@
                     mit der Fotogalerie kompatibel.
                 @endif
             </p>
+        </div>
+
+        {{-- Neuen Passkey registrieren --}}
+        <div class="mt-2 mb-6">
+            <button @click="showNameModal = true"
+                    class="inline-flex items-center justify-center gap-2 rounded-lg
+                           bg-indigo-600 text-sm font-medium text-white
+                           hover:bg-indigo-700 active:bg-indigo-800
+                           transition-colors duration-150 shadow-sm
+                           w-full py-3 md:w-auto md:py-2 md:px-5">
+                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg"
+                     fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M12 4.5v15m7.5-7.5h-15"/>
+                </svg>
+                Neuen Passkey registrieren
+            </button>
         </div>
 
         {{-- Flash: Status-Meldung --}}
