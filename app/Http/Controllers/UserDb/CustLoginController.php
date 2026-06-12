@@ -1,15 +1,15 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustLoginController.php
- * VERSION:     1.10.0
+ * VERSION:     1.11.0
  * AUTOR:       Martin Wagner
  * DATUM:       2026-06-08
  *
  * ZWECK:       Cust-Login — registrierter Login mit optionaler 2FA,
  *              anonymer Login per Passwort-Sequenz, Passkey-Login, Logout.
  *
- * FUNCTIONS:   showLogin()       — Gibt customer.auth.login View zurück;
- *                                  übergibt custTab (Flash 'cust_tab', Default 'reg').
+ * FUNCTIONS:   showLogin()       — Redirect zu welcome mit Flash open_login_modal='cust';
+ *                                  öffnet das Login-Modal auf der Startseite automatisch.
  *                                  Reads: —
  *              handleLogin()     — Validiert cust_email + password; sucht CustUser;
  *                                  ermittelt bevorzugten Mandanten via CustPcode;
@@ -148,12 +148,9 @@ class CustLoginController extends UserDbController
         ))->create();
     }
 
-    public function showLogin(): View
+    public function showLogin(): RedirectResponse
     {
-        return view('customer.auth.login', [
-            'errors'  => session('errors'),
-            'custTab' => session('cust_tab', 'reg'),
-        ]);
+        return redirect()->route('welcome')->with('open_login_modal', 'cust');
     }
 
     public function handleLogin(Request $request): RedirectResponse
