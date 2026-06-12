@@ -1,8 +1,8 @@
 {{--
     FILE:    resources/views/mandant/cust/index.blade.php
-    VERSION: 3.2.3
+    VERSION: 3.2.4
     AUTHOR:  Martin Wagner
-    DATE:    2026-06-08
+    DATE:    2026-06-12
 
     DESCRIPTION:
       Mitgliederliste des eingeloggten Mandanten.
@@ -155,17 +155,17 @@
                               class="mb-2">
                             @csrf
                             @method('PATCH')
-                            <div class="flex items-center gap-2 flex-wrap mb-2">
+                            <div class="grid grid-cols-1 gap-2 mb-2">
                                 <input type="text"
                                        name="cust_alias"
                                        value="{{ $cust->cust_alias }}"
                                        required
                                        placeholder="Alias"
-                                       class="flex-1 min-w-0 rounded-lg border border-gray-300
+                                       class="w-full rounded-lg border border-gray-300
                                               bg-white px-3 h-10 text-sm text-gray-800 shadow-sm
                                               focus:outline-none focus:ring-2 focus:ring-indigo-400">
                                 <select name="sec_level"
-                                        class="rounded-lg border border-gray-300 bg-white
+                                        class="w-full rounded-lg border border-gray-300 bg-white
                                                px-2 h-10 text-sm text-gray-800 shadow-sm
                                                focus:outline-none focus:ring-2 focus:ring-indigo-400">
                                     @php
@@ -252,7 +252,7 @@
                                 <td class="px-4 py-3">
                                     <form method="POST"
                                           action="{{ route('mandant.kunden.passcode', $cust->pcode_id) }}"
-                                          class="flex items-center gap-2 flex-wrap">
+                                          class="flex items-center gap-2">
                                         @csrf
                                         @method('PATCH')
 
@@ -261,13 +261,12 @@
                                                value="{{ $cust->cust_alias }}"
                                                required
                                                placeholder="Alias"
-                                               class="rounded-lg border border-gray-300 bg-white
+                                               class="flex-[2] min-w-0 rounded-lg border border-gray-300 bg-white
                                                       px-2 py-1.5 text-xs text-gray-800 shadow-sm
-                                                      w-36
                                                       focus:outline-none focus:ring-2 focus:ring-indigo-400">
 
                                         <select name="sec_level"
-                                                class="rounded-lg border border-gray-300 bg-white
+                                                class="flex-1 rounded-lg border border-gray-300 bg-white
                                                        px-2 py-1.5 text-xs text-gray-800 shadow-sm
                                                        focus:outline-none focus:ring-2 focus:ring-indigo-400">
                                             @php

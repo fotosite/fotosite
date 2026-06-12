@@ -1,3 +1,3 @@
 git add .
-git commit -m "feat: Passwort-Reset für mand — analog zu cust, mit verschärfter Passwort-Policy (12 Zeichen)"
+git commit -m "fix: Mitgliederliste - cust_alias/Sicherheitsstufe Layout (Smartphone untereinander, Desktop 2:1)"
 git push
