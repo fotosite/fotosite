@@ -1,3 +1,3 @@
 git add .
-git commit -m "fix: handleReset - keine Erfolgsmeldung mehr (Sicherheit, kein Enumeration-Hinweis)"
+git commit -m "feat: Passwort-Reset für mand — analog zu cust, mit verschärfter Passwort-Policy (12 Zeichen)"
 git push

@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/auth/login-modal.blade.php
-    VERSION: 1.1.0
+    VERSION: 1.2.0
     DATE:    2026-06-12
 
     DESCRIPTION:
@@ -302,6 +302,13 @@
                            class="block w-full rounded-lg border-gray-300 shadow-sm
                                   focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                            required>
+                </div>
+
+                <div class="mt-1 text-right">
+                    <a href="{{ route('mandant.password.reset.request') }}"
+                       class="text-xs text-indigo-600 hover:underline">
+                        Passwort vergessen?
+                    </a>
                 </div>
 
                 <div class="mt-5">

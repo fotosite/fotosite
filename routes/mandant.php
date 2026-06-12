@@ -6,6 +6,7 @@ use App\Http\Controllers\UserDb\MandantCustController;
 use App\Http\Controllers\UserDb\MandantDashboardController;
 use App\Http\Controllers\UserDb\MandantLoginController;
 use App\Http\Controllers\UserDb\MandantSelfController;
+use App\Http\Controllers\UserDb\MandPasswordResetController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -37,6 +38,17 @@ Route::middleware('web')->prefix('mandant')->name('mandant.')->group(function ()
         ->name('login.passkey.options');
     Route::post('/login/passkey',        [MandantLoginController::class, 'passkeyLogin'])
         ->name('login.passkey');
+
+    // ── Passwort zurücksetzen ─────────────────────────────
+    Route::get('/password-reset',          [MandPasswordResetController::class, 'showResetRequest'])
+        ->name('password.reset.request');
+    Route::post('/password-reset',         [MandPasswordResetController::class, 'sendResetLink'])
+        ->middleware('throttle:3,10')
+        ->name('password.reset.send');
+    Route::get('/password-reset/{token}',  [MandPasswordResetController::class, 'showResetForm'])
+        ->name('password.reset');
+    Route::post('/password-reset/{token}', [MandPasswordResetController::class, 'handleReset'])
+        ->name('password.reset.handle');
 });
 
 // ── Authenticated area ────────────────────────────────────────

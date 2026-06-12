@@ -1,11 +1,11 @@
 {{--
     FILE:    resources/views/emails/invite.blade.php
-    VERSION: 1.1.0
+    VERSION: 1.2.0
     DATE:    2026-06-12
 
     DESCRIPTION:
       E-Mail-Template für Einladungen und Passwort-Zurücksetzungen.
-      Unterstützt type='register' (syst/mand/cust) und type='pw_reset' (syst/cust).
+      Unterstützt type='register' (syst/mand/cust) und type='pw_reset' (syst/mand/cust).
 
     DATA FROM MAILABLE (InviteMail):
       $inviteUrl  — string, Einladungs- oder Reset-Link
@@ -108,6 +108,10 @@
             @else
                 @if($userType === 'cust')
                     <p>Es wurde eine Passwort-Zurücksetzung für Ihr Mitglieds-Konto bei
+                       Fotogalerie angefordert. Klicken Sie auf den folgenden Link —
+                       er ist 24 Stunden gültig:</p>
+                @elseif($userType === 'mand')
+                    <p>Es wurde eine Passwort-Zurücksetzung für Ihr Galerist:innen-Konto bei
                        Fotogalerie angefordert. Klicken Sie auf den folgenden Link —
                        er ist 24 Stunden gültig:</p>
                 @else
