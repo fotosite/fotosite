@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/emails/cust-invite.blade.php
-    VERSION: 1.2.0
+    VERSION: 1.3.0
     DATE:    2026-06-08
 
     DESCRIPTION:
@@ -8,9 +8,10 @@
       sowie alternativen Zugang über Kurzzeit-Passwort.
 
     DATA FROM MAILABLE:
-      $registerUrl — string, Registrierungslink (48 h gültig)
-      $mandUname   — string, Benutzername des einladenden Mandanten
-      $custName    — string, interner Alias des Mitglieds (Fallback: 'dort')
+      $registerUrl   — string, Registrierungslink (48 h gültig)
+      $mandUname     — string, Benutzername des einladenden Mandanten
+      $custName      — string, interner Alias des Mitglieds (Fallback: 'dort')
+      $mandFirstname — string, Vorname des Mandanten im Genitiv (z. B. "Martins")
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -98,7 +99,7 @@
         <div class="body">
             <p>Hallo {{ $custName }},</p>
 
-            <p>diese Mail kommt von Martins Fotogalerie-Website.<br>
+            <p>diese Mail kommt von {{ $mandFirstname }} Fotogalerie-Website.<br>
                Die Webadresse der Website ist
                <a href="https://fotos.martinwagner.de/" style="color:#1a1a2e;">https://fotos.martinwagner.de/</a></p>
 

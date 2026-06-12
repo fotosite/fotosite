@@ -1,3 +1,3 @@
 git add .
-git commit -m "fix: UI-Terminologie Passcode/Passcodeliste -> Kurzzeit-Kennwort/-liste"
+git commit -m "feat: customer/login Platzhalter ersetzt — vollständige Login-Seite mit Passkey, PW, Gast-Tab"
 git push
