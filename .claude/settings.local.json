@@ -13,7 +13,8 @@
       "Bash(findstr /i \"curl.cainfo\\\\|openssl.cafile\\\\|cainfo\\\\|cafile\")",
       "Bash(Select-String -Pattern \"cainfo|cafile\")",
       "Bash(xargs grep -l \"serialize\\\\|jsonSerialize\\\\|Serializable\")",
-      "Bash(composer dump-autoload *)"
+      "Bash(composer dump-autoload *)",
+      "Bash(grep -E \"GET\\\\s+/\\\\s\")"
     ]
   }
 }

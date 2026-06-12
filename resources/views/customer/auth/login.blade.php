@@ -20,6 +20,6 @@
 <body style="font-family: sans-serif; text-align: center; padding: 4rem;">
     <h1>Seite nicht verfügbar</h1>
     <p>Diese Seite wird nicht mehr verwendet.</p>
-    <p><a href="{{ route('welcome') }}">Zurück zur Startseite</a></p>
+    <p><a href="{{ route('home') }}">Zurück zur Startseite</a></p>
 </body>
 </html>

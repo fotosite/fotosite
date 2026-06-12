@@ -1,3 +1,3 @@
 git add .
-git commit -m "fix: login.blade.php auf minimalen Platzhalter reduziert (kein doppeltes Markup mehr)"
+git commit -m "fix: route('welcome') -> route('home') in showLogin() und Platzhalter"
 git push
