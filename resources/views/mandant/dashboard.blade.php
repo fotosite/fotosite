@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/dashboard.blade.php
-    VERSION: 2.7.2
+    VERSION: 2.8.0
     DATE:    2026-06-08
 
     DESCRIPTION:
@@ -164,17 +164,17 @@
         @if($pwExpired)
             <div class="p-4 rounded-lg mb-4 text-sm
                         bg-amber-50 border border-amber-300 text-amber-800">
-                ⚠️ Der Gültigkeitszeitraum für Ihre Passcodeliste ist abgelaufen.
+                ⚠️ Der Gültigkeitszeitraum für Ihre Kurzzeit-Kennwortliste ist abgelaufen.
                 Bitte aktualisieren Sie die
                 <a href="{{ route('mandant.pwlist') }}"
-                   class="font-semibold underline hover:no-underline">Passcodeliste</a>.
+                   class="font-semibold underline hover:no-underline">Kurzzeit-Kennwortliste</a>.
             </div>
         @endif
 
         @if($pwMissing)
             <div class="p-4 rounded-lg mb-4 text-sm
                         bg-blue-50 border border-blue-300 text-blue-800">
-                ℹ️ Sie haben noch keine Passcodeliste angelegt.
+                ℹ️ Sie haben noch keine Kurzzeit-Kennwortliste angelegt.
                 <a href="{{ route('mandant.pwlist') }}"
                    class="font-semibold underline hover:no-underline">Jetzt anlegen</a>.
             </div>
@@ -284,7 +284,7 @@
                         Mitglieder
                     </h2>
                     <p class="text-xs text-gray-500 leading-relaxed">
-                        Mitglieder einladen, Passcodes<br>verwalten, löschen
+                        Mitglieder einladen, Kurzzeit-Kennwörter<br>verwalten, löschen
                     </p>
                 </div>
 
@@ -375,7 +375,7 @@
 
                 <div>
                     <h2 class="text-sm font-semibold text-gray-800 tracking-wide mb-1">
-                        Passcodeliste
+                        Kurzzeit-Kennwortliste
                     </h2>
                     <p class="text-xs text-gray-500 leading-relaxed">
                         Passwörter und Gültigkeit<br>verwalten

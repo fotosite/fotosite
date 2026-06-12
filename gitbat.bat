@@ -1,3 +1,3 @@
 git add .
-git commit -m "feat: Smartphone/Tablet-Optimierung — Dashboard-Passkey-Prompt, Mitgliederliste, Passkey-Button"
+git commit -m "fix: UI-Terminologie Passcode/Passcodeliste -> Kurzzeit-Kennwort/-liste"
 git push
