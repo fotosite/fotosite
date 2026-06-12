@@ -1,3 +1,23 @@
+{{--
+    FILE:    resources/views/auth/login-modal.blade.php
+    VERSION: 1.1.0
+    DATE:    2026-06-12
+
+    DESCRIPTION:
+      Startseite / Login-Modal der Fotogalerie.
+      Rendert zwei Seiten über Alpine.js page-State:
+        page === 'cust' — Customer-Login (Tabs: Anonym / Registriert)
+        page === 'mand' — Mandanten-Login
+
+    ROUTES USED:
+      POST customer.login.anon            — Gast-Login (Kurzzeit-Kennwort)
+      POST customer.login.handle          — Mitglied-Login (E-Mail + PW)
+      GET  customer.login.passkey.options — Cust-Passkey-Challenge (JS)
+      POST customer.login.passkey         — Cust-Passkey-Assertion (JS)
+      POST /mandant/login                 — Mandant-Login (E-Mail + PW)
+      GET  mandant.login.passkey.options  — Mand-Passkey-Challenge (JS)
+      POST mandant.login.passkey          — Mand-Passkey-Assertion (JS)
+--}}
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -173,6 +193,13 @@
                                required>
                     </div>
 
+                    <div class="mt-1 text-right">
+                        <a href="{{ route('customer.password.reset.request') }}"
+                           class="text-xs text-indigo-600 hover:underline">
+                            Passwort vergessen?
+                        </a>
+                    </div>
+
                     <div class="mt-5">
                         <button type="submit"
                                 class="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm
@@ -288,16 +315,12 @@
                 </div>
             </form>
 
-            <div class="mt-5 flex items-center justify-between">
+            <div class="mt-5">
                 <button type="button"
                         @click="page = 'cust'"
                         class="text-xs text-gray-400 hover:text-gray-600 transition-colors">
                     ← Zurück
                 </button>
-                <a href="#"
-                   class="text-xs text-gray-400 hover:text-gray-600 transition-colors">
-                    Passwort vergessen?
-                </a>
             </div>
 
         </div>

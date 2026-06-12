@@ -1,20 +1,20 @@
 {{--
     FILE:    resources/views/welcome.blade.php
-    VERSION: 1.0.0
+    VERSION: 1.1.0
     AUTOR:   Martin Wagner
-    DATUM:   2026-06-08
+    DATUM:   2026-06-12
+
+    ACHTUNG: Diese Datei wird von keiner Route verwendet
+             (siehe routes/web.php — Route 'home' rendert
+             auth/login-modal.blade.php).
+             Mögliche Altlast, zur Bereinigung vormerken.
 
     DESCRIPTION:
-      Startseite der Fotogalerie. Enthält das Customer-Login-Modal,
-      das automatisch öffnet wenn session('open_login_modal') === 'cust'
-      (Redirect von CustLoginController::showLogin()) oder wenn
-      Validierungsfehler des Login-Formulars vorliegen ($errors->any()).
+      Ursprünglich: Startseite der Fotogalerie mit Customer-Login-Modal.
+      Nicht mehr aktiv — ersetzt durch resources/views/auth/login-modal.blade.php.
 
     ROUTES USED:
-      POST customer.login.handle          — Mitglied-Login (E-Mail + PW)
-      POST customer.login.anon            — Gast-Login (Kurzzeit-Kennwort)
-      GET  customer.login.passkey.options — Passkey-Challenge (JSON)
-      POST customer.login.passkey         — Passkey-Assertion (JSON)
+      (keine — diese View wird von keiner Route gerendert)
 --}}
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -209,10 +209,6 @@
                                 @error('password')
                                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                                 @enderror
-                            </div>
-                            <div class="mt-1 text-right">
-                                <a href="{{ route('customer.password.reset.request') }}"
-                                   class="text-xs text-indigo-600 hover:underline">Passwort vergessen?</a>
                             </div>
                         </div>
                         <div class="mt-5">
