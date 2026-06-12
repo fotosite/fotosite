@@ -1,3 +1,3 @@
 git add .
-git commit -m "fix: route('welcome') -> route('home') in showLogin() und Platzhalter"
+git commit -m "feat: Passwort-Reset für cust — Request-Formular, Reset-Link, Mail, Login-Modal-Link"
 git push

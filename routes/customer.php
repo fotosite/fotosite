@@ -3,6 +3,7 @@
 use App\Http\Controllers\Passkey\CustPasskeyController;
 use App\Http\Controllers\UserDb\CustDashboardController;
 use App\Http\Controllers\UserDb\CustLoginController;
+use App\Http\Controllers\UserDb\CustPasswordResetController;
 use App\Http\Controllers\UserDb\CustRegisterController;
 use Illuminate\Support\Facades\Route;
 
@@ -50,6 +51,17 @@ Route::middleware('web')->prefix('customer')->name('customer.')->group(function 
         ->name('register');
     Route::post('/register/{token}', [CustRegisterController::class, 'store'])
         ->name('register.store');
+
+    // ── Passwort zurücksetzen ─────────────────────────────
+    Route::get('/password-reset',          [CustPasswordResetController::class, 'showResetRequest'])
+        ->name('password.reset.request');
+    Route::post('/password-reset',         [CustPasswordResetController::class, 'sendResetLink'])
+        ->middleware('throttle:3,10')
+        ->name('password.reset.send');
+    Route::get('/password-reset/{token}',  [CustPasswordResetController::class, 'showResetForm'])
+        ->name('password.reset');
+    Route::post('/password-reset/{token}', [CustPasswordResetController::class, 'handleReset'])
+        ->name('password.reset.handle');
 
     // ── Passkey-Verwaltung (authentifiziert, role:cust folgt) ─
     Route::get('/passkeys',                  [CustPasskeyController::class, 'index'])
