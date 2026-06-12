@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustPasswordResetController.php
- * VERSION:     1.0.0
+ * VERSION:     1.1.0
  * DATE:        2026-06-12
  *
  * FUNCTIONS:   showResetRequest()  — Shows email-input form for password-reset request.
@@ -74,8 +74,9 @@ class CustPasswordResetController extends UserDbController
             Mail::to($user->cust_email)->send(new InviteMail($url, 'pw_reset', 'cust'));
         }
 
-        return redirect()->route('customer.password.reset.request')
-            ->with('status', 'Falls ein Konto mit dieser E-Mail-Adresse existiert, wurde ein Link zum Passwort-Zurücksetzen gesendet.');
+        return redirect()->route('home')
+            ->with('status', 'Falls diese Email-Adresse registriert ist, wurde eine Email mit einem Link zum Zurücksetzen verschickt.')
+            ->with('open_login_modal', 'cust');
     }
 
     public function showResetForm(string $token): View

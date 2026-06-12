@@ -1,3 +1,3 @@
 git add .
-git commit -m "fix: Passwort-vergessen-Link in korrekte Datei (auth/login-modal.blade.php) verschoben, falscher Platzhalter entfernt"
+git commit -m "fix: sendResetLink redirected zur Startseite mit Status-Meldung + Login-Modal"
 git push
