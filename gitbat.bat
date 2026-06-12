@@ -1,3 +1,3 @@
 git add .
-git commit -m "fix: sendResetLink redirected zur Startseite mit Status-Meldung + Login-Modal"
+git commit -m "fix: handleReset - keine Erfolgsmeldung mehr (Sicherheit, kein Enumeration-Hinweis)"
 git push

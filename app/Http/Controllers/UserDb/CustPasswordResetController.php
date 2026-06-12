@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustPasswordResetController.php
- * VERSION:     1.1.0
+ * VERSION:     1.2.0
  * DATE:        2026-06-12
  *
  * FUNCTIONS:   showResetRequest()  — Shows email-input form for password-reset request.
@@ -116,7 +116,6 @@ class CustPasswordResetController extends UserDbController
         $invite->delete();
 
         return redirect()->route('home')
-            ->with('status', 'Ihr Passwort wurde erfolgreich zurückgesetzt. Bitte melden Sie sich jetzt an.')
             ->with('open_login_modal', 'cust');
     }
 }
