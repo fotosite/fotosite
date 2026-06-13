@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/customer/dashboard.blade.php
-    VERSION: 1.2.2
+    VERSION: 1.3.0
     AUTHOR:  Martin Wagner
     DATE:    2026-06-08
 
@@ -214,8 +214,30 @@
                 </div>
             @endif
 
+            {{-- Mein Konto --}}
+            <div class="mt-6 mb-2 flex items-center justify-between
+                        rounded-lg border border-gray-100 bg-white px-4 py-3">
+                <div class="flex items-center gap-2.5">
+                    <svg class="w-4 h-4 text-indigo-400 shrink-0"
+                         xmlns="http://www.w3.org/2000/svg"
+                         fill="none" viewBox="0 0 24 24"
+                         stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501
+                                 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12
+                                 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/>
+                    </svg>
+                    <span class="text-sm text-gray-700">Mein Konto</span>
+                </div>
+                <a href="{{ route('customer.konto') }}"
+                   class="text-xs font-medium text-indigo-600
+                          hover:text-indigo-800 transition-colors">
+                    Verwalten →
+                </a>
+            </div>
+
             {{-- Passkeys verwalten --}}
-            <div class="mt-6 mb-4 flex items-center justify-between
+            <div class="mt-2 mb-4 flex items-center justify-between
                         rounded-lg border border-gray-100 bg-white px-4 py-3">
                 <div class="flex items-center gap-2.5">
                     <svg class="w-4 h-4 text-indigo-400 shrink-0"

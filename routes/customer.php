@@ -5,6 +5,7 @@ use App\Http\Controllers\UserDb\CustDashboardController;
 use App\Http\Controllers\UserDb\CustLoginController;
 use App\Http\Controllers\UserDb\CustPasswordResetController;
 use App\Http\Controllers\UserDb\CustRegisterController;
+use App\Http\Controllers\UserDb\CustSelfController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -62,6 +63,14 @@ Route::middleware('web')->prefix('customer')->name('customer.')->group(function 
         ->name('password.reset');
     Route::post('/password-reset/{token}', [CustPasswordResetController::class, 'handleReset'])
         ->name('password.reset.handle');
+
+    // ── Konto-Eigenverwaltung ─────────────────────────────
+    Route::get('/konto',          [CustSelfController::class, 'edit'])
+        ->name('konto');
+    Route::patch('/konto',        [CustSelfController::class, 'update'])
+        ->name('konto.update');
+    Route::patch('/konto/password', [CustSelfController::class, 'updatePassword'])
+        ->name('konto.password');
 
     // ── Passkey-Verwaltung (authentifiziert, role:cust folgt) ─
     Route::get('/passkeys',                  [CustPasskeyController::class, 'index'])
