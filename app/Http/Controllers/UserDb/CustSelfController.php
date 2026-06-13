@@ -1,9 +1,9 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustSelfController.php
- * VERSION:     1.1.0
+ * VERSION:     1.2.0
  * AUTOR:       Martin Wagner
- * DATUM:       2026-06-12
+ * DATUM:       2026-06-13
  *
  * ZWECK:       Customer Eigenverwaltung — Kontaktdaten, Passwort, Galerien verwalten,
  *              Konto löschen.
@@ -29,7 +29,10 @@
  *              reorderGalerie()    — Tauscht pcode_prefstat zweier benachbarter Einträge
  *                                     (up/down); weist sequenzielle Werte zu.
  *                                     Reads/Writes: userdb.cust_pcode.pcode_prefstat
- *              toggleMailrequest() — Setzt cust_mailrequest für einen pcode-Eintrag.
+ *              saveSettings()      — Setzt cust_mailrequest für alle pcode-Einträge des
+ *                                     Cust auf Basis der übermittelten Checkboxen;
+ *                                     Checkbox-Fehlende → false (unchecked sendet nichts).
+ *                                     Reads:  userdb.cust_pcode.pcode_id
  *                                     Writes: userdb.cust_pcode.cust_mailrequest
  *              removeGalerie()     — Löscht einen pcode-Eintrag; bei letztem Eintrag:
  *                                     destroyAccount(). Redirect zu galerien oder home.
@@ -212,7 +215,7 @@ class CustSelfController extends UserDbController
         return redirect()->route('customer.galerien');
     }
 
-    public function toggleMailrequest(Request $request, int $pcodeId): RedirectResponse
+    public function saveSettings(Request $request): RedirectResponse
     {
         $custId = $request->session()->get('_cust_id');
         $cust   = $custId ? CustUser::find($custId) : null;
@@ -223,13 +226,15 @@ class CustSelfController extends UserDbController
             return redirect()->route('customer.login');
         }
 
-        CustPcode::where('pcode_id', $pcodeId)
-            ->where('cust_id', $custId)
-            ->firstOrFail()
-            ->update(['cust_mailrequest' => $request->boolean('cust_mailrequest')]);
+        $pcodes = CustPcode::where('cust_id', $custId)->get();
+
+        foreach ($pcodes as $pcode) {
+            $pcode->cust_mailrequest = $request->has("mailrequest_{$pcode->pcode_id}");
+            $pcode->save();
+        }
 
         return redirect()->route('customer.galerien')
-            ->with('status', 'Einstellung gespeichert.');
+            ->with('status', 'Einstellungen gespeichert.');
     }
 
     public function removeGalerie(Request $request, int $pcodeId): RedirectResponse

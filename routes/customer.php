@@ -79,13 +79,12 @@ Route::middleware('web')->prefix('customer')->name('customer.')->group(function 
     // ── Galerien-Verwaltung ───────────────────────────────
     Route::get('/galerien', [CustSelfController::class, 'galerien'])
         ->name('galerien');
+    Route::post('/galerien/save-settings', [CustSelfController::class, 'saveSettings'])
+        ->name('galerien.save-settings');
     Route::patch('/galerien/{pcodeId}/reorder/{direction}',
         [CustSelfController::class, 'reorderGalerie'])
         ->name('galerien.reorder')
         ->where('direction', 'up|down');
-    Route::patch('/galerien/{pcodeId}/mailrequest',
-        [CustSelfController::class, 'toggleMailrequest'])
-        ->name('galerien.mailrequest');
     Route::delete('/galerien/{pcodeId}',
         [CustSelfController::class, 'removeGalerie'])
         ->name('galerien.remove');

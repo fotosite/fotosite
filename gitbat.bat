@@ -1,3 +1,3 @@
 git add .
-git commit -m "feat: cust-Dashboard umgebaut (3 Kacheln), neue Dummy-Content-Seite nach Login, anon-Dashboard entfernt"
+git commit -m "feat: Meine Galerien umgebaut - zentraler Save-Button fuer Mailrequest, Up/Down rechtsbuendig, Confirm-Dialog beim Verlassen"
 git push
