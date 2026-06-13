@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Models/UserDb/CustPcode.php
- * VERSION:     1.2.0
+ * VERSION:     1.3.0
  * AUTHOR:      Martin Wagner
  * DATE:        2026-05-30
  * PURPOSE:     Mandant-Mitglieder-Zuordnung mit Sicherheitsstufe und internem Alias
@@ -13,7 +13,7 @@
  *              App\Models\UserDb\CustUser
  *
  * DB ACCESS:   userdb.cust_pcode.pcode_id, mand_id, cust_id, cust_passcode,
- *              pcode_prefstat, cust_alias
+ *              pcode_prefstat, cust_alias, cust_mailrequest
  */
 
 namespace App\Models\UserDb;
@@ -32,6 +32,11 @@ class CustPcode extends UserDbModel
         'cust_passcode',
         'pcode_prefstat',
         'cust_alias',
+        'cust_mailrequest',
+    ];
+
+    protected $casts = [
+        'cust_mailrequest' => 'boolean',
     ];
 
     public function mandUser(): BelongsTo

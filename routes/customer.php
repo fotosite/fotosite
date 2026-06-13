@@ -71,6 +71,22 @@ Route::middleware('web')->prefix('customer')->name('customer.')->group(function 
         ->name('konto.update');
     Route::patch('/konto/password', [CustSelfController::class, 'updatePassword'])
         ->name('konto.password');
+    Route::delete('/konto',       [CustSelfController::class, 'deleteAccount'])
+        ->name('konto.delete');
+
+    // ── Galerien-Verwaltung ───────────────────────────────
+    Route::get('/galerien', [CustSelfController::class, 'galerien'])
+        ->name('galerien');
+    Route::patch('/galerien/{pcodeId}/reorder/{direction}',
+        [CustSelfController::class, 'reorderGalerie'])
+        ->name('galerien.reorder')
+        ->where('direction', 'up|down');
+    Route::patch('/galerien/{pcodeId}/mailrequest',
+        [CustSelfController::class, 'toggleMailrequest'])
+        ->name('galerien.mailrequest');
+    Route::delete('/galerien/{pcodeId}',
+        [CustSelfController::class, 'removeGalerie'])
+        ->name('galerien.remove');
 
     // ── Passkey-Verwaltung (authentifiziert, role:cust folgt) ─
     Route::get('/passkeys',                  [CustPasskeyController::class, 'index'])

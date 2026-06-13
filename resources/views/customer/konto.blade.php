@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/customer/konto.blade.php
-    VERSION: 1.0.0
+    VERSION: 1.1.0
     DATE:    2026-06-12
 
     DESCRIPTION:
@@ -14,8 +14,9 @@
     ROUTES USED:
       GET   customer.dashboard      — Zurück-Link
       PATCH customer.konto.update   — Kontaktdaten speichern
-      PATCH customer.konto.password — Passwort ändern
-      POST  customer.logout         — Abmelden
+      PATCH  customer.konto.password — Passwort ändern
+      DELETE customer.konto.delete  — Konto löschen
+      POST   customer.logout        — Abmelden
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -350,6 +351,38 @@
                 </div>
 
             </form>
+        </div>
+
+        {{-- ── Card 3: Konto löschen ───────────────────────── --}}
+
+        <div class="mt-6 bg-red-50 rounded-xl border border-red-200 shadow-sm p-6">
+
+            <h2 class="text-sm font-semibold text-red-800 tracking-wide mb-3">
+                Konto löschen
+            </h2>
+
+            <p class="text-sm text-red-700 mb-5">
+                Achtung, du bist dabei, dein Konto zu löschen. Wenn dein Mitgliedskonto
+                keinen Galeristen mehr hat, wird dein Fotogalerie-Konto gelöscht, und du
+                hast keinen Zugang mehr. Bekommst du danach eine neue Einladung von einem
+                Galeristen, musst du dann ein neues Benutzerkonto anlegen.
+            </p>
+
+            <form method="POST"
+                  action="{{ route('customer.konto.delete') }}"
+                  onsubmit="return window.confirm('Konto wirklich endgültig löschen? Diese Aktion kann nicht rückgängig gemacht werden.')">
+                @csrf
+                @method('DELETE')
+                <button type="submit"
+                        class="w-full flex justify-center py-3 md:py-2 px-4
+                               rounded-md text-sm font-medium text-white
+                               bg-red-600 hover:bg-red-700 transition-colors
+                               focus:outline-none focus:ring-2
+                               focus:ring-red-500 focus:ring-offset-2">
+                    Konto endgültig löschen
+                </button>
+            </form>
+
         </div>
 
     </main>

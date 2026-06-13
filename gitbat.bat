@@ -1,3 +1,3 @@
 git add .
-git commit -m "feat: cust-Eigenverwaltung Teil 1 - Mein Konto (Kontaktdaten + Passwort aendern)"
+git commit -m "feat: cust-Eigenverwaltung Teil 2 - Meine Galerien (Reorder, Mailrequest, Entfernen + Konto loeschen)"
 git push
