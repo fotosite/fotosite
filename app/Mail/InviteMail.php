@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Mail/InviteMail.php
- * VERSION:     1.2.0
+ * VERSION:     1.5.0
  *
  * FUNCTIONS:   __construct()   — Accepts invite URL, type ('register'|'pw_reset'),
  *                                and userType ('syst'|'mand'|'cust', default 'syst')
@@ -35,10 +35,10 @@ class InviteMail extends Mailable
     public function envelope(): Envelope
     {
         $subject = match(true) {
-            $this->type === 'pw_reset'                              => 'Fotosite V8 — Passwort zurücksetzen',
-            $this->type === 'register' && $this->userType === 'mand' => 'Einladung: Fotosite Mandant',
-            $this->type === 'register' && $this->userType === 'cust' => 'Einladung: Fotosite User',
-            default                                                  => 'Einladung: Fotosite V8 System-Account erstellen',
+            $this->type === 'pw_reset'                              => 'Fotogalerie — Passwort zurücksetzen',
+            $this->type === 'register' && $this->userType === 'mand' => 'Einladung: Fotogalerie Galerist:in',
+            $this->type === 'register' && $this->userType === 'cust' => 'Einladung: Fotogalerie Mitglied',
+            default                                                  => 'Einladung: Fotogalerie System-Account erstellen',
         };
 
         return new Envelope(subject: $subject);

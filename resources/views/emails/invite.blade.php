@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/emails/invite.blade.php
-    VERSION: 1.2.0
+    VERSION: 1.3.0
     DATE:    2026-06-12
 
     DESCRIPTION:
@@ -106,24 +106,15 @@
                 <p class="note">Falls Sie diese Einladung nicht erwartet haben,
                    können Sie diese E-Mail ignorieren.</p>
             @else
-                @if($userType === 'cust')
-                    <p>Es wurde eine Passwort-Zurücksetzung für Ihr Mitglieds-Konto bei
-                       Fotogalerie angefordert. Klicken Sie auf den folgenden Link —
-                       er ist 24 Stunden gültig:</p>
-                @elseif($userType === 'mand')
-                    <p>Es wurde eine Passwort-Zurücksetzung für Ihr Galerist:innen-Konto bei
-                       Fotogalerie angefordert. Klicken Sie auf den folgenden Link —
-                       er ist 24 Stunden gültig:</p>
-                @else
-                    <p>Es wurde eine Passwort-Zurücksetzung für Ihren Fotogalerie
-                       System-Account angefordert. Klicken Sie auf den folgenden Link —
-                       er ist 24 Stunden gültig:</p>
-                @endif
+                <p>Sie haben Ihr Passwort vergessen? Kein Problem: mit
+                diesem Link können Sie ein neues Passwort festlegen:</p>
 
-                <a href="{{ $inviteUrl }}" class="btn">Link zum Passwort setzen</a>
+                <p style="word-break:break-all; font-size:12px; color:#666666;">
+                    {{ $inviteUrl }}
+                </p>
 
-                <p class="note">Falls Sie diese Zurücksetzung nicht angefordert haben,
-                   können Sie diese E-Mail ignorieren. Ihr Konto bleibt unverändert.</p>
+                <p>Falls dies nicht von Ihnen veranlasst war, können Sie
+                diese Email ignorieren. Ihr Konto bleibt dann unverändert.</p>
             @endif
         </div>
 
