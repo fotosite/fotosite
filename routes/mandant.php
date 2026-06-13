@@ -43,7 +43,7 @@ Route::middleware('web')->prefix('mandant')->name('mandant.')->group(function ()
     Route::get('/password-reset',          [MandPasswordResetController::class, 'showResetRequest'])
         ->name('password.reset.request');
     Route::post('/password-reset',         [MandPasswordResetController::class, 'sendResetLink'])
-        ->middleware('throttle:3,10')
+        ->middleware('throttle:password-reset')
         ->name('password.reset.send');
     Route::get('/password-reset/{token}',  [MandPasswordResetController::class, 'showResetForm'])
         ->name('password.reset');

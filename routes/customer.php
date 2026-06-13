@@ -26,10 +26,10 @@ Route::middleware('web')->prefix('customer')->name('customer.')->group(function 
     Route::get('/login',          [CustLoginController::class, 'showLogin'])
         ->name('login');
     Route::post('/login',         [CustLoginController::class, 'handleLogin'])
-        ->middleware('throttle:10,1')
+        ->middleware('throttle:cust-login')
         ->name('login.handle');
     Route::post('/login/anon',    [CustLoginController::class, 'handleAnonLogin'])
-        ->middleware('throttle:5,1')
+        ->middleware('throttle:cust-anon-login')
         ->name('login.anon');
     Route::get('/login/passkey/options', [CustLoginController::class, 'passkeyOptions'])
         ->name('login.passkey.options');
@@ -38,7 +38,7 @@ Route::middleware('web')->prefix('customer')->name('customer.')->group(function 
     Route::get('/login/2fa',      [CustLoginController::class, 'showTwoFactor'])
         ->name('login.2fa');
     Route::post('/login/2fa',     [CustLoginController::class, 'verifyTwoFactor'])
-        ->middleware('throttle:3,10')
+        ->middleware('throttle:login-2fa')
         ->name('login.2fa.verify');
     Route::post('/logout',        [CustLoginController::class, 'logout'])
         ->name('logout');
@@ -56,7 +56,7 @@ Route::middleware('web')->prefix('customer')->name('customer.')->group(function 
     Route::get('/password-reset',          [CustPasswordResetController::class, 'showResetRequest'])
         ->name('password.reset.request');
     Route::post('/password-reset',         [CustPasswordResetController::class, 'sendResetLink'])
-        ->middleware('throttle:3,10')
+        ->middleware('throttle:password-reset')
         ->name('password.reset.send');
     Route::get('/password-reset/{token}',  [CustPasswordResetController::class, 'showResetForm'])
         ->name('password.reset');

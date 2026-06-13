@@ -1,3 +1,3 @@
 git add .
-git commit -m "fix: Mitgliederliste - cust_alias/Sicherheitsstufe Layout (Smartphone untereinander, Desktop 2:1)"
+git commit -m "feat: DEBUGMODE in .env umgeht alle Rate-Limits (Testbetrieb), benannte RateLimiter zentral"
 git push
