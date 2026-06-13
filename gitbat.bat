@@ -1,3 +1,3 @@
 git add .
-git commit -m "feat: cust-Eigenverwaltung Teil 2 - Meine Galerien (Reorder, Mailrequest, Entfernen + Konto loeschen)"
+git commit -m "feat: cust-Dashboard umgebaut (3 Kacheln), neue Dummy-Content-Seite nach Login, anon-Dashboard entfernt"
 git push

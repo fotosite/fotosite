@@ -47,6 +47,8 @@ Route::middleware('web')->prefix('customer')->name('customer.')->group(function 
     // ── Dashboard ─────────────────────────────────────────
     Route::get('/dashboard', [CustDashboardController::class, 'index'])
         ->name('dashboard');
+    Route::get('/content', [CustDashboardController::class, 'content'])
+        ->name('content');
 
     Route::get('/register/{token}',  [CustRegisterController::class, 'show'])
         ->name('register');

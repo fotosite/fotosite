@@ -1,27 +1,25 @@
 {{--
     FILE:    resources/views/customer/dashboard.blade.php
-    VERSION: 1.4.0
-    AUTHOR:  Martin Wagner
-    DATE:    2026-06-08
+    VERSION: 2.0.0
+    DATE:    2026-06-13
 
     DESCRIPTION:
-      Kunden-Dashboard — Einstiegsseite für registrierte Mitglieder (cust)
-      und anonyme Besucher (anon) nach erfolgreichem Login.
+      Kunden-Dashboard — Verwaltungsübersicht für registrierte Mitglieder (cust).
       Standalone (kein Layout-Erbe). Accent-Farbe: indigo.
+      Anonyme Besucher (anon) werden nach Login direkt zu customer.content
+      geleitet und erreichen dieses Dashboard nicht mehr.
 
     DATA FROM CONTROLLER:
-      $userType          — 'cust' oder 'anon'
-      $mand              — MandUser (aktive/einzige Galerie)
-      $secLevel          — int (Sicherheitsstufe dieser Session)
-      $cust              — CustUser|null (nur für cust)
-      $pcodes            — Collection<CustPcode>|null (nur für cust, mit mandUser)
-      $showPasskeyPrompt — bool, einmaliger Passkey-Prompt-Flag (CustDashboardController)
+      $cust              — CustUser|null
+      $showPasskeyPrompt — bool, einmaliger Passkey-Prompt-Flag
       $passkeyOs         — string, erkanntes OS ('win'|'andr'|'ios'|'unknown')
 
     ROUTES USED:
-      POST customer.logout            — Abmelden
-      GET  customer.passkeys          — Passkey-Verwaltung
-      POST customer.passkeys.dismiss  — "Nie wieder fragen"
+      POST customer.logout           — Abmelden
+      GET  customer.konto            — Konto-Verwaltung
+      GET  customer.galerien         — Galerien-Verwaltung
+      GET  customer.passkeys         — Passkey-Verwaltung
+      POST customer.passkeys.dismiss — "Nie wieder fragen"
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -51,11 +49,7 @@
                 <span class="text-zinc-800 select-none">|</span>
                 <span class="text-sm font-semibold tracking-widest
                              uppercase text-indigo-600">
-                    @if($userType === 'cust')
-                        {{ $cust?->cust_firstname ?? 'Mitglied' }}
-                    @else
-                        Gast
-                    @endif
+                    {{ $cust?->cust_firstname ?? 'Mitglied' }}
                 </span>
             </div>
 
@@ -77,11 +71,21 @@
     {{-- ══════════════════════════════════════════════════════
          MAIN
     ══════════════════════════════════════════════════════ --}}
-    <main class="mx-auto max-w-4xl px-6 pt-10 pb-24">
+    <main class="mx-auto max-w-4xl px-6 pt-14 pb-24">
+
+        {{-- Seitenüberschrift --}}
+        <div class="mb-10">
+            <h1 class="text-xl font-semibold tracking-tight text-gray-800">
+                Mitglieder-Dashboard
+            </h1>
+            <p class="mt-1.5 text-sm text-zinc-600">
+                Willkommen, {{ $cust?->cust_firstname ?? 'Mitglied' }}!
+            </p>
+        </div>
 
         {{-- Flash: Status --}}
         @if(session('status'))
-            <div class="mb-6 rounded-lg border border-indigo-200
+            <div class="mb-8 rounded-lg border border-indigo-200
                         bg-indigo-50 px-4 py-3 text-sm text-indigo-700">
                 {{ session('status') }}
             </div>
@@ -91,7 +95,7 @@
         @if($showPasskeyPrompt)
         <div x-data="{ open: true }" x-show="open" x-cloak
              class="bg-indigo-50 border border-indigo-200 rounded-lg
-                    p-4 mb-4 flex flex-col md:flex-row md:items-start gap-4">
+                    p-4 mb-8 flex flex-col md:flex-row md:items-start gap-4">
             <div class="flex-1">
                 <p class="text-sm font-medium text-indigo-800">
                     Passkey einrichten — schneller und sicherer anmelden
@@ -138,134 +142,84 @@
         </div>
         @endif
 
-        @if($userType === 'anon')
+        {{-- ── Navigations-Kacheln ──────────────────────────── --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
-            {{-- ── Anonymer Besucher ──────────────────────── --}}
-            <div class="mb-8">
-                <h1 class="text-xl font-semibold tracking-tight text-gray-800">
-                    Willkommen
-                </h1>
-                <p class="mt-1.5 text-sm text-zinc-600">
-                    Sie sind als Gast bei
-                    <span class="font-medium text-gray-800">
-                        {{ genitivName($mand?->mand_uname ?? '') }}
-                    </span>
-                    Fotogalerie angemeldet.
-                </p>
-                <p class="mt-1 text-xs text-gray-400">
-                    Sicherheitsstufe: {{ $secLevel }}
-                </p>
-            </div>
+            {{-- 1. Mein Konto --}}
+            <a href="{{ route('customer.konto') }}"
+               class="relative flex flex-col gap-5 rounded-xl
+                      border border-indigo-100 bg-white p-6
+                      hover:border-indigo-300 hover:shadow-sm
+                      transition-all duration-150">
 
-            <div class="rounded-xl border border-dashed border-gray-300
-                        bg-white px-6 py-12 text-center text-sm text-gray-400">
-                Fotoinhalte folgen in Phase 7
-            </div>
-
-        @else
-
-            {{-- ── Registriertes Mitglied ─────────────────── --}}
-            <div class="mb-8">
-                <h1 class="text-xl font-semibold tracking-tight text-gray-800">
-                    Willkommen, {{ $cust?->cust_firstname ?? 'Mitglied' }}!
-                </h1>
-                <p class="mt-1.5 text-sm text-zinc-600">
-                    Aktive Galerie:
-                    <span class="font-medium text-gray-800">
-                        {{ $mand?->mand_uname ?? '—' }}
-                    </span>
-                    · Stufe {{ $secLevel }}
-                </p>
-            </div>
-
-            {{-- Galerie-Liste --}}
-            @if($pcodes && $pcodes->isNotEmpty())
-                <div class="mb-8">
-                    <h2 class="text-sm font-semibold text-gray-700
-                               tracking-wide uppercase mb-3">
-                        Meine Galerien
-                    </h2>
-                    <div class="space-y-2">
-                        @foreach($pcodes as $pcode)
-                            @php $isActive = $mand && $pcode->mand_id === $mand->mand_id; @endphp
-                            <div class="flex items-center justify-between rounded-lg
-                                        border px-4 py-3 text-sm
-                                        {{ $isActive
-                                            ? 'border-indigo-300 bg-indigo-50'
-                                            : 'border-gray-200 bg-white' }}">
-                                <div>
-                                    <span class="font-medium
-                                                 {{ $isActive ? 'text-indigo-700' : 'text-gray-800' }}">
-                                        {{ $pcode->mandUser?->mand_uname ?? '—' }}
-                                    </span>
-                                    <span class="ml-2 text-xs text-gray-400">
-                                        Stufe {{ $pcode->cust_passcode }}
-                                    </span>
-                                </div>
-                                @if($isActive)
-                                    <span class="text-xs font-medium text-indigo-600
-                                                 tracking-wide uppercase">
-                                        aktiv
-                                    </span>
-                                @endif
-                            </div>
-                        @endforeach
-                    </div>
+                <div class="w-9 h-9 rounded-lg border border-indigo-200
+                            bg-indigo-50 flex items-center justify-center">
+                    <svg class="w-[18px] h-[18px] text-indigo-500"
+                         xmlns="http://www.w3.org/2000/svg"
+                         fill="none" viewBox="0 0 24 24"
+                         stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5
+                                 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933
+                                 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/>
+                    </svg>
                 </div>
-            @endif
 
-            {{-- Meine Galerien --}}
-            <div class="mt-6 mb-2 flex items-center justify-between
-                        rounded-lg border border-gray-100 bg-white px-4 py-3">
-                <div class="flex items-center gap-2.5">
-                    <svg class="w-4 h-4 text-indigo-400 shrink-0"
+                <div>
+                    <h2 class="text-sm font-semibold text-gray-800 tracking-wide mb-1">
+                        Mein Konto
+                    </h2>
+                    <p class="text-xs text-gray-500 leading-relaxed">
+                        Kontaktdaten und Passwort<br>verwalten.
+                    </p>
+                </div>
+
+            </a>
+
+            {{-- 2. Meine Galerien --}}
+            <a href="{{ route('customer.galerien') }}"
+               class="relative flex flex-col gap-5 rounded-xl
+                      border border-indigo-100 bg-white p-6
+                      hover:border-indigo-300 hover:shadow-sm
+                      transition-all duration-150">
+
+                <div class="w-9 h-9 rounded-lg border border-indigo-200
+                            bg-indigo-50 flex items-center justify-center">
+                    <svg class="w-[18px] h-[18px] text-indigo-500"
                          xmlns="http://www.w3.org/2000/svg"
                          fill="none" viewBox="0 0 24 24"
                          stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round"
                               d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159
                                  5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909
-                                 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0
-                                 -1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5
-                                 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1
-                                 1-.75 0 .375.375 0 0 1 .75 0Z"/>
+                                 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0
+                                 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0
+                                 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375
+                                 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
                     </svg>
-                    <span class="text-sm text-gray-700">Meine Galerien</span>
                 </div>
-                <a href="{{ route('customer.galerien') }}"
-                   class="text-xs font-medium text-indigo-600
-                          hover:text-indigo-800 transition-colors">
-                    Verwalten →
-                </a>
-            </div>
 
-            {{-- Mein Konto --}}
-            <div class="mt-2 mb-2 flex items-center justify-between
-                        rounded-lg border border-gray-100 bg-white px-4 py-3">
-                <div class="flex items-center gap-2.5">
-                    <svg class="w-4 h-4 text-indigo-400 shrink-0"
-                         xmlns="http://www.w3.org/2000/svg"
-                         fill="none" viewBox="0 0 24 24"
-                         stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                              d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501
-                                 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12
-                                 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/>
-                    </svg>
-                    <span class="text-sm text-gray-700">Mein Konto</span>
+                <div>
+                    <h2 class="text-sm font-semibold text-gray-800 tracking-wide mb-1">
+                        Meine Galerien
+                    </h2>
+                    <p class="text-xs text-gray-500 leading-relaxed">
+                        Reihenfolge und Benachrichtigungen<br>für deine Galeristen verwalten.
+                    </p>
                 </div>
-                <a href="{{ route('customer.konto') }}"
-                   class="text-xs font-medium text-indigo-600
-                          hover:text-indigo-800 transition-colors">
-                    Verwalten →
-                </a>
-            </div>
 
-            {{-- Passkeys verwalten --}}
-            <div class="mt-2 mb-4 flex items-center justify-between
-                        rounded-lg border border-gray-100 bg-white px-4 py-3">
-                <div class="flex items-center gap-2.5">
-                    <svg class="w-4 h-4 text-indigo-400 shrink-0"
+            </a>
+
+            {{-- 3. Passkeys verwalten --}}
+            <a href="{{ route('customer.passkeys') }}"
+               class="relative flex flex-col gap-5 rounded-xl
+                      border border-indigo-100 bg-white p-6
+                      hover:border-indigo-300 hover:shadow-sm
+                      transition-all duration-150">
+
+                <div class="w-9 h-9 rounded-lg border border-indigo-200
+                            bg-indigo-50 flex items-center justify-center">
+                    <svg class="w-[18px] h-[18px] text-indigo-500"
                          xmlns="http://www.w3.org/2000/svg"
                          fill="none" viewBox="0 0 24 24"
                          stroke-width="1.5" stroke="currentColor">
@@ -274,21 +228,20 @@
                                  17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1
                                  .43-1.563A6 6 0 0 1 21.75 8.25Z"/>
                     </svg>
-                    <span class="text-sm text-gray-700">Passkeys</span>
                 </div>
-                <a href="{{ route('customer.passkeys') }}"
-                   class="text-xs font-medium text-indigo-600
-                          hover:text-indigo-800 transition-colors">
-                    Verwalten →
-                </a>
-            </div>
 
-            <div class="rounded-xl border border-dashed border-gray-300
-                        bg-white px-6 py-12 text-center text-sm text-gray-400">
-                Fotoinhalte folgen in Phase 7
-            </div>
+                <div>
+                    <h2 class="text-sm font-semibold text-gray-800 tracking-wide mb-1">
+                        Passkeys verwalten
+                    </h2>
+                    <p class="text-xs text-gray-500 leading-relaxed">
+                        Mit Fingerabdruck oder Gesichtserkennung<br>anmelden.
+                    </p>
+                </div>
 
-        @endif
+            </a>
+
+        </div>{{-- /grid --}}
 
     </main>
 

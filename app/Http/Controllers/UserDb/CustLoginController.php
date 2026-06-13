@@ -1,9 +1,9 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustLoginController.php
- * VERSION:     1.11.1
+ * VERSION:     1.12.0
  * AUTOR:       Martin Wagner
- * DATUM:       2026-06-08
+ * DATUM:       2026-06-13
  *
  * ZWECK:       Cust-Login — registrierter Login mit optionaler 2FA,
  *              anonymer Login per Passwort-Sequenz, Passkey-Login, Logout.
@@ -42,7 +42,7 @@
  *                                  Passkey-Prompt (_prompt_passkey, _passkey_os,
  *                                  _passkey_browser, _passkey_uahash) anhand vorhandenem
  *                                  Passkey und passkey_dismissed-Eintrag setzen,
- *                                  pending_* vergessen, Redirect zu customer.dashboard.
+ *                                  pending_* vergessen, Redirect zu customer.content.
  *                                  Reads: sessiondb.twofa_code.* (via TwofaService)
  *                                         userdb.passkey_dismissed.user_type, user_id,
  *                                         os, ua_hash
@@ -245,7 +245,7 @@ class CustLoginController extends UserDbController
         \App\Models\SessionDb\Session::where('expires_at', '<', now())
             ->delete();
 
-        return redirect()->route('customer.dashboard');
+        return redirect()->route('customer.content');
     }
 
     public function handleAnonLogin(Request $request): RedirectResponse
@@ -290,7 +290,7 @@ class CustLoginController extends UserDbController
         $request->session()->put('_sec_level',     $secLevel);
         $request->session()->put('_last_activity', time());
 
-        return redirect()->route('customer.dashboard');
+        return redirect()->route('customer.content');
     }
 
     public function showTwoFactor(Request $request): View|RedirectResponse
@@ -365,7 +365,7 @@ class CustLoginController extends UserDbController
         \App\Models\SessionDb\Session::where('expires_at', '<', now())
             ->delete();
 
-        return redirect()->route('customer.dashboard');
+        return redirect()->route('customer.content');
     }
 
     /**
@@ -496,7 +496,7 @@ class CustLoginController extends UserDbController
 
             return response()->json([
                 'success'  => true,
-                'redirect' => route('customer.dashboard'),
+                'redirect' => route('customer.content'),
             ]);
 
         } catch (Throwable $e) {
