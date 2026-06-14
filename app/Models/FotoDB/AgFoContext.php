@@ -1,4 +1,18 @@
 <?php
+/**
+ * FILE:        app/Models/FotoDB/AgFoContext.php
+ * VERSION:     1.0.1
+ *
+ * FUNCTIONS:   activityGroup() — BelongsTo ActivityGroup; reads fotodb.ag_fo_context.*
+ *              fotoObj()       — BelongsTo FotoObj; reads fotodb.ag_fo_context.*
+ *
+ * CALLS:       App\Models\FotoDB\ActivityGroup
+ *              App\Models\FotoDB\FotoObj
+ *
+ * DB ACCESS:   fotodb.ag_fo_context.ag_fo_id, ag_id, fo_id, ag_is_banner
+ *
+ * CHANGES:     1.0.1 (2026-06-14) ag_banner entfernt — DDL-Feld gelöscht
+ */
 
 namespace App\Models\FotoDB;
 
@@ -11,14 +25,12 @@ class AgFoContext extends FotoDbModel
     public $timestamps = false;
 
     protected $fillable = [
-        'ag_banner',
         'ag_id',
         'fo_id',
         'ag_is_banner',
     ];
 
     protected $casts = [
-        'ag_banner'    => 'boolean',
         'ag_is_banner' => 'boolean',
     ];
 

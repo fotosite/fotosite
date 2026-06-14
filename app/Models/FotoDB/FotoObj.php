@@ -1,4 +1,30 @@
 <?php
+/**
+ * FILE:        app/Models/FotoDB/FotoObj.php
+ * VERSION:     1.0.1
+ *
+ * FUNCTIONS:   agFoContexts()      — hasMany AgFoContext; reads fotodb.ag_fo_context.*
+ *              asgFoContexts()     — hasMany AsgFoContext; reads fotodb.asg_fo_context.*
+ *              mpFoContexts()      — hasMany MpFoContext; reads fotodb.mp_fo_context.*
+ *              activityGroups()    — belongsToMany ActivityGroup via ag_fo_context
+ *              activitySubgroups() — belongsToMany ActivitySubgroup via asg_fo_context
+ *              mandProfiles()      — belongsToMany MandProfile via mp_fo_context
+ *
+ * CALLS:       App\Models\FotoDB\AgFoContext
+ *              App\Models\FotoDB\AsgFoContext
+ *              App\Models\FotoDB\MpFoContext
+ *              App\Models\FotoDB\ActivityGroup
+ *              App\Models\FotoDB\ActivitySubgroup
+ *              App\Models\FotoDB\MandProfile
+ *
+ * DB ACCESS:   fotodb.foto_obj.fo_id, fo_is_video, fo_filename, fo_title,
+ *              fo_subtitle, fo_text, mand_id, fo_sec_code, fo_datetime,
+ *              db_saved, fo_filepath, fo_prefstat
+ *              fotodb.ag_fo_context.ag_is_banner (pivot)
+ *              fotodb.asg_fo_context.ags_is_banner (pivot)
+ *
+ * CHANGES:     1.0.1 (2026-06-14) ag_banner aus withPivot entfernt — DDL-Feld gelöscht
+ */
 
 namespace App\Models\FotoDB;
 
@@ -49,7 +75,7 @@ class FotoObj extends FotoDbModel
     public function activityGroups(): BelongsToMany
     {
         return $this->belongsToMany(ActivityGroup::class, 'ag_fo_context', 'fo_id', 'ag_id')
-            ->withPivot(['ag_banner', 'ag_is_banner']);
+            ->withPivot(['ag_is_banner']);
     }
 
     public function activitySubgroups(): BelongsToMany
