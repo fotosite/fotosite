@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Models/FotoDB/FotoObj.php
- * VERSION:     1.0.1
+ * VERSION:     1.0.2
  *
  * FUNCTIONS:   agFoContexts()      — hasMany AgFoContext; reads fotodb.ag_fo_context.*
  *              asgFoContexts()     — hasMany AsgFoContext; reads fotodb.asg_fo_context.*
@@ -18,12 +18,13 @@
  *              App\Models\FotoDB\MandProfile
  *
  * DB ACCESS:   fotodb.foto_obj.fo_id, fo_is_video, fo_filename, fo_title,
- *              fo_subtitle, fo_text, mand_id, fo_sec_code, fo_datetime,
+ *              fo_subtitle, fo_text, mand_id, fo_sec_level, fo_datetime,
  *              db_saved, fo_filepath, fo_prefstat
  *              fotodb.ag_fo_context.ag_is_banner (pivot)
  *              fotodb.asg_fo_context.ags_is_banner (pivot)
  *
  * CHANGES:     1.0.1 (2026-06-14) ag_banner aus withPivot entfernt — DDL-Feld gelöscht
+ *              1.0.2 (2026-06-16) fo_sec_code → fo_sec_level (TINYINT UNSIGNED)
  */
 
 namespace App\Models\FotoDB;
@@ -44,7 +45,7 @@ class FotoObj extends FotoDbModel
         'fo_subtitle',
         'fo_text',
         'mand_id',
-        'fo_sec_code',
+        'fo_sec_level',
         'fo_datetime',
         'db_saved',
         'fo_filepath',

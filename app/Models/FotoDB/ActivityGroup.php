@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Models/FotoDB/ActivityGroup.php
- * VERSION:     1.0.1
+ * VERSION:     1.0.2
  *
  * FUNCTIONS:   subgroups()    — hasMany ActivitySubgroup; reads fotodb.activity_subgroup.*
  *              agFoContexts() — hasMany AgFoContext; reads fotodb.ag_fo_context.*
@@ -12,10 +12,11 @@
  *              App\Models\FotoDB\FotoObj
  *
  * DB ACCESS:   fotodb.activity_group.ag_id, ag_title, ag_subtitle, ag_text,
- *              mand_id, ag_sec_code, ag_prefstat
+ *              mand_id, ag_sec_level, ag_sort_date, ag_prefstat
  *              fotodb.ag_fo_context.ag_is_banner (pivot)
  *
  * CHANGES:     1.0.1 (2026-06-14) ag_banner aus withPivot entfernt — DDL-Feld gelöscht
+ *              1.0.2 (2026-06-16) ag_sec_code → ag_sec_level (TINYINT UNSIGNED), ag_sort_date ergänzt
  */
 
 namespace App\Models\FotoDB;
@@ -34,7 +35,8 @@ class ActivityGroup extends FotoDbModel
         'ag_subtitle',
         'ag_text',
         'mand_id',
-        'ag_sec_code',
+        'ag_sec_level',
+        'ag_sort_date',
         'ag_prefstat',
     ];
 

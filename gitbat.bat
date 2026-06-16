@@ -1,1 +1,1 @@
-git add -A ; git commit -m "fix: ag_banner aus FotoDB-Models entfernt (DDL-Feld geloescht)" ; git tag ag_banner_removed_ok
+git add -A ; git commit -m "fix: FotoDB-Models auf sec_level synchronisiert (TINYINT UNSIGNED)" ; git tag sec_level_sync_ok

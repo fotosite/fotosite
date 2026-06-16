@@ -1,4 +1,22 @@
 <?php
+/**
+ * FILE:        app/Models/FotoDB/ActivitySubgroup.php
+ * VERSION:     1.0.0
+ *
+ * FUNCTIONS:   activityGroup()  — belongsTo ActivityGroup; reads fotodb.activity_group.*
+ *              asgFoContexts()  — hasMany AsgFoContext; reads fotodb.asg_fo_context.*
+ *              fotos()          — belongsToMany FotoObj via asg_fo_context; reads fotodb.foto_obj.*
+ *
+ * CALLS:       App\Models\FotoDB\ActivityGroup
+ *              App\Models\FotoDB\AsgFoContext
+ *              App\Models\FotoDB\FotoObj
+ *
+ * DB ACCESS:   fotodb.activity_subgroup.asg_id, asg_title, asg_subtitle, asg_text,
+ *              asg_public, mand_id, asg_sec_level, ag_id, asg_prefstat, asg_date
+ *              fotodb.asg_fo_context.ags_is_banner (pivot)
+ *
+ * CHANGES:     1.0.0 (2026-06-16) asg_sec_code → asg_sec_level (TINYINT UNSIGNED), Docblock ergänzt
+ */
 
 namespace App\Models\FotoDB;
 
@@ -18,7 +36,7 @@ class ActivitySubgroup extends FotoDbModel
         'asg_text',
         'asg_public',
         'mand_id',
-        'asg_sec_code',
+        'asg_sec_level',
         'ag_id',
         'asg_prefstat',
         'asg_date',
