@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Models/UserDb/MandUser.php
- * VERSION:     1.4.0
+ * VERSION:     1.5.0
  *
  * FUNCTIONS:   passcodes()     — hasMany CustPcode via mand_id
  *
@@ -10,9 +10,14 @@
  * DB ACCESS:   userdb.mand_user.mand_id, mand_uname, mand_email, mand_tel,
  *              mand_firstname, mand_lastname, mand_street+nr,
  *              mand_postcode+city, mand_company, mand_pw_hash,
- *              mand_prefstat, mand_2fa_opt_in, active, valid_to, has_public_content
+ *              mand_prefstat, mand_2fa_opt_in, active, valid_to, has_public_content,
  *              mand_cust_2fa (integer) — Ab welcher Sicherheitsstufe (0–6) 2FA
  *              für Mitglieder erzwungen wird. 0=nie, 7=immer, Standard=3
+ *              ds_accepted_at, ds_version,
+ *              upload_terms_accepted_at, upload_terms_version
+ *
+ * CHANGES:     1.5.0 (2026-06-16) ds_accepted_at, ds_version, upload_terms_accepted_at,
+ *              upload_terms_version ergänzt (Datenschutz-Feature)
  */
 
 namespace App\Models\UserDb;
@@ -41,14 +46,20 @@ class MandUser extends UserDbModel
         'active',
         'has_public_content',
         'valid_to',
+        'ds_accepted_at',
+        'ds_version',
+        'upload_terms_accepted_at',
+        'upload_terms_version',
     ];
 
     protected $casts = [
-        'active'             => 'boolean',
-        'mand_cust_2fa'      => 'integer',
-        'mand_2fa_opt_in'    => 'boolean',
-        'has_public_content' => 'boolean',
-        'valid_to'           => 'date',
+        'active'                  => 'boolean',
+        'mand_cust_2fa'           => 'integer',
+        'mand_2fa_opt_in'         => 'boolean',
+        'has_public_content'      => 'boolean',
+        'valid_to'                => 'date',
+        'ds_accepted_at'          => 'datetime',
+        'upload_terms_accepted_at'=> 'datetime',
     ];
 
     protected $hidden = ['mand_pw_hash'];

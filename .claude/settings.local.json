@@ -14,7 +14,9 @@
       "Bash(Select-String -Pattern \"cainfo|cafile\")",
       "Bash(xargs grep -l \"serialize\\\\|jsonSerialize\\\\|Serializable\")",
       "Bash(composer dump-autoload *)",
-      "Bash(grep -E \"GET\\\\s+/\\\\s\")"
+      "Bash(grep -E \"GET\\\\s+/\\\\s\")",
+      "Bash(cat tailwind.config.js)",
+      "Bash(cat tailwind.config.ts)"
     ]
   }
 }

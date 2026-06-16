@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Models/UserDb/CustUser.php
- * VERSION:     1.1.0
+ * VERSION:     1.2.0
  *
  * FUNCTIONS:   passcodes()     — hasMany CustPcode via cust_id
  *
@@ -9,7 +9,10 @@
  *
  * DB ACCESS:   userdb.cust_user.cust_id, cust_uname, cust_email, cust_tel,
  *              cust_firstname, cust_lastname, cust_street+nr,
- *              cust_postcode_city, cust_company, cust_pw_hash, cust_2fa_opt_in
+ *              cust_postcode_city, cust_company, cust_pw_hash, cust_2fa_opt_in,
+ *              ds_accepted_at, ds_version
+ *
+ * CHANGES:     1.2.0 (2026-06-16) ds_accepted_at, ds_version ergänzt (Datenschutz-Feature)
  */
 
 namespace App\Models\UserDb;
@@ -33,10 +36,13 @@ class CustUser extends UserDbModel
         'cust_company',
         'cust_pw_hash',
         'cust_2fa_opt_in',
+        'ds_accepted_at',
+        'ds_version',
     ];
 
     protected $casts = [
         'cust_2fa_opt_in' => 'boolean',
+        'ds_accepted_at'  => 'datetime',
     ];
 
     protected $hidden = ['cust_pw_hash'];

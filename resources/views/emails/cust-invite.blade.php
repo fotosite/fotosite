@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/emails/cust-invite.blade.php
-    VERSION: 1.3.0
+    VERSION: 1.4.0
     DATE:    2026-06-08
 
     DESCRIPTION:
@@ -115,6 +115,13 @@
                nach einem Kurzzeit-Passwort. Damit bekommst du Zugang zur
                Fotogalerie mit folgendem Link:<br>
                <a href="https://fotos.martinwagner.de/" style="color:#1a1a2e;">https://fotos.martinwagner.de/</a></p>
+
+            <p style="font-size:13px; color:#555555; border-left:3px solid #1a1a2e;
+                      padding:8px 12px; margin:0 0 20px 0;">
+                <strong>Hinweis:</strong> Bei der Registrierung ist die Zustimmung zur
+                Datenschutzerklärung erforderlich. Diese wird dir während der
+                Registrierung angezeigt.
+            </p>
         </div>
 
         <div class="footer">

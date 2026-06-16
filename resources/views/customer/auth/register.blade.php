@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/customer/auth/register.blade.php
-    VERSION: 1.3.1
+    VERSION: 1.4.1
     AUTHOR:  Martin Wagner
     DATE:    2026-06-08
 
@@ -274,6 +274,31 @@
                 </div>
 
             </div>{{-- /space-y-5 --}}
+
+            {{-- Datenschutz-Checkbox --}}
+            <div class="mt-5">
+                <label class="flex items-start gap-3 cursor-pointer group">
+                    <input type="checkbox"
+                           id="ds_accepted" name="ds_accepted"
+                           value="1"
+                           class="mt-0.5 h-4 w-4 rounded border-gray-300 text-indigo-600
+                                  focus:ring-indigo-400
+                                  @error('ds_accepted') border-red-400 @enderror">
+                    <span class="text-sm text-gray-600 leading-snug">
+                        Ich habe die
+                        <a href="{{ route('customer.datenschutz.erlaeuterung') }}"
+                           target="_blank"
+                           class="text-indigo-600 hover:underline">
+                            Datenschutzerklärung
+                        </a>
+                        gelesen und stimme zu.
+                        <span class="text-red-500">*</span>
+                    </span>
+                </label>
+                @error('ds_accepted')
+                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
 
             {{-- Submit --}}
             <div class="mt-7">

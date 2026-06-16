@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/emails/invite.blade.php
-    VERSION: 1.3.0
+    VERSION: 1.4.0
     DATE:    2026-06-12
 
     DESCRIPTION:
@@ -102,6 +102,23 @@
                 @endif
 
                 <a href="{{ $inviteUrl }}" class="btn">Link zum Account erstellen</a>
+
+                @if($userType === 'mand')
+                <p style="font-size:13px; color:#555555; border-left:3px solid #1a1a2e;
+                          padding:8px 12px; margin:0 0 20px 0; border-radius:0 4px 4px 0;">
+                    <strong>Hinweis:</strong> Bei der Registrierung sind die Zustimmung
+                    zur Datenschutzerklärung sowie zu den Bedingungen für den Upload
+                    von Daten erforderlich. Beide Dokumente werden Ihnen während der
+                    Registrierung angezeigt.
+                </p>
+                @elseif($userType === 'cust')
+                <p style="font-size:13px; color:#555555; border-left:3px solid #1a1a2e;
+                          padding:8px 12px; margin:0 0 20px 0; border-radius:0 4px 4px 0;">
+                    <strong>Hinweis:</strong> Bei der Registrierung ist die Zustimmung
+                    zur Datenschutzerklärung erforderlich. Diese wird Ihnen während der
+                    Registrierung angezeigt.
+                </p>
+                @endif
 
                 <p class="note">Falls Sie diese Einladung nicht erwartet haben,
                    können Sie diese E-Mail ignorieren.</p>

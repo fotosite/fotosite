@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/customer/content.blade.php
-    VERSION: 1.0.0
+    VERSION: 1.1.1
     DATE:    2026-06-13
 
     DESCRIPTION:
@@ -129,6 +129,58 @@
             </span>
         </div>
     </footer>
+
+
+    {{-- ══════════════════════════════════════════════════════
+         DATENSCHUTZ-HINWEIS (nur für anon, einmalig pro Session)
+    ══════════════════════════════════════════════════════ --}}
+    @if(session('_user_type') === 'anon' && !session('_ds_hinweis_gezeigt'))
+    <div x-data="{ open: true }"
+         x-show="open"
+         x-transition
+         class="fixed inset-0 z-50 flex items-end justify-center sm:items-center px-4 pb-6 sm:pb-0">
+
+        {{-- Backdrop --}}
+        <div class="absolute inset-0 bg-black/40"></div>
+
+        {{-- Modal --}}
+        <div class="relative z-10 w-full max-w-md rounded-xl bg-white
+                    shadow-xl border border-gray-200 px-6 py-7">
+
+            <h2 class="text-base font-semibold text-gray-800 mb-3">
+                Datenschutz-Hinweis
+            </h2>
+
+            <p class="text-sm text-gray-600 leading-relaxed mb-4">
+                Diese Fotogalerie verarbeitet Ihre Sitzungsdaten gemäß Datenschutzrecht.
+                Als Gast werden keine personenbezogenen Daten dauerhaft gespeichert.
+                Ihre Sitzung läuft nach Inaktivität automatisch ab.
+            </p>
+
+            <p class="text-sm text-gray-600 leading-relaxed mb-5">
+                Weitere Informationen finden Sie in der
+                <a href="{{ route('customer.datenschutz.erlaeuterung') }}"
+                   target="_blank"
+                   class="text-indigo-600 hover:underline font-medium">
+                    Datenschutz-Erläuterung
+                </a>.
+            </p>
+
+            <form method="POST" action="{{ route('customer.datenschutz.hinweis-ok') }}">
+                @csrf
+                <button type="submit"
+                        class="w-full flex justify-center rounded-lg
+                               bg-indigo-600 px-4 py-2.5 text-sm font-medium
+                               text-white hover:bg-indigo-700
+                               transition-colors duration-150
+                               focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    Verstanden
+                </button>
+            </form>
+
+        </div>
+    </div>
+    @endif
 
 </body>
 </html>

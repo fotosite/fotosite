@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/SystemMandantController.php
- * VERSION:     1.3.0
+ * VERSION:     1.4.0
  *
  * FUNCTIONS:   index()          — Lists all MandUser records ordered by mand_lastname.
  *                                 Reads: userdb.mand_user.*
@@ -20,7 +20,9 @@
  *                                 Writes: userdb.mand_user (DELETE)
  *              showRegister()   — Validates mand register token; returns register form.
  *                                 Reads: userdb.invite.*
- *              handleRegister() — Creates MandUser from register invite; deletes invite.
+ *              handleRegister() — Creates MandUser from register invite inkl.
+ *                                 ds_accepted_at, ds_version, upload_terms_accepted_at,
+ *                                 upload_terms_version; deletes invite.
  *                                 Reads:  userdb.invite.*
  *                                 Writes: userdb.mand_user.*, userdb.invite (DELETE)
  *
@@ -38,9 +40,13 @@
  * DB ACCESS:   userdb.mand_user.mand_id, mand_uname, mand_email, mand_tel,
  *              mand_firstname, mand_lastname, mand_company, mand_pw_hash,
  *              mand_street+nr, mand_postcode+city, mand_prefstat,
- *              mand_cust_2fa, active, has_public_content, valid_to
+ *              mand_cust_2fa, active, has_public_content, valid_to,
+ *              ds_accepted_at, ds_version, upload_terms_accepted_at, upload_terms_version
  *              userdb.invite.*
  *              userdb.syst_user.syst_id, syst_uname
+ *
+ * CHANGES:     1.4.0 (2026-06-16) handleRegister() — zwei DS-Checkboxen (ds_accepted,
+ *              upload_terms_accepted) + Speicherung in mand_user (Datenschutz-Feature)
  */
 
 namespace App\Http\Controllers\UserDb;
@@ -193,29 +199,35 @@ class SystemMandantController extends UserDbController
         }
 
         $request->validate([
-            'mand_uname'     => ['required', 'string', 'unique:userdb.mand_user,mand_uname'],
-            'mand_firstname' => ['required', 'string'],
-            'mand_lastname'  => ['required', 'string'],
-            'mand_tel'       => ['required', 'string'],
-            'mand_company'   => ['required', 'string'],
-            'password'       => ['required', 'min:12', 'confirmed'],
+            'mand_uname'             => ['required', 'string', 'unique:userdb.mand_user,mand_uname'],
+            'mand_firstname'         => ['required', 'string'],
+            'mand_lastname'          => ['required', 'string'],
+            'mand_tel'               => ['required', 'string'],
+            'mand_company'           => ['required', 'string'],
+            'password'               => ['required', 'min:12', 'confirmed'],
+            'ds_accepted'            => ['accepted'],
+            'upload_terms_accepted'  => ['accepted'],
         ]);
 
         MandUser::create([
-            'mand_uname'         => $request->mand_uname,
-            'mand_email'         => $invite->inv_email,
-            'mand_firstname'     => $request->mand_firstname,
-            'mand_lastname'      => $request->mand_lastname,
-            'mand_tel'           => $request->mand_tel,
-            'mand_company'       => $request->mand_company,
-            'mand_pw_hash'       => Hash::make($request->password),
-            'mand_street+nr'     => '',
-            'mand_postcode+city' => '',
-            'mand_prefstat'      => 0,
-            'active'             => true,
-            'has_public_content' => false,
-            'mand_cust_2fa'      => false,
-            'valid_to'           => null,
+            'mand_uname'               => $request->mand_uname,
+            'mand_email'               => $invite->inv_email,
+            'mand_firstname'           => $request->mand_firstname,
+            'mand_lastname'            => $request->mand_lastname,
+            'mand_tel'                 => $request->mand_tel,
+            'mand_company'             => $request->mand_company,
+            'mand_pw_hash'             => Hash::make($request->password),
+            'mand_street+nr'           => '',
+            'mand_postcode+city'       => '',
+            'mand_prefstat'            => 0,
+            'active'                   => true,
+            'has_public_content'       => false,
+            'mand_cust_2fa'            => false,
+            'valid_to'                 => null,
+            'ds_accepted_at'           => now(),
+            'ds_version'               => config('datenschutz.version'),
+            'upload_terms_accepted_at' => now(),
+            'upload_terms_version'     => config('datenschutz.version'),
         ]);
 
         $invite->delete();

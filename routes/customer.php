@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DatenschutzController;
 use App\Http\Controllers\Passkey\CustPasskeyController;
 use App\Http\Controllers\UserDb\CustDashboardController;
 use App\Http\Controllers\UserDb\CustLoginController;
@@ -10,7 +11,7 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Customer Area Routes  (/customer/*)
+| Customer Area Routes  (/customer/*)                    VERSION: 1.3.0
 |--------------------------------------------------------------------------
 | Routes for the customer-facing area.
 | Mix of public and authenticated routes.
@@ -19,6 +20,19 @@ use Illuminate\Support\Facades\Route;
 |   App\Http\Controllers\UserDb\    — customer profile & auth
 |   App\Http\Controllers\FotoDB\    — browsing photos
 |   App\Http\Controllers\FotoBlobDb\— downloading/streaming media
+|
+| CHANGES: 1.1.0 (2026-06-16) datenschutz-Routen in eigene Group ohne
+|          App-spezifische Custom-Middleware (SessionHijackProtection,
+|          SessionIdleTimeout, ValidateUserExists) — öffentlich erreichbar
+|          ohne Login, für Einladungsempfänger, anon, cust, mand.
+|          1.2.0 (2026-06-16) URI-Segment /datenschutz/ → /ds/ (mod_security
+|          auf Alfahosting blockt "datenschutz" in URLs mit 403). Route-Namen
+|          customer.datenschutz.* bleiben unverändert.
+|          1.3.0 (2026-06-16) withoutMiddleware-Konstrukt entfernt — verursacht
+|          403 in Laravel 13, weil Custom-Middlewares via web(append:[]) eingehängt
+|          sind und sich so nicht per withoutMiddleware() auf Gruppe ausschließen
+|          lassen. ds-Routen jetzt in der normalen web-Group; alle drei Middlewares
+|          haben eigenständige Passthroughs für unangemeldete Erstbesucher.
 */
 
 Route::middleware('web')->prefix('customer')->name('customer.')->group(function () {
@@ -102,4 +116,22 @@ Route::middleware('web')->prefix('customer')->name('customer.')->group(function 
         ->name('passkeys.destroy');
     Route::post('/passkeys/dismiss',         [CustPasskeyController::class, 'dismiss'])
         ->name('passkeys.dismiss');
+
+    // ── Datenschutz — öffentlich ──────────────────────────
+    // Erreichbar ohne Login: Einladungsempfänger, anon, cust, mand.
+    // URI /ds/ statt /datenschutz/ — mod_security auf Alfahosting
+    // blockt URLs mit "datenschutz" (403). Route-Namen: datenschutz.*.
+    // Die drei App-Custom-Middlewares (SessionHijackProtection,
+    // SessionIdleTimeout, ValidateUserExists) haben eigenständige
+    // Passthroughs für Erstbesucher ohne Session — kein withoutMiddleware
+    // nötig (und withoutMiddleware() auf Group ist in Laravel 13 mit
+    // web(append:[...]) ohnehin broken → 403).
+    Route::get('/ds/erlaeuterung', [DatenschutzController::class, 'erlaeuterung'])
+        ->name('datenschutz.erlaeuterung');
+    Route::get('/ds/erklaerung-pdf', [DatenschutzController::class, 'erklaerungPdf'])
+        ->name('datenschutz.erklaerung-pdf');
+    Route::get('/ds/upload-bedingungen-pdf', [DatenschutzController::class, 'uploadBedingungenPdf'])
+        ->name('datenschutz.upload-bedingungen-pdf');
+    Route::post('/ds/hinweis-ok', [DatenschutzController::class, 'hinweisOk'])
+        ->name('datenschutz.hinweis-ok');
 });

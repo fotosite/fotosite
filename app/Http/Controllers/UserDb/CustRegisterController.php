@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustRegisterController.php
- * VERSION:     1.5.0
+ * VERSION:     1.6.0
  * AUTHOR:      Martin Wagner
  * DATE:        2026-05-30
  * PURPOSE:     Mitglieder-Registrierung per Einladungs-Token
@@ -12,7 +12,8 @@
  *                                 userdb.cust_user.cust_email
  *              store()  — Zwei Pfade über Hidden Field 'existing':
  *                          existing=1: nur Email validieren, vorhandenen CustUser nutzen.
- *                          existing=0: volle Validierung + CustUser::create().
+ *                          existing=0: volle Validierung + CustUser::create() inkl.
+ *                                      ds_accepted_at, ds_version (Datenschutz-Checkbox).
  *                          Danach CustPcode erstellen, Einladung als verwendet markieren.
  *                          Reads:  sessiondb.cust_invite.*
  *                                  userdb.cust_user.cust_email
@@ -33,9 +34,12 @@
  *              cust_email, sec_level
  *              userdb.cust_user.cust_id, cust_firstname, cust_lastname, cust_email,
  *              cust_tel, cust_company, cust_street+nr, cust_postcode_city,
- *              cust_pw_hash, cust_2fa_opt_in
+ *              cust_pw_hash, cust_2fa_opt_in, ds_accepted_at, ds_version
  *              userdb.cust_pcode.pcode_id, mand_id, cust_id, cust_passcode,
  *              pcode_prefstat
+ *
+ * CHANGES:     1.6.0 (2026-06-16) ds_accepted (Pflicht-Checkbox) + ds_accepted_at/ds_version
+ *              beim CustUser::create() gespeichert (Datenschutz-Feature)
  */
 
 namespace App\Http\Controllers\UserDb;
@@ -108,6 +112,7 @@ class CustRegisterController extends UserDbController
                 'cust_postcode_city' => ['required', 'string', 'max:255'],
                 'password'           => ['required', 'confirmed',
                     Password::min(10)->mixedCase()->numbers()],
+                'ds_accepted'        => ['accepted'],
             ]);
 
             $cust = CustUser::create([
@@ -120,6 +125,8 @@ class CustRegisterController extends UserDbController
                 'cust_postcode_city' => $validated['cust_postcode_city'],
                 'cust_pw_hash'       => Hash::make($validated['password']),
                 'cust_2fa_opt_in'    => false,
+                'ds_accepted_at'     => now(),
+                'ds_version'         => config('datenschutz.version'),
             ]);
         }
 

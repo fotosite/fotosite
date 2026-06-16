@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/system/mandanten/register.blade.php
-    VERSION: 1.1.1
+    VERSION: 1.2.1
     DATE:    2026-06-08
 
     DESCRIPTION:
@@ -166,6 +166,56 @@
                                       focus:border-gray-500 focus:ring-gray-500">
                     </div>
 
+                </div>
+
+                {{-- Datenschutz-Checkbox --}}
+                <div class="pt-1">
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input type="checkbox"
+                               id="ds_accepted" name="ds_accepted"
+                               value="1"
+                               class="mt-0.5 h-4 w-4 rounded border-gray-300 text-gray-800
+                                      focus:ring-gray-500
+                                      @error('ds_accepted') border-red-400 @enderror">
+                        <span class="text-sm text-gray-600 leading-snug">
+                            Ich habe die
+                            <a href="{{ route('customer.datenschutz.erlaeuterung') }}"
+                               target="_blank"
+                               class="text-gray-800 underline hover:text-indigo-600">
+                                Datenschutzerklärung
+                            </a>
+                            gelesen und stimme zu.
+                            <span class="text-red-500">*</span>
+                        </span>
+                    </label>
+                    @error('ds_accepted')
+                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                {{-- Upload-Bedingungen-Checkbox --}}
+                <div class="pt-1">
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input type="checkbox"
+                               id="upload_terms_accepted" name="upload_terms_accepted"
+                               value="1"
+                               class="mt-0.5 h-4 w-4 rounded border-gray-300 text-gray-800
+                                      focus:ring-gray-500
+                                      @error('upload_terms_accepted') border-red-400 @enderror">
+                        <span class="text-sm text-gray-600 leading-snug">
+                            Ich habe die
+                            <a href="{{ route('customer.datenschutz.upload-bedingungen-pdf') }}"
+                               target="_blank"
+                               class="text-gray-800 underline hover:text-indigo-600">
+                                Bedingungen für den Upload von Daten
+                            </a>
+                            gelesen und stimme zu.
+                            <span class="text-red-500">*</span>
+                        </span>
+                    </label>
+                    @error('upload_terms_accepted')
+                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div class="mt-6">
