@@ -1,6 +1,6 @@
 # PROJECT_CONTEXT.md — Fotosite V08
 
-> Stand: 14.06.2026 — Phase 6 abgeschlossen, Phase 7 in Vorbereitung. DDL-Pflege (sec_level-Umbenennung, ag_banner entfernt) durchgeführt.
+> Stand: 16.06.2026 — Phase 6 abgeschlossen, Phase 7 in Vorbereitung. sec_level vereinheitlicht (TINYINT UNSIGNED), Datenschutz-Feature implementiert. Abnahmetest cust noch offen.
 
 ## 1. Project Overview
 
@@ -12,7 +12,7 @@ Multi-Tenant-Fotogalerie-Plattform (Hobbyprojekt, Ziel: fertige, nutzbare Websit
 - `cust` — Mitglied (registriert oder anonym mit Kurzzeit-Kennwort), UI: „Mitglied/Mitglieder"
 - `anon` — Anonymer Besucher (sessionbasiert, kein Login)
 
-**Sicherheitsstufen:** Foto-Objekte, Activity Groups und Subgroups tragen ein `*_sec_level`-Feld (INT, 0–6), das die Sichtbarkeit steuert. Davon zu unterscheiden ist `sec_code` (varchar): ein mand-spezifischer Anon-Zugangscode, genau einer Sicherheitsstufe und einem Mandanten zugeordnet. `sec_code` ≠ `sec_level`.
+**Sicherheitsstufen:** Foto-Objekte, Activity Groups und Subgroups tragen ein `*_sec_level`-Feld (`TINYINT UNSIGNED`, Werte 0–6), das die Sichtbarkeit steuert. Davon zu unterscheiden ist `sec_code` (varchar): ein mand-spezifischer Anon-Zugangscode, genau einer Sicherheitsstufe und einem Mandanten zugeordnet. `sec_code` ≠ `sec_level`. (Typ später per `ALTER ... MODIFY` problemlos auf INT erweiterbar, falls je >255 Stufen nötig.)
 
 | Stufe | Bedeutung | Speicherung |
 |---|---|---|
@@ -78,8 +78,8 @@ Connection: `userdb`
 | Table | PK | Purpose |
 |---|---|---|
 | `syst_user` | `syst_id` | System-Admin-Accounts |
-| `mand_user` | `mand_id` | Galerist:in-Accounts (inkl. `mand_pw_hash`, `mand_cust_2fa`, `mand_2fa_opt_in`, `has_public_content`, `active`) |
-| `cust_user` | `cust_id` | Mitglieder-Accounts |
+| `mand_user` | `mand_id` | Galerist:in-Accounts (inkl. `mand_pw_hash`, `mand_cust_2fa`, `mand_2fa_opt_in`, `has_public_content`, `active`, `ds_accepted_at`, `ds_version`, `upload_terms_accepted_at`, `upload_terms_version`) |
+| `cust_user` | `cust_id` | Mitglieder-Accounts (inkl. `ds_accepted_at`, `ds_version`) |
 | `cust_pcode` | `pcode_id` | Passcode/Sicherheitsstufe je Mitglied+Mandant (`cust_pcode`, `cust_alias`, `pcode_prefstat`) |
 | `invite` | `inv_id` | Einladungen/Reset-Tokens für syst/mand/cust (`inv_type`: register\|pw_reset; `inv_user_type`: syst\|mand\|cust) |
 | `passkey` | `pk_id` | WebAuthn-Credentials (`user_type`, `user_id`, `credential_id`, `public_key`, `sign_count`, `device_name`, `last_used_at`) |
@@ -101,9 +101,9 @@ Connection: `fotodb`
 
 | Table | PK | Purpose |
 |---|---|---|
-| `foto_obj` | `fo_id` | Foto/Video-Metadaten (`fo_filename`, `fo_title`, `fo_subtitle`, `fo_text`, `mand_id`, `fo_sec_level`, `fo_datetime`, `db_saved`, `fo_filepath`, `fo_prefstat`) |
-| `activity_group` | `ag_id` | Oberste Content-Ebene je Mandant (`ag_title`, `ag_subtitle`, `ag_text`, `mand_id`, `ag_sec_level`, `ag_prefstat`, `ag_sort_date`) |
-| `activity_subgroup` | `asg_id` | Untergruppe (FK → `activity_group.ag_id`), gleiche Struktur wie AG, zusätzlich `asg_public`, `asg_sec_level` |
+| `foto_obj` | `fo_id` | Foto/Video-Metadaten (`fo_filename`, `fo_title`, `fo_subtitle`, `fo_text`, `mand_id`, `fo_sec_level` TINYINT, `fo_is_video` bool, `fo_datetime`, `db_saved`, `fo_filepath`, `fo_prefstat`) |
+| `activity_group` | `ag_id` | Oberste Content-Ebene je Mandant (`ag_title`, `ag_subtitle`, `ag_text`, `mand_id`, `ag_sec_level` TINYINT, `ag_prefstat`, `ag_sort_date`) |
+| `activity_subgroup` | `asg_id` | Untergruppe (FK → `activity_group.ag_id`), gleiche Struktur wie AG, zusätzlich `asg_public`, `asg_sec_level` TINYINT |
 | `ag_fo_context` | — | Pivot: Activity Group ↔ Foto (`ag_is_banner`) |
 | `asg_fo_context` | — | Pivot: Activity Subgroup ↔ Foto |
 | `mand_profile` | `mp_id` | **Cust-sichtbare Profilseite** des Mandanten (Selbstvorstellung) — gehört zum Foto-Content, nicht zur Eigenverwaltung. `mp_name`/`mp_title` varchar(255), `mp_text` text, `mp_title_start`/`mp_subtitle_start` (Startseiten-Überschriften) |
@@ -144,6 +144,7 @@ app/
 │   │       ├── CustRegisterController.php
 │   │       ├── CustDashboardController.php
 │   │       └── CustPasswordResetController.php   # NEU: Passwort-Reset cust
+│   ├── DatenschutzController.php              # NEU 16.06.: Erläuterung (Markdown→HTML), PDF-Auslieferung, anon-Hinweis
 │   └── Middleware/
 │       ├── NoIndexHeader.php
 │       ├── SessionHijackProtection.php          # IP-Hash + UA-Hash
@@ -260,6 +261,31 @@ Analog zum bestehenden `syst`-Reset, über `userdb.invite` (`inv_type='pw_reset'
 
 ---
 
+## 10a. Datenschutz & Einwilligung — NEU, 16.06.
+
+**Zwei Dokumente** (konstante Dateinamen, Datum nur im Dokumentinhalt) unter `storage/app/private/`:
+- `datenschutzerklaerung.pdf` — bestätigungspflichtig für cust + mand
+- `upload_bedingungen.pdf` — zusätzlich bestätigungspflichtig für mand
+- `erlaeuterung.md` — umgangssprachliche Vorbemerkung (unversioniert, per WinSCP editierbar)
+
+**Erläuterungsseite:** `erlaeuterung.md` wird zur Laufzeit gelesen und via `league/commonmark` (2.8.2) zu HTML gerendert. Rollenabhängige `<!--MAND-->...<!--/MAND-->`-Blöcke: bei mand sichtbar, bei cust/anon herausgeschnitten (Regex, Leerzeichen-tolerant). Styling per `<style>`-Block in der Blade-View (kein `@tailwindcss/typography` installiert).
+
+**Routen** (öffentlich, OHNE Login — für Einladungsempfänger, anon, cust, mand). URL-Segment `/ds/` statt `/datenschutz/`, Route-Namen bleiben `customer.datenschutz.*`:
+- `GET /customer/ds/erlaeuterung`
+- `GET /customer/ds/erklaerung-pdf` (PDF inline)
+- `GET /customer/ds/upload-bedingungen-pdf` (PDF inline)
+- `POST /customer/ds/hinweis-ok` (anon-Popup-Bestätigung, Session-Flag)
+
+**Einwilligung:**
+- cust: Pflicht-Checkbox bei Registrierung → `cust_user.ds_accepted_at` + `ds_version`
+- mand: zwei Pflicht-Checkboxen → `mand_user.ds_accepted_at`/`ds_version` + `upload_terms_accepted_at`/`upload_terms_version`
+- anon: Popup nach korrektem Passcode (Hinweis + Link), Kenntnisnahme via Session-Flag `_ds_hinweis_gezeigt`, KEINE DB-Speicherung
+- DS-Versionswert: Config `config/datenschutz.php` → `['version' => '1.0']`
+
+**Hinweis Link in erlaeuterung.md:** Der PDF-Link ist hartkodiert auf `/customer/ds/erklaerung-pdf` (kein `route()`-Aufruf, da Markdown). Bei Routenänderung manuell anpassen.
+
+---
+
 ## 11. Phase 7 — Drei-Frontend-UI (laufend)
 
 **Geräteklassen:**
@@ -278,7 +304,6 @@ Analog zum bestehenden `syst`-Reset, über `userdb.invite` (`inv_type='pw_reset'
 - Passkey-Seiten: „Neuen Passkey"-Button bildschirmbreit unterhalb Hinweistext auf Smartphone
 
 **Noch offen (Hauptaufgaben Phase 7):**
-- FotoDB-Models beim Content-Start synchronisieren: `ag_sec_code`/`asg_sec_code`/`fo_sec_code` → `*_sec_level` in `$fillable`; `ag_sort_date` in `ActivityGroup.$fillable` ergänzen (gebündelt, da Models ohnehin angefasst werden)
 - Keine Controller/Views für `ActivityGroup`, `ActivitySubgroup`, `FotoObj` (Anzeige + CRUD)
 - Smartphone-Batch-Upload-Flow für mand (`/mandant/upload/*`): Galerie-Picker mit Mehrfachauswahl, EXIF/Dateinamen-Datumserkennung (Fallback-Kette: EXIF → Dateiname-Parsing → `filemtime()` → manuell), AG/ASG-Zuordnung, Sicherheitsstufe, Upload mit Fortschritt/Retry
 - Mandanten-Content-Seite (horizontale Balken, Thumbnails, Navigation zwischen Mandanten) für cust + anon; anon leer, cust mit Textlink zum Dashboard
@@ -297,7 +322,10 @@ Analog zum bestehenden `syst`-Reset, über `userdb.invite` (`inv_type='pw_reset'
 | 2 | `resources/views/welcome.blade.php` von keiner Route gerendert | Kein Altlast — vorgesehene Willkommensseite, Logik noch offen (Phase 7) |
 | 3 | `_last_activity` liegt im JSON-Session-Payload, nicht als DB-Spalte | SQL-Updates auf die DB-Spalte wirken sich nicht aus — nur `session()->put()` verwenden |
 | 4 | `ag_fo_context.ag_banner` (obsolet) aus DDL und Code entfernt | Erledigt 14.06. (Tag `ag_banner_removed_ok`); `ag_is_banner` bleibt |
-| 5 | `*_sec_code` → `*_sec_level` (INT) in fotodb-DDL umbenannt | DDL erledigt 14.06.; Model-`$fillable` zieht beim Phase-7-Start nach |
+| 5 | `*_sec_code` → `*_sec_level` (TINYINT UNSIGNED) in fotodb-DDL + Models | **Erledigt 16.06.** (Tag `sec_level_sync_ok`); `fo_is_video` ergänzt |
+| 6 | 403 ohne Logeintrag → `abort(403)`/403-Responses erscheinen NICHT im Laravel-Log | Bei 403 zuerst Controller auf `abort(403)` prüfen, nicht Server/Middleware |
+| 7 | Korrigierte Datei lokal sauber, aber 403/Fehler bleibt → Datei war nie per FTP hochgeladen | Nach Claude-Code-Fix per grep Server-Datei gegen lokale prüfen, bevor weiter diagnostiziert wird |
+| 8 | Alfahosting: kein mod_security-Block auf „datenschutz" (Annahme war falsch) | URL-Segment `/ds/` bleibt trotzdem bestehen; echte Ursache war `abort(403)` im Controller |
 
 ---
 
@@ -306,7 +334,7 @@ Analog zum bestehenden `syst`-Reset, über `userdb.invite` (`inv_type='pw_reset'
 - **Repo:** `github.com/fotosite/fotosite` (privat)
 - **Aktiver Branch:** `feature/passkey-infra`
 - **Lokaler Pfad:** `D:\mwa\Projekte\fotosite\Fotosite_V08\claudescode\fotosite`
-- **Relevante Tags:** `phase5_cust_login_ok`, `p6_passkey_prompt_ok`, `p6_passkey_ui_ok`, `ag_banner_removed_ok`
+- **Relevante Tags:** `phase5_cust_login_ok`, `p6_passkey_prompt_ok`, `p6_passkey_ui_ok`, `ag_banner_removed_ok`, `sec_level_sync_ok`, `datenschutz_ok`
 - `.gitignore`: `.env`, `/vendor/`, `/node_modules/`, `/storage/logs/`, `fotosite_DDL_*.sql`
 
 ---

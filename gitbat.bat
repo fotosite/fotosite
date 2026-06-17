@@ -1,1 +1,3 @@
-git add -A ; git commit -m "feat: Datenschutz-Erlaeuterung, PDF-Anzeige, Einwilligung bei Registrierung; fix: 403 (abort entfernt), URI /ds/" ; git tag datenschutz_ok
+git add -A
+git commit -m "fix: mand-Registrierung Checkbox-State + Fehlertexte vereinheitlicht"
+git tag mand_register_ok

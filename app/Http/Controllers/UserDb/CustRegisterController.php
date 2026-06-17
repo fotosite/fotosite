@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustRegisterController.php
- * VERSION:     1.6.0
+ * VERSION:     1.7.0
  * AUTHOR:      Martin Wagner
  * DATE:        2026-05-30
  * PURPOSE:     Mitglieder-Registrierung per Einladungs-Token
@@ -38,7 +38,8 @@
  *              userdb.cust_pcode.pcode_id, mand_id, cust_id, cust_passcode,
  *              pcode_prefstat
  *
- * CHANGES:     1.6.0 (2026-06-16) ds_accepted (Pflicht-Checkbox) + ds_accepted_at/ds_version
+ * CHANGES:     1.7.0 (2026-06-17) Deutschsprachige Fehlermeldung für ds_accepted.accepted
+ *              1.6.0 (2026-06-16) ds_accepted (Pflicht-Checkbox) + ds_accepted_at/ds_version
  *              beim CustUser::create() gespeichert (Datenschutz-Feature)
  */
 
@@ -113,6 +114,8 @@ class CustRegisterController extends UserDbController
                 'password'           => ['required', 'confirmed',
                     Password::min(10)->mixedCase()->numbers()],
                 'ds_accepted'        => ['accepted'],
+            ], [
+                'ds_accepted.accepted' => 'Um ein Mitglieder-Konto zu erstellen, musst du der Datenschutzerklärung zustimmen.',
             ]);
 
             $cust = CustUser::create([

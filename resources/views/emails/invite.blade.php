@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/emails/invite.blade.php
-    VERSION: 1.4.0
-    DATE:    2026-06-12
+    VERSION: 1.5.0
+    DATE:    2026-06-17
 
     DESCRIPTION:
       E-Mail-Template für Einladungen und Passwort-Zurücksetzungen.
@@ -88,8 +88,8 @@
         <div class="body">
             @if($type === 'register')
                 @if($userType === 'mand')
-                    <p>Sie wurden eingeladen, einen Mandanten-Account für Fotogalerie
-                       anzulegen. Klicken Sie auf den folgenden Link — er ist 24 Stunden
+                    <p>Du wurdest eingeladen, einen Galerist:innen-Account für die Fotogalerie
+                       anzulegen. Klicke auf den folgenden Button — er ist 24 Stunden
                        gültig:</p>
                 @elseif($userType === 'cust')
                     <p>Sie wurden eingeladen, einen Mitglieder-Account für Fotogalerie
@@ -104,11 +104,14 @@
                 <a href="{{ $inviteUrl }}" class="btn">Link zum Account erstellen</a>
 
                 @if($userType === 'mand')
+                <p style="word-break:break-all; font-size:12px; color:#666666;">
+                    Oder verwende die URL: {{ $inviteUrl }}
+                </p>
                 <p style="font-size:13px; color:#555555; border-left:3px solid #1a1a2e;
                           padding:8px 12px; margin:0 0 20px 0; border-radius:0 4px 4px 0;">
                     <strong>Hinweis:</strong> Bei der Registrierung sind die Zustimmung
                     zur Datenschutzerklärung sowie zu den Bedingungen für den Upload
-                    von Daten erforderlich. Beide Dokumente werden Ihnen während der
+                    von Daten erforderlich. Beide Dokumente werden dir während der
                     Registrierung angezeigt.
                 </p>
                 @elseif($userType === 'cust')
@@ -120,8 +123,13 @@
                 </p>
                 @endif
 
+                @if($userType === 'mand')
+                <p class="note">Falls du diese Einladung nicht erwartet hast,
+                   kannst du diese E-Mail ignorieren.</p>
+                @else
                 <p class="note">Falls Sie diese Einladung nicht erwartet haben,
                    können Sie diese E-Mail ignorieren.</p>
+                @endif
             @else
                 <p>Sie haben Ihr Passwort vergessen? Kein Problem: mit
                 diesem Link können Sie ein neues Passwort festlegen:</p>
@@ -136,7 +144,7 @@
         </div>
 
         <div class="footer">
-            Diese E-Mail wurde automatisch von Fotogalerie versandt. Bitte antworten Sie nicht auf diese E-Mail.
+            Diese E-Mail wurde automatisch von Fotogalerie versandt. Antworten an diese E-Mail-Adresse werden nicht gelesen und nicht beantwortet.
         </div>
     </div>
 </body>

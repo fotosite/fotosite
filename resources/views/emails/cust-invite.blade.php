@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/emails/cust-invite.blade.php
-    VERSION: 1.4.0
-    DATE:    2026-06-08
+    VERSION: 1.5.0
+    DATE:    2026-06-17
 
     DESCRIPTION:
       Einladungs-E-Mail an neues Mitglied — enthält Registrierungslink (48 h gültig)
@@ -99,22 +99,19 @@
         <div class="body">
             <p>Hallo {{ $custName }},</p>
 
-            <p>diese Mail kommt von {{ $mandFirstname }} Fotogalerie-Website.<br>
-               Die Webadresse der Website ist
-               <a href="https://fotos.martinwagner.de/" style="color:#1a1a2e;">https://fotos.martinwagner.de/</a></p>
+            <p>Dies ist eine Einladung, die Fotogalerie von {{ $mandFirstname }} anzusehen.<br>
+               {{ genitivName($mandUname) }} Künstlername als Galerist:in lautet {{ $mandUname }}.</p>
 
-            <p>{{ $mandUname }} lädt dich mit dieser Mail ein, seine Fotogalerie
-               anzusehen. Benutze diesen Link, um ein Konto anzulegen:</p>
+            <p>Benutze diesen Button, um ein Konto anzulegen:</p>
+
+            <a href="{{ $registerUrl }}" class="btn">Konto anlegen</a>
 
             <p style="word-break:break-all; font-size:12px; color:#666666;">
-                {{ $registerUrl }}
+                Oder verwende die URL: {{ $registerUrl }}
             </p>
 
-            <p>Du kannst die Fotogalerie auch besuchen, ohne ein Konto anzulegen.
-               Wenn du kein Konto anlegen möchtest, dann frage {{ $mandUname }}
-               nach einem Kurzzeit-Passwort. Damit bekommst du Zugang zur
-               Fotogalerie mit folgendem Link:<br>
-               <a href="https://fotos.martinwagner.de/" style="color:#1a1a2e;">https://fotos.martinwagner.de/</a></p>
+            <p>Du kannst die Fotogalerie auch ohne Konto besuchen. Wenn du kein Konto anlegen
+               möchtest, frage {{ $mandFirstname }} nach einem Kurzzeit-Passwort.</p>
 
             <p style="font-size:13px; color:#555555; border-left:3px solid #1a1a2e;
                       padding:8px 12px; margin:0 0 20px 0;">

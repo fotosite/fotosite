@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/SystemMandantController.php
- * VERSION:     1.4.0
+ * VERSION:     1.5.0
  *
  * FUNCTIONS:   index()          — Lists all MandUser records ordered by mand_lastname.
  *                                 Reads: userdb.mand_user.*
@@ -45,7 +45,9 @@
  *              userdb.invite.*
  *              userdb.syst_user.syst_id, syst_uname
  *
- * CHANGES:     1.4.0 (2026-06-16) handleRegister() — zwei DS-Checkboxen (ds_accepted,
+ * CHANGES:     1.5.0 (2026-06-17) handleRegister() — deutschsprachige Fehlermeldungen für
+ *              ds_accepted.accepted und upload_terms_accepted.accepted
+ *              1.4.0 (2026-06-16) handleRegister() — zwei DS-Checkboxen (ds_accepted,
  *              upload_terms_accepted) + Speicherung in mand_user (Datenschutz-Feature)
  */
 
@@ -207,6 +209,9 @@ class SystemMandantController extends UserDbController
             'password'               => ['required', 'min:12', 'confirmed'],
             'ds_accepted'            => ['accepted'],
             'upload_terms_accepted'  => ['accepted'],
+        ], [
+            'ds_accepted.accepted'           => 'Um ein Galerist:innen-Konto zu erstellen, musst du der Datenschutzerklärung sowie den Bedingungen für den Upload von Inhalten zustimmen.',
+            'upload_terms_accepted.accepted' => 'Um ein Galerist:innen-Konto zu erstellen, musst du der Datenschutzerklärung sowie den Bedingungen für den Upload von Inhalten zustimmen.',
         ]);
 
         MandUser::create([

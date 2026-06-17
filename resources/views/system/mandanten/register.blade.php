@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/system/mandanten/register.blade.php
-    VERSION: 1.2.1
-    DATE:    2026-06-08
+    VERSION: 1.4.0
+    DATE:    2026-06-17
 
     DESCRIPTION:
       Standalone mandant registration page for invited mandants.
@@ -50,7 +50,7 @@
             @if($errors->any())
                 <div class="mb-6 rounded-lg border border-red-300
                             bg-red-50 px-4 py-3 text-sm text-red-700 space-y-1">
-                    @foreach($errors->all() as $error)
+                    @foreach(array_unique($errors->all()) as $error)
                         <p>{{ $error }}</p>
                     @endforeach
                 </div>
@@ -174,6 +174,7 @@
                         <input type="checkbox"
                                id="ds_accepted" name="ds_accepted"
                                value="1"
+                               {{ old('ds_accepted') ? 'checked' : '' }}
                                class="mt-0.5 h-4 w-4 rounded border-gray-300 text-gray-800
                                       focus:ring-gray-500
                                       @error('ds_accepted') border-red-400 @enderror">
@@ -189,7 +190,7 @@
                         </span>
                     </label>
                     @error('ds_accepted')
-                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-xs text-red-600">Um ein Galerist:innen-Konto zu erstellen, musst du der Datenschutzerklärung sowie den Bedingungen für den Upload von Inhalten zustimmen.</p>
                     @enderror
                 </div>
 
@@ -199,6 +200,7 @@
                         <input type="checkbox"
                                id="upload_terms_accepted" name="upload_terms_accepted"
                                value="1"
+                               {{ old('upload_terms_accepted') ? 'checked' : '' }}
                                class="mt-0.5 h-4 w-4 rounded border-gray-300 text-gray-800
                                       focus:ring-gray-500
                                       @error('upload_terms_accepted') border-red-400 @enderror">
@@ -214,7 +216,7 @@
                         </span>
                     </label>
                     @error('upload_terms_accepted')
-                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-xs text-red-600">Um ein Galerist:innen-Konto zu erstellen, musst du der Datenschutzerklärung sowie den Bedingungen für den Upload von Inhalten zustimmen.</p>
                     @enderror
                 </div>
 
