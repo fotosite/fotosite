@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/customer/konto.blade.php
-    VERSION: 1.1.0
+    VERSION: 1.2.0
     DATE:    2026-06-12
 
     DESCRIPTION:
@@ -84,7 +84,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round"
                           d="M15.75 19.5 8.25 12l7.5-7.5"/>
                 </svg>
-                Dashboard
+                Einstellungen
             </a>
         </div>
 

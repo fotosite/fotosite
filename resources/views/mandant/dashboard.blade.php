@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/dashboard.blade.php
-    VERSION: 2.8.0
+    VERSION: 2.9.0
     DATE:    2026-06-08
 
     DESCRIPTION:
@@ -25,7 +25,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>Mandanten-Dashboard · Fotogalerie</title>
+    <title>Galeristen-Einstellungen · Fotogalerie</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
@@ -50,7 +50,7 @@
                 <span class="text-zinc-800 select-none">|</span>
                 <span class="text-sm font-semibold tracking-widest
                              uppercase text-indigo-600">
-                    Mandant
+                    Galerist:in
                 </span>
                 <span class="text-sm text-indigo-200">{{ $mandUname }}</span>
             </div>
@@ -78,7 +78,7 @@
         {{-- Seitenüberschrift --}}
         <div class="mb-10">
             <h1 class="text-xl font-semibold tracking-tight text-gray-800">
-                Mandanten-Dashboard
+                Galeristen-Einstellungen
             </h1>
             <p class="mt-1.5 text-sm text-zinc-600">
                 Willkommen in Ihrem Verwaltungsbereich.
@@ -396,7 +396,7 @@
                     flex items-center justify-between">
             <span class="text-[10px] font-mono tracking-widest
                          uppercase text-gray-400">
-                Fotogalerie · Mandanten-Bereich
+                Fotogalerie · Galeristen-Bereich
             </span>
             <span class="text-[10px] text-gray-400">
                 Session aktiv

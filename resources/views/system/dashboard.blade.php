@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/system/dashboard.blade.php
-    VERSION: 1.5.1
+    VERSION: 1.6.0
     DATE:    2026-06-08
 
     DESCRIPTION:
@@ -195,10 +195,10 @@
 
                 <div>
                     <h2 class="text-sm font-semibold text-gray-800 tracking-wide mb-1">
-                        Mandantenverwaltung
+                        Galeristen-Verwaltung
                     </h2>
                     <p class="text-xs text-gray-500 leading-relaxed">
-                        Mandanten anlegen, bearbeiten,<br>löschen · CRUD
+                        Galeristen anlegen, bearbeiten,<br>löschen · CRUD
                     </p>
                 </div>
 

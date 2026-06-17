@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/system/mandanten/register.blade.php
-    VERSION: 1.4.0
+    VERSION: 1.5.0
     DATE:    2026-06-17
 
     DESCRIPTION:
@@ -21,7 +21,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>Mandanten-Account erstellen · Fotogalerie</title>
+    <title>Galerist:innen-Account erstellen · Fotogalerie</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
@@ -44,7 +44,7 @@
             </div>
 
             <h1 class="text-xl font-semibold tracking-tight text-gray-800 mb-6">
-                Mandanten-Account erstellen
+                Galerist:innen-Account erstellen
             </h1>
 
             @if($errors->any())

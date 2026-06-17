@@ -1,3 +1,3 @@
 git add -A
-git commit -m "fix: mand-Registrierung Checkbox-State + Fehlertexte vereinheitlicht"
-git tag mand_register_ok
+git commit -m "ui: Mandant->Galerist:in, Dashboard->Einstellungen in allen Views"
+git tag ui_begriffe_ok

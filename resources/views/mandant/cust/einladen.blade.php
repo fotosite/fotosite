@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/cust/einladen.blade.php
-    VERSION: 1.3.4
+    VERSION: 1.4.0
     AUTHOR:  Martin Wagner
     DATE:    2026-06-08
 
@@ -44,7 +44,7 @@
                 <span class="text-zinc-800 select-none">|</span>
                 <span class="text-sm font-semibold tracking-widest
                              uppercase text-indigo-600">
-                    Mandant
+                    Galerist:in
                 </span>
                 <span class="text-sm text-indigo-200">{{ $mandUname }}</span>
             </div>
@@ -219,7 +219,7 @@
                     flex items-center justify-between">
             <span class="text-[10px] font-mono tracking-widest
                          uppercase text-gray-400">
-                Fotogalerie · Mandanten-Bereich
+                Fotogalerie · Galeristen-Bereich
             </span>
             <span class="text-[10px] text-gray-400">
                 Session aktiv

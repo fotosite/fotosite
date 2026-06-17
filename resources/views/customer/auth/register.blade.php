@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/customer/auth/register.blade.php
-    VERSION: 1.4.1
+    VERSION: 1.5.0
     AUTHOR:  Martin Wagner
     DATE:    2026-06-08
 
@@ -67,14 +67,14 @@
 
         {{-- ── Kompaktform: bereits registrierter User ──────── --}}
         <div class="mb-6 space-y-2 text-sm text-gray-600">
-            <p>Sie wurden von einem Mandanten eingeladen.</p>
+            <p>Sie wurden von einem Galeristen eingeladen.</p>
             <p>
                 Ihr Account ist bereits registriert:
                 <span class="font-medium text-gray-800">{{ $cust_email }}</span>
             </p>
             <p class="text-gray-400 text-xs">
                 Mit einem Klick auf "Einladung annehmen" wird Ihr Zugang für diesen
-                Mandanten freigeschaltet.
+                Galeristen freigeschaltet.
             </p>
         </div>
 

@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/auth/login-modal.blade.php
-    VERSION: 1.2.0
+    VERSION: 1.3.0
     DATE:    2026-06-12
 
     DESCRIPTION:
@@ -218,7 +218,7 @@
                 <button type="button"
                         @click="page = 'mand'"
                         class="text-xs text-gray-400 hover:text-gray-500 transition-colors">
-                    Mandanten-Login
+                    Galeristen-Login
                 </button>
             </div>
 
@@ -230,7 +230,7 @@
         ═══════════════════════════════════════════════════════════ --}}
         <div x-show="page === 'mand'" x-cloak>
 
-            <h2 class="text-xl font-semibold text-gray-800 mb-6">Mandanten-Anmeldung</h2>
+            <h2 class="text-xl font-semibold text-gray-800 mb-6">Galeristen-Anmeldung</h2>
 
             {{-- Passkey-Button (zunächst versteckt; wird per JS eingeblendet) --}}
             <button id="passkey-btn"

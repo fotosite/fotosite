@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/system/mandanten/edit.blade.php
-    VERSION: 1.0.1
+    VERSION: 1.1.0
     DATE:    2026-06-08
 
     DESCRIPTION:
@@ -65,7 +65,7 @@
             <a href="{{ route('system.mandanten.show', $mandant->mand_id) }}"
                class="text-xs text-gray-400 hover:text-gray-600
                       transition-colors duration-150 tracking-wide">
-                ← Mandant ansehen
+                ← Galerist:in ansehen
             </a>
         </div>
 

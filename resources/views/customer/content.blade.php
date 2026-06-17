@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/customer/content.blade.php
-    VERSION: 1.1.1
+    VERSION: 1.2.0
     DATE:    2026-06-13
 
     DESCRIPTION:
@@ -102,7 +102,7 @@
                 <a href="{{ route('customer.dashboard') }}"
                    class="text-sm text-indigo-600 hover:text-indigo-800
                           transition-colors">
-                    ← Zum Mitglieder-Dashboard
+                    ← Zu meinen Einstellungen
                 </a>
             </div>
         @else

@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/system/mandanten/index.blade.php
-    VERSION: 1.0.2
+    VERSION: 1.1.0
     DATE:    2026-06-08
 
     DESCRIPTION:
@@ -26,7 +26,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>Mandantenverwaltung · Fotogalerie</title>
+    <title>Galeristen-Verwaltung · Fotogalerie</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
@@ -85,7 +85,7 @@
 
         <div class="mb-8">
             <h1 class="text-xl font-semibold tracking-tight text-gray-800">
-                Mandantenverwaltung
+                Galeristen-Verwaltung
             </h1>
         </div>
 
@@ -108,7 +108,7 @@
         {{-- ── Invite section ─────────────────────────────── --}}
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8">
             <h2 class="text-sm font-semibold text-gray-800 tracking-wide mb-4">
-                Neuen Mandanten einladen
+                Neuen Galeristen einladen
             </h2>
             <form method="POST"
                   action="{{ route('system.mandanten.invite') }}"
@@ -140,7 +140,7 @@
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-100">
                 <h2 class="text-sm font-semibold text-gray-800 tracking-wide">
-                    Mandanten
+                    Galeristen
                 </h2>
             </div>
             <div class="overflow-x-auto">
@@ -195,7 +195,7 @@
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"
-                                                    x-on:click="if(!confirm('Mandant wirklich löschen?')) $event.preventDefault()"
+                                                    x-on:click="if(!confirm('Galerist:in wirklich löschen?')) $event.preventDefault()"
                                                     class="text-xs text-red-400 hover:text-red-600
                                                            transition-colors tracking-wide">
                                                 Löschen

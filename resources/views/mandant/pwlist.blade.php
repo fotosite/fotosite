@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/pwlist.blade.php
-    VERSION: 1.17.0
+    VERSION: 1.18.0
     DATE:    2026-06-08
 
     DESCRIPTION:
@@ -53,7 +53,7 @@
                 <span class="text-zinc-800 select-none">|</span>
                 <span class="text-sm font-semibold tracking-widest
                              uppercase text-indigo-600">
-                    Mandant
+                    Galerist:in
                 </span>
                 <span class="text-sm text-indigo-200">{{ $mandUname }}</span>
             </div>
@@ -89,7 +89,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round"
                           d="M15.75 19.5 8.25 12l7.5-7.5"/>
                 </svg>
-                Dashboard
+                Einstellungen
             </a>
         </div>
 
@@ -694,7 +694,7 @@
                     flex items-center justify-between">
             <span class="text-[10px] font-mono tracking-widest
                          uppercase text-gray-400">
-                Fotogalerie · Mandanten-Bereich
+                Fotogalerie · Galeristen-Bereich
             </span>
             <span class="text-[10px] text-gray-400">
                 Session aktiv

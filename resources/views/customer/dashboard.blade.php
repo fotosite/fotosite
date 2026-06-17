@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/customer/dashboard.blade.php
-    VERSION: 2.0.0
+    VERSION: 2.1.0
     DATE:    2026-06-13
 
     DESCRIPTION:
@@ -27,7 +27,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>Dashboard · Fotogalerie</title>
+    <title>Einstellungen · Fotogalerie</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
@@ -76,7 +76,7 @@
         {{-- Seitenüberschrift --}}
         <div class="mb-10">
             <h1 class="text-xl font-semibold tracking-tight text-gray-800">
-                Mitglieder-Dashboard
+                Meine Einstellungen
             </h1>
             <p class="mt-1.5 text-sm text-zinc-600">
                 Willkommen, {{ $cust?->cust_firstname ?? 'Mitglied' }}!
