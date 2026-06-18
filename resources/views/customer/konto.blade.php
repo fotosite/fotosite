@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/customer/konto.blade.php
-    VERSION: 1.3.0
+    VERSION: 1.4.0
     DATE:    2026-06-18
 
     DESCRIPTION:
@@ -18,7 +18,10 @@
       DELETE customer.konto.delete   — Konto löschen
       POST   customer.logout         — Abmelden
 
-    CHANGES: 1.3.0 (2026-06-18) Passwort-Bereich entfernt (jetzt PW-Modal auf
+    CHANGES: 1.4.0 (2026-06-18) cust_uname-Feld ergänzt (Pflicht); cust_firstname/
+             cust_lastname/cust_street+nr/cust_postcode_city von optional auf
+             Pflichtfeld umgestellt; cust_tel/cust_company bleiben optional.
+             1.3.0 (2026-06-18) Passwort-Bereich entfernt (jetzt PW-Modal auf
              customer/dashboard.blade.php); cust_email auf readonly/nicht editierbar
              umgestellt (E-Mail-Änderung jetzt über E-Mail-Modal); Change-Tracking via
              Alpine dirty-Flag + beforeunload-Handler ergänzt.
@@ -131,6 +134,24 @@
 
                 <div class="space-y-4">
 
+                    {{-- cust_uname --}}
+                    <div>
+                        <label for="cust_uname"
+                               class="block text-sm font-medium text-gray-700">
+                            Benutzername <span class="text-red-500">*</span>
+                        </label>
+                        <input id="cust_uname" name="cust_uname" type="text"
+                               value="{{ old('cust_uname', $cust->cust_uname) }}"
+                               required
+                               class="mt-1 block w-full rounded-md border-gray-300
+                                      shadow-sm text-sm
+                                      focus:border-indigo-500 focus:ring-indigo-500
+                                      @error('cust_uname') border-red-400 @enderror">
+                        @error('cust_uname')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     {{-- cust_email (nicht editierbar — Aenderung ueber E-Mail-Modal) --}}
                     <div>
                         <label for="cust_email"
@@ -151,11 +172,11 @@
                         <div>
                             <label for="cust_firstname"
                                    class="block text-sm font-medium text-gray-700">
-                                Vorname
-                                <span class="text-gray-400 font-normal">(optional)</span>
+                                Vorname <span class="text-red-500">*</span>
                             </label>
                             <input id="cust_firstname" name="cust_firstname" type="text"
                                    value="{{ old('cust_firstname', $cust->cust_firstname) }}"
+                                   required
                                    class="mt-1 block w-full rounded-md border-gray-300
                                           shadow-sm text-sm
                                           focus:border-indigo-500 focus:ring-indigo-500
@@ -168,11 +189,11 @@
                         <div>
                             <label for="cust_lastname"
                                    class="block text-sm font-medium text-gray-700">
-                                Nachname
-                                <span class="text-gray-400 font-normal">(optional)</span>
+                                Nachname <span class="text-red-500">*</span>
                             </label>
                             <input id="cust_lastname" name="cust_lastname" type="text"
                                    value="{{ old('cust_lastname', $cust->cust_lastname) }}"
+                                   required
                                    class="mt-1 block w-full rounded-md border-gray-300
                                           shadow-sm text-sm
                                           focus:border-indigo-500 focus:ring-indigo-500
@@ -206,11 +227,11 @@
                     <div>
                         <label for="cust_street_nr"
                                class="block text-sm font-medium text-gray-700">
-                            Straße und Hausnummer
-                            <span class="text-gray-400 font-normal">(optional)</span>
+                            Straße und Hausnummer <span class="text-red-500">*</span>
                         </label>
                         <input id="cust_street_nr" name="cust_street+nr" type="text"
                                value="{{ old('cust_street+nr', $cust->{'cust_street+nr'}) }}"
+                               required
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
                                       focus:border-indigo-500 focus:ring-indigo-500
@@ -224,11 +245,11 @@
                     <div>
                         <label for="cust_postcode_city"
                                class="block text-sm font-medium text-gray-700">
-                            PLZ und Ort
-                            <span class="text-gray-400 font-normal">(optional)</span>
+                            PLZ und Ort <span class="text-red-500">*</span>
                         </label>
                         <input id="cust_postcode_city" name="cust_postcode_city" type="text"
                                value="{{ old('cust_postcode_city', $cust->cust_postcode_city) }}"
+                               required
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
                                       focus:border-indigo-500 focus:ring-indigo-500

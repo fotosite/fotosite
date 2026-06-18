@@ -1,9 +1,9 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustRegisterController.php
- * VERSION:     1.7.0
+ * VERSION:     1.9.0
  * AUTHOR:      Martin Wagner
- * DATE:        2026-05-30
+ * DATE:        2026-06-18
  * PURPOSE:     Mitglieder-Registrierung per Einladungs-Token
  *
  * FUNCTIONS:   show()   — Validiert Token; prüft ob E-Mail bereits in cust_user existiert;
@@ -12,8 +12,11 @@
  *                                 userdb.cust_user.cust_email
  *              store()  — Zwei Pfade über Hidden Field 'existing':
  *                          existing=1: nur Email validieren, vorhandenen CustUser nutzen.
- *                          existing=0: volle Validierung + CustUser::create() inkl.
- *                                      ds_accepted_at, ds_version (Datenschutz-Checkbox).
+ *                          existing=0: volle Validierung (inkl. cust_uname, Adressfelder)
+ *                                      + CustUser::create() inkl. ds_accepted_at,
+ *                                      ds_version (Datenschutz-Checkbox). cust_tel/
+ *                                      cust_company optional, bei leer Fallback
+ *                                      'nicht vorhanden'.
  *                          Danach CustPcode erstellen, Einladung als verwendet markieren.
  *                          Reads:  sessiondb.cust_invite.*
  *                                  userdb.cust_user.cust_email
@@ -32,13 +35,29 @@
  *
  * DB ACCESS:   sessiondb.cust_invite.invite_id, token, expires_at, used, mand_id,
  *              cust_email, sec_level
- *              userdb.cust_user.cust_id, cust_firstname, cust_lastname, cust_email,
- *              cust_tel, cust_company, cust_street+nr, cust_postcode_city,
+ *              userdb.cust_user.cust_id, cust_uname, cust_firstname, cust_lastname,
+ *              cust_email, cust_tel, cust_company, cust_street+nr, cust_postcode_city,
  *              cust_pw_hash, cust_2fa_opt_in, ds_accepted_at, ds_version
  *              userdb.cust_pcode.pcode_id, mand_id, cust_id, cust_passcode,
  *              pcode_prefstat
  *
- * CHANGES:     1.7.0 (2026-06-17) Deutschsprachige Fehlermeldung für ds_accepted.accepted
+ * CHANGES:     1.9.0 (2026-06-18) store() — Erfolgsmeldung nach Kontoerstellung
+ *              aktualisiert ("Konto erfolgreich angelegt..."). Redirect bewusst auf
+ *              route('home') statt route('customer.login') belassen: 'customer.login'
+ *              (CustLoginController::showLogin()) erzeugt einen eigenen Redirect zu
+ *              'home' mit einem anderen Flash-Key (open_login_modal) und würde die
+ *              'status'-Flash-Message beim Session-Flash-Aging verwerfen, bevor die
+ *              Login-Seite (auth/login-modal.blade.php, gerendert von Route 'home')
+ *              tatsächlich angezeigt wird.
+ *              1.8.0 (2026-06-18) store() — cust_uname als Pflichtfeld ergänzt
+ *              (mit unique-Pruefung — cust_user.cust_uname hat laut DDL einen
+ *              UNIQUE-Constraint, ohne Validierungsregel würde ein Duplikat eine
+ *              ungefilterte SQL-Exception statt einer Formularfehlermeldung
+ *              auslösen); cust_street+nr/cust_postcode_city bereits Pflicht
+ *              (unverändert); cust_tel auf nullable umgestellt (Fallback
+ *              'nicht vorhanden'); cust_company-Fallback von '' auf
+ *              'nicht vorhanden' umgestellt.
+ *              1.7.0 (2026-06-17) Deutschsprachige Fehlermeldung für ds_accepted.accepted
  *              1.6.0 (2026-06-16) ds_accepted (Pflicht-Checkbox) + ds_accepted_at/ds_version
  *              beim CustUser::create() gespeichert (Datenschutz-Feature)
  */
@@ -104,10 +123,11 @@ class CustRegisterController extends UserDbController
             }
         } else {
             $validated = $request->validate([
+                'cust_uname'         => ['required', 'string', 'max:255', 'unique:userdb.cust_user,cust_uname'],
                 'cust_firstname'     => ['required', 'string', 'max:255'],
                 'cust_lastname'      => ['required', 'string', 'max:255'],
                 'cust_email'         => ['required', 'email', 'max:255'],
-                'cust_tel'           => ['required', 'string', 'max:255'],
+                'cust_tel'           => ['nullable', 'string', 'max:255'],
                 'cust_company'       => ['nullable', 'string', 'max:255'],
                 'cust_street+nr'     => ['required', 'string', 'max:255'],
                 'cust_postcode_city' => ['required', 'string', 'max:255'],
@@ -119,11 +139,12 @@ class CustRegisterController extends UserDbController
             ]);
 
             $cust = CustUser::create([
+                'cust_uname'         => $validated['cust_uname'],
                 'cust_firstname'     => $validated['cust_firstname'],
                 'cust_lastname'      => $validated['cust_lastname'],
                 'cust_email'         => $validated['cust_email'],
-                'cust_tel'           => $validated['cust_tel'],
-                'cust_company'       => $validated['cust_company'] ?? '',
+                'cust_tel'           => $validated['cust_tel'] ?? 'nicht vorhanden',
+                'cust_company'       => $validated['cust_company'] ?? 'nicht vorhanden',
                 'cust_street+nr'     => $validated['cust_street+nr'],
                 'cust_postcode_city' => $validated['cust_postcode_city'],
                 'cust_pw_hash'       => Hash::make($validated['password']),
@@ -144,6 +165,6 @@ class CustRegisterController extends UserDbController
         $invite->update(['used' => true]);
 
         return redirect()->route('home')
-            ->with('status', 'Registrierung erfolgreich. Bitte melden Sie sich an.');
+            ->with('status', 'Konto erfolgreich angelegt. Bitte melde dich jetzt als Mitglied an.');
     }
 }

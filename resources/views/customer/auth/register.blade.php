@@ -1,8 +1,8 @@
 {{--
     FILE:    resources/views/customer/auth/register.blade.php
-    VERSION: 1.5.0
+    VERSION: 1.6.0
     AUTHOR:  Martin Wagner
-    DATE:    2026-06-08
+    DATE:    2026-06-18
 
     DESCRIPTION:
       Mitglieder-Registrierungsformular — wird per Einladungs-Token aufgerufen.
@@ -18,6 +18,11 @@
     ROUTES USED:
       POST /customer/register/{token} — Registrierung abschicken (route('customer.register.store'))
       GET  /                          — Startseite (route('home'))
+
+    CHANGES: 1.6.0 (2026-06-18) cust_uname-Feld ergänzt (Pflicht); cust_tel auf
+             optional umgestellt; cust_company-Label vereinheitlicht ("Firma /
+             Organisation"); Change-Tracking via Alpine dirty-Flag + beforeunload
+             ergänzt (Passwortfelder von dirty-Tracking ausgenommen).
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -104,12 +109,35 @@
 
         <form method="POST"
               action="{{ route('customer.register.store', ['token' => $token]) }}"
-              autocomplete="off">
+              autocomplete="off"
+              x-data="{ dirty: false }"
+              x-init="window.addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } })"
+              @input="dirty = true"
+              @change="dirty = true"
+              @submit="dirty = false">
             @csrf
             <input type="hidden" name="token"    value="{{ $token }}">
             <input type="hidden" name="existing" value="0">
 
             <div class="space-y-5">
+
+                {{-- Benutzername --}}
+                <div>
+                    <label for="cust_uname"
+                           class="block text-sm font-medium text-gray-700 mb-1">
+                        Benutzername <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text"
+                           id="cust_uname" name="cust_uname"
+                           value="{{ old('cust_uname') }}"
+                           required
+                           class="w-full rounded-lg border px-3 py-2 text-sm text-gray-800 shadow-sm
+                                  focus:outline-none focus:ring-2 focus:ring-indigo-400
+                                  @error('cust_uname') border-red-400 bg-red-50 @else border-gray-300 @enderror">
+                    @error('cust_uname')
+                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
 
                 {{-- Vorname / Nachname --}}
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -164,16 +192,16 @@
                     @enderror
                 </div>
 
-                {{-- Telefon --}}
+                {{-- Telefon (optional) --}}
                 <div>
                     <label for="cust_tel"
                            class="block text-sm font-medium text-gray-700 mb-1">
-                        Telefon <span class="text-red-500">*</span>
+                        Telefon
+                        <span class="text-gray-400 font-normal">(optional)</span>
                     </label>
                     <input type="text"
                            id="cust_tel" name="cust_tel"
                            value="{{ old('cust_tel') }}"
-                           required
                            class="w-full rounded-lg border px-3 py-2 text-sm text-gray-800 shadow-sm
                                   focus:outline-none focus:ring-2 focus:ring-indigo-400
                                   @error('cust_tel') border-red-400 bg-red-50 @else border-gray-300 @enderror">
@@ -182,11 +210,11 @@
                     @enderror
                 </div>
 
-                {{-- Firma (optional) --}}
+                {{-- Firma / Organisation (optional) --}}
                 <div>
                     <label for="cust_company"
                            class="block text-sm font-medium text-gray-700 mb-1">
-                        Firma
+                        Firma / Organisation
                         <span class="text-gray-400 font-normal">(optional)</span>
                     </label>
                     <input type="text"
@@ -245,6 +273,7 @@
                     <input type="password"
                            id="password" name="password"
                            required autocomplete="new-password"
+                           @input.stop="" @change.stop=""
                            class="w-full rounded-lg border px-3 py-2 text-sm text-gray-800 shadow-sm
                                   focus:outline-none focus:ring-2 focus:ring-indigo-400
                                   @error('password') border-red-400 bg-red-50 @else border-gray-300 @enderror">
@@ -265,6 +294,7 @@
                     <input type="password"
                            id="password_confirmation" name="password_confirmation"
                            required autocomplete="new-password"
+                           @input.stop="" @change.stop=""
                            class="w-full rounded-lg border px-3 py-2 text-sm text-gray-800 shadow-sm
                                   focus:outline-none focus:ring-2 focus:ring-indigo-400
                                   @error('password_confirmation') border-red-400 bg-red-50 @else border-gray-300 @enderror">

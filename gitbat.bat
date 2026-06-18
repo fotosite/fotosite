@@ -1,3 +1,3 @@
 git add -A
-git commit -m "feat: PW- und E-Mail-Aenderung per Modal (mand+cust); E-Mail-Aenderung per Bestaetigungslink ueber invite-Tabelle"
-git tag email_pw_modal_ok
+git commit -m "fix: Erfolgsmeldung nach Kontoerstellung (cust+mand); login_page=mand fuer korrektes Modal-Tab"
+git tag registrierung_ok

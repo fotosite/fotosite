@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustSelfController.php
- * VERSION:     1.3.0
+ * VERSION:     1.4.0
  * AUTOR:       Martin Wagner
  * DATUM:       2026-06-18
  *
@@ -14,8 +14,12 @@
  *              update()            — Validiert und speichert Kontaktdaten. cust_email
  *                                     wird NICHT aus dem Request übernommen (Aenderung
  *                                     läuft über requestEmailChange()/confirmEmailChange()).
+ *                                     cust_uname/cust_firstname/cust_lastname/
+ *                                     cust_street+nr/cust_postcode_city sind Pflicht;
+ *                                     cust_tel/cust_company optional (Fallback
+ *                                     'nicht vorhanden').
  *                                     Reads:  userdb.cust_user.cust_id
- *                                     Writes: userdb.cust_user.cust_firstname,
+ *                                     Writes: userdb.cust_user.cust_uname, cust_firstname,
  *                                             cust_lastname, cust_tel, cust_street+nr,
  *                                             cust_postcode_city, cust_company
  *              updatePassword()    — Validiert aktuelles + neues Passwort (Policy: min 10
@@ -84,7 +88,13 @@
  *              userdb.invite.inv_id, inv_email, inv_token_hash, inv_type,
  *              inv_user_type, inv_user_id, expires_at (email_change-Einträge)
  *
- * CHANGES:     1.3.0 (2026-06-18) update() — cust_email aus Validierung/Speicherung
+ * CHANGES:     1.4.0 (2026-06-18) update() — cust_uname als Pflichtfeld ergänzt (mit
+ *              unique-Pruefung — cust_user.cust_uname hat laut DDL einen UNIQUE-
+ *              Constraint); cust_firstname/cust_lastname/cust_street+nr/
+ *              cust_postcode_city von nullable auf required umgestellt; cust_tel/
+ *              cust_company bleiben nullable, jedoch mit Fallback 'nicht vorhanden'
+ *              bei leerem Wert (statt rohem leerem String).
+ *              1.3.0 (2026-06-18) update() — cust_email aus Validierung/Speicherung
  *              entfernt (nicht editierbar); requestEmailChange()/confirmEmailChange()
  *              ergänzt — E-Mail-Aenderung per Bestaetigungsmail (invite-Tabelle,
  *              inv_type='email_change'); alte Adresse bleibt bis Bestaetigung aktiv.
@@ -134,13 +144,17 @@ class CustSelfController extends UserDbController
         }
 
         $validated = $request->validate([
-            'cust_firstname'     => ['nullable', 'string', 'max:255'],
-            'cust_lastname'      => ['nullable', 'string', 'max:255'],
+            'cust_uname'         => ['required', 'string', 'max:255', "unique:userdb.cust_user,cust_uname,{$custId},cust_id"],
+            'cust_firstname'     => ['required', 'string', 'max:255'],
+            'cust_lastname'      => ['required', 'string', 'max:255'],
             'cust_tel'           => ['nullable', 'string', 'max:255'],
-            'cust_street+nr'     => ['nullable', 'string', 'max:255'],
-            'cust_postcode_city' => ['nullable', 'string', 'max:255'],
+            'cust_street+nr'     => ['required', 'string', 'max:255'],
+            'cust_postcode_city' => ['required', 'string', 'max:255'],
             'cust_company'       => ['nullable', 'string', 'max:255'],
         ]);
+
+        $validated['cust_tel']     = $validated['cust_tel'] ?? 'nicht vorhanden';
+        $validated['cust_company'] = $validated['cust_company'] ?? 'nicht vorhanden';
 
         $cust->update($validated);
 

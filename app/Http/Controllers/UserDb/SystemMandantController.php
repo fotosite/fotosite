@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/SystemMandantController.php
- * VERSION:     1.6.0
+ * VERSION:     1.7.0
  *
  * FUNCTIONS:   index()          — Lists all MandUser records ordered by mand_lastname.
  *                                 Reads: userdb.mand_user.*
@@ -45,7 +45,12 @@
  *              userdb.invite.*
  *              userdb.syst_user.syst_id, syst_uname
  *
- * CHANGES:     1.6.0 (2026-06-18) handleRegister() — Adressfelder (mand_street+nr,
+ * CHANGES:     1.7.0 (2026-06-18) handleRegister() — Erfolgsmeldung nach Kontoerstellung
+ *              aktualisiert ("Konto erfolgreich angelegt..."); login_page='mand'
+ *              zusätzlich geflasht, damit das Login-Modal (auth/login-modal.blade.php)
+ *              direkt die Galerist:innen-Seite zeigt statt auf den Cust-Tab zu fallen
+ *              (Default war session('login_page', 'cust')).
+ *              1.6.0 (2026-06-18) handleRegister() — Adressfelder (mand_street+nr,
  *              mand_postcode+city) als Pflichtfelder ergänzt; mand_tel/mand_company
  *              auf nullable umgestellt (Fallback 'nicht vorhanden' bei leerem Wert)
  *              1.5.0 (2026-06-17) handleRegister() — deutschsprachige Fehlermeldungen für
@@ -243,6 +248,7 @@ class SystemMandantController extends UserDbController
         $invite->delete();
 
         return redirect()->route('mandant.login')
-            ->with('status', 'Mandanten-Account erstellt. Bitte melden Sie sich an.');
+            ->with('status', 'Konto erfolgreich angelegt. Bitte melde dich jetzt als Galerist:in an.')
+            ->with('login_page', 'mand');
     }
 }
