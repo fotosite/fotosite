@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/customer/dashboard.blade.php
-    VERSION: 2.1.0
-    DATE:    2026-06-13
+    VERSION: 2.2.0
+    DATE:    2026-06-18
 
     DESCRIPTION:
       Kunden-Dashboard — Verwaltungsübersicht für registrierte Mitglieder (cust).
@@ -15,11 +15,16 @@
       $passkeyOs         — string, erkanntes OS ('win'|'andr'|'ios'|'unknown')
 
     ROUTES USED:
-      POST customer.logout           — Abmelden
-      GET  customer.konto            — Konto-Verwaltung
-      GET  customer.galerien         — Galerien-Verwaltung
-      GET  customer.passkeys         — Passkey-Verwaltung
-      POST customer.passkeys.dismiss — "Nie wieder fragen"
+      POST customer.logout              — Abmelden
+      GET  customer.konto               — Konto-Verwaltung
+      POST customer.konto.passwort      — Passwort-Modal speichern
+      POST customer.konto.email-aendern — E-Mail-Modal senden
+      GET  customer.galerien            — Galerien-Verwaltung
+      GET  customer.passkeys            — Passkey-Verwaltung
+      POST customer.passkeys.dismiss    — "Nie wieder fragen"
+
+    CHANGES: 2.2.0 (2026-06-18) Passwort-Modal und E-Mail-Modal ergänzt (Buttons
+             "Passwort ändern" / "E-Mail ändern").
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -31,7 +36,11 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="min-h-screen bg-gray-50 text-gray-900 antialiased">
+<body class="min-h-screen bg-gray-50 text-gray-900 antialiased"
+      x-data="{
+          pwModalOpen: {{ $errors->hasAny(['current_password', 'password', 'password_confirmation']) ? 'true' : 'false' }},
+          emailModalOpen: {{ $errors->has('email') ? 'true' : 'false' }}
+      }">
 
     {{-- ══════════════════════════════════════════════════════
          TOP BAR
@@ -81,6 +90,143 @@
             <p class="mt-1.5 text-sm text-zinc-600">
                 Willkommen, {{ $cust?->cust_firstname ?? 'Mitglied' }}!
             </p>
+        </div>
+
+        {{-- Sicherheits-Aktionen: Passwort / E-Mail ändern --}}
+        <div class="flex flex-wrap gap-3 mb-8">
+            <button type="button" @click="pwModalOpen = true"
+                    class="px-4 py-2 text-sm font-medium text-indigo-700
+                           bg-indigo-50 border border-indigo-200 rounded-lg
+                           hover:bg-indigo-100 transition-colors">
+                Passwort ändern
+            </button>
+            <button type="button" @click="emailModalOpen = true"
+                    class="px-4 py-2 text-sm font-medium text-indigo-700
+                           bg-indigo-50 border border-indigo-200 rounded-lg
+                           hover:bg-indigo-100 transition-colors">
+                E-Mail ändern
+            </button>
+        </div>
+
+        {{-- Modal: Passwort ändern --}}
+        <div x-show="pwModalOpen" x-cloak
+             class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+            <div class="bg-white rounded-xl p-6 max-w-sm w-full shadow-xl"
+                 @click.outside="pwModalOpen = false">
+                <h3 class="font-semibold text-gray-800 mb-4">Passwort ändern</h3>
+
+                <p class="mb-4 text-xs text-gray-400">
+                    Nach erfolgreicher Änderung werden Sie zur Anmeldung weitergeleitet.
+                </p>
+
+                <form method="POST" action="{{ route('customer.konto.passwort') }}" autocomplete="off">
+                    @csrf
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">
+                                Aktuelles Passwort
+                            </label>
+                            <input name="current_password" type="password" required
+                                   autocomplete="current-password"
+                                   class="mt-1 block w-full rounded-md border-gray-300
+                                          shadow-sm text-sm
+                                          focus:border-indigo-500 focus:ring-indigo-500
+                                          @error('current_password') border-red-400 @enderror">
+                            @error('current_password')
+                                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">
+                                Neues Passwort
+                            </label>
+                            <input name="password" type="password" required
+                                   autocomplete="new-password"
+                                   class="mt-1 block w-full rounded-md border-gray-300
+                                          shadow-sm text-sm
+                                          focus:border-indigo-500 focus:ring-indigo-500
+                                          @error('password') border-red-400 @enderror">
+                            <p class="text-xs text-gray-400 mt-1">Mindestens 10 Zeichen.</p>
+                            @error('password')
+                                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">
+                                Passwort bestätigen
+                            </label>
+                            <input name="password_confirmation" type="password" required
+                                   autocomplete="new-password"
+                                   class="mt-1 block w-full rounded-md border-gray-300
+                                          shadow-sm text-sm
+                                          focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                    </div>
+                    <div class="mt-5 flex gap-3">
+                        <button type="button" @click="pwModalOpen = false"
+                                class="w-full px-4 py-2 text-sm text-gray-500
+                                       border border-gray-300 rounded-lg hover:bg-gray-50">
+                            Abbrechen
+                        </button>
+                        <button type="submit"
+                                class="w-full px-4 py-2 text-sm font-medium text-white
+                                       bg-indigo-600 rounded-lg hover:bg-indigo-700">
+                            Speichern
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {{-- Modal: E-Mail ändern --}}
+        <div x-show="emailModalOpen" x-cloak
+             class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+            <div class="bg-white rounded-xl p-6 max-w-sm w-full shadow-xl"
+                 @click.outside="emailModalOpen = false">
+                <h3 class="font-semibold text-gray-800 mb-4">E-Mail ändern</h3>
+
+                @if(session('email_change_status'))
+                    <div class="mb-4 rounded-lg border border-indigo-200
+                                bg-indigo-50 px-3 py-2 text-sm text-indigo-700">
+                        {{ session('email_change_status') }}
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('customer.konto.email-aendern') }}" autocomplete="off">
+                    @csrf
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">
+                                Neue E-Mail-Adresse
+                            </label>
+                            <input name="email" type="email" required
+                                   class="mt-1 block w-full rounded-md border-gray-300
+                                          shadow-sm text-sm
+                                          focus:border-indigo-500 focus:ring-indigo-500
+                                          @error('email') border-red-400 @enderror">
+                            @error('email')
+                                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <p class="text-xs text-gray-400">
+                            An die neue Adresse wird eine Bestätigungsmail gesendet.
+                            Erst nach Bestätigung wird die Adresse geändert.
+                        </p>
+                    </div>
+                    <div class="mt-5 flex gap-3">
+                        <button type="button" @click="emailModalOpen = false"
+                                class="w-full px-4 py-2 text-sm text-gray-500
+                                       border border-gray-300 rounded-lg hover:bg-gray-50">
+                            Abbrechen
+                        </button>
+                        <button type="submit"
+                                class="w-full px-4 py-2 text-sm font-medium text-white
+                                       bg-indigo-600 rounded-lg hover:bg-indigo-700">
+                            Senden
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
 
         {{-- Flash: Status --}}

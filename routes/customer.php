@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Customer Area Routes  (/customer/*)                    VERSION: 1.3.0
+| Customer Area Routes  (/customer/*)                    VERSION: 1.4.0
 |--------------------------------------------------------------------------
 | Routes for the customer-facing area.
 | Mix of public and authenticated routes.
@@ -33,6 +33,9 @@ use Illuminate\Support\Facades\Route;
 |          sind und sich so nicht per withoutMiddleware() auf Gruppe ausschließen
 |          lassen. ds-Routen jetzt in der normalen web-Group; alle drei Middlewares
 |          haben eigenständige Passthroughs für unangemeldete Erstbesucher.
+|          1.4.0 (2026-06-18) konto.passwort (POST, PW-Modal), konto.email-aendern
+|          (POST) und konto.email-bestaetigen/{token} (GET) ergänzt — E-Mail-Aenderung
+|          per Bestaetigungslink, siehe CustSelfController.
 */
 
 Route::middleware('web')->prefix('customer')->name('customer.')->group(function () {
@@ -87,6 +90,12 @@ Route::middleware('web')->prefix('customer')->name('customer.')->group(function 
         ->name('konto.update');
     Route::patch('/konto/password', [CustSelfController::class, 'updatePassword'])
         ->name('konto.password');
+    Route::post('/konto/passwort', [CustSelfController::class, 'updatePassword'])
+        ->name('konto.passwort');
+    Route::post('/konto/email-aendern', [CustSelfController::class, 'requestEmailChange'])
+        ->name('konto.email-aendern');
+    Route::get('/konto/email-bestaetigen/{token}', [CustSelfController::class, 'confirmEmailChange'])
+        ->name('konto.email-bestaetigen');
     Route::delete('/konto',       [CustSelfController::class, 'deleteAccount'])
         ->name('konto.delete');
 

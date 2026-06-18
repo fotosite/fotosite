@@ -1,10 +1,11 @@
 {{--
     FILE:    resources/views/customer/konto.blade.php
-    VERSION: 1.2.0
-    DATE:    2026-06-12
+    VERSION: 1.3.0
+    DATE:    2026-06-18
 
     DESCRIPTION:
-      Customer Eigenverwaltung — Kontaktdaten und Passwort bearbeiten.
+      Customer Eigenverwaltung — Kontaktdaten bearbeiten. Passwort- und E-Mail-Änderung
+      erfolgen über Modals auf der Einstellungsseite (customer/dashboard.blade.php).
       Standalone (kein Layout-Erbe), gleiches Strukturmuster wie customer/dashboard.
       Accent-Farbe: indigo.
 
@@ -12,11 +13,15 @@
       $cust (CustUser) — vollständige Instanz
 
     ROUTES USED:
-      GET   customer.dashboard      — Zurück-Link
-      PATCH customer.konto.update   — Kontaktdaten speichern
-      PATCH  customer.konto.password — Passwort ändern
-      DELETE customer.konto.delete  — Konto löschen
-      POST   customer.logout        — Abmelden
+      GET    customer.dashboard      — Zurück-Link
+      PATCH  customer.konto.update   — Kontaktdaten speichern
+      DELETE customer.konto.delete   — Konto löschen
+      POST   customer.logout         — Abmelden
+
+    CHANGES: 1.3.0 (2026-06-18) Passwort-Bereich entfernt (jetzt PW-Modal auf
+             customer/dashboard.blade.php); cust_email auf readonly/nicht editierbar
+             umgestellt (E-Mail-Änderung jetzt über E-Mail-Modal); Change-Tracking via
+             Alpine dirty-Flag + beforeunload-Handler ergänzt.
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -115,28 +120,29 @@
 
             <form method="POST"
                   action="{{ route('customer.konto.update') }}"
-                  autocomplete="off">
+                  autocomplete="off"
+                  x-data="{ dirty: false }"
+                  x-init="window.addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } })"
+                  @input="dirty = true"
+                  @change="dirty = true"
+                  @submit="dirty = false">
                 @csrf
                 @method('PATCH')
 
                 <div class="space-y-4">
 
-                    {{-- cust_email (Pflicht) --}}
+                    {{-- cust_email (nicht editierbar — Aenderung ueber E-Mail-Modal) --}}
                     <div>
                         <label for="cust_email"
                                class="block text-sm font-medium text-gray-700">
-                            E-Mail <span class="text-red-500">*</span>
+                            E-Mail
                         </label>
-                        <input id="cust_email" name="cust_email" type="email"
-                               value="{{ old('cust_email', $cust->cust_email) }}"
-                               required
-                               class="mt-1 block w-full rounded-md border-gray-300
-                                      shadow-sm text-sm
-                                      focus:border-indigo-500 focus:ring-indigo-500
-                                      @error('cust_email') border-red-400 @enderror">
-                        @error('cust_email')
-                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                        @enderror
+                        <input id="cust_email" type="email"
+                               value="{{ $cust->cust_email }}"
+                               disabled readonly
+                               class="mt-1 block w-full rounded-md border-gray-200
+                                      bg-gray-50 text-gray-500 shadow-sm text-sm
+                                      cursor-not-allowed">
                     </div>
 
                     {{-- cust_firstname / cust_lastname --}}
@@ -266,94 +272,7 @@
             </form>
         </div>
 
-        {{-- ── Card 2: Passwort ändern ─────────────────────── --}}
-
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-
-            <h2 class="text-sm font-semibold text-gray-800 tracking-wide mb-5">
-                Passwort ändern
-            </h2>
-
-            <form method="POST"
-                  action="{{ route('customer.konto.password') }}"
-                  autocomplete="off">
-                @csrf
-                @method('PATCH')
-
-                <div class="space-y-4">
-
-                    <div>
-                        <label for="current_password"
-                               class="block text-sm font-medium text-gray-700">
-                            Aktuelles Passwort
-                        </label>
-                        <input id="current_password" name="current_password"
-                               type="password" required
-                               autocomplete="current-password"
-                               class="mt-1 block w-full rounded-md border-gray-300
-                                      shadow-sm text-sm
-                                      focus:border-indigo-500 focus:ring-indigo-500
-                                      @error('current_password') border-red-400 @enderror">
-                        @error('current_password')
-                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label for="password"
-                               class="block text-sm font-medium text-gray-700">
-                            Neues Passwort
-                        </label>
-                        <input id="password" name="password"
-                               type="password" required
-                               autocomplete="new-password"
-                               class="mt-1 block w-full rounded-md border-gray-300
-                                      shadow-sm text-sm
-                                      focus:border-indigo-500 focus:ring-indigo-500
-                                      @error('password') border-red-400 @enderror">
-                        <p class="text-xs text-gray-400 mt-1">
-                            Mindestens 10 Zeichen.
-                        </p>
-                        @error('password')
-                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label for="password_confirmation"
-                               class="block text-sm font-medium text-gray-700">
-                            Passwort bestätigen
-                        </label>
-                        <input id="password_confirmation"
-                               name="password_confirmation"
-                               type="password" required
-                               autocomplete="new-password"
-                               class="mt-1 block w-full rounded-md border-gray-300
-                                      shadow-sm text-sm
-                                      focus:border-indigo-500 focus:ring-indigo-500
-                                      @error('password_confirmation') border-red-400 @enderror">
-                        @error('password_confirmation')
-                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                </div>
-
-                <div class="mt-6">
-                    <button type="submit"
-                            class="w-full flex justify-center py-3 md:py-2 px-4
-                                   rounded-md text-sm font-medium text-white
-                                   bg-indigo-600 hover:bg-indigo-700 transition-colors
-                                   focus:outline-none focus:ring-2
-                                   focus:ring-indigo-500 focus:ring-offset-2">
-                        Passwort ändern
-                    </button>
-                </div>
-
-            </form>
-        </div>
-
-        {{-- ── Card 3: Konto löschen ───────────────────────── --}}
+        {{-- ── Card 2: Konto löschen ───────────────────────── --}}
 
         <div class="mt-6 bg-red-50 rounded-xl border border-red-200 shadow-sm p-6">
 

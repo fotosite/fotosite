@@ -1,3 +1,3 @@
 git add -A
-git commit -m "feat: Adressfelder Galerist:in-Registrierung und Mein Konto"
-git tag mand_adressfelder_ok
+git commit -m "feat: PW- und E-Mail-Aenderung per Modal (mand+cust); E-Mail-Aenderung per Bestaetigungslink ueber invite-Tabelle"
+git tag email_pw_modal_ok

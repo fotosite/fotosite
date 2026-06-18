@@ -1,23 +1,27 @@
 {{--
     FILE:    resources/views/mandant/konto.blade.php
-    VERSION: 1.6.0
+    VERSION: 1.7.0
     DATE:    2026-06-18
 
     DESCRIPTION:
-      Mandant Eigenverwaltung — Kontaktdaten und Passwort bearbeiten.
+      Mandant Eigenverwaltung — Kontaktdaten bearbeiten. Passwort- und E-Mail-Änderung
+      erfolgen über Modals auf der Einstellungsseite (mandant/dashboard.blade.php).
       Standalone (kein Layout-Erbe), gleiches Strukturmuster wie mandant/dashboard.
       Accent-Farbe: indigo.
 
     DATA FROM CONTROLLER:
-      $mand (MandUser) — vollständige Instanz (ab Abschnitt 3)
+      $mand (MandUser) — vollständige Instanz
 
     ROUTES USED:
       GET   mandant.dashboard       — Zurück-Link
       PATCH mandant.konto.update    — Kontaktdaten speichern
-      PATCH mandant.konto.password  — Passwort ändern
       POST  mandant.logout          — Abmelden
 
-    CHANGES: 1.6.0 (2026-06-18) mand_email auf readonly/nicht editierbar umgestellt
+    CHANGES: 1.7.0 (2026-06-18) Passwort-Bereich entfernt (jetzt PW-Modal auf
+             mandant/dashboard.blade.php); mand_email-Hinweistext entfernt (Hinweis
+             jetzt im E-Mail-Modal); Change-Tracking via Alpine dirty-Flag +
+             beforeunload-Handler ergänzt.
+             1.6.0 (2026-06-18) mand_email auf readonly/nicht editierbar umgestellt
              (Hinweis "E-Mail-Änderung folgt in Kürze"); mand_uname als Pflichtfeld
              markiert; mand_tel/mand_company als optional markiert.
 --}}
@@ -120,7 +124,12 @@
 
             <form method="POST"
                   action="{{ route('mandant.konto.update') }}"
-                  autocomplete="off">
+                  autocomplete="off"
+                  x-data="{ dirty: false }"
+                  x-init="window.addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } })"
+                  @input="dirty = true"
+                  @change="dirty = true"
+                  @submit="dirty = false">
                 @csrf
                 @method('PATCH')
 
@@ -156,7 +165,6 @@
                                class="mt-1 block w-full rounded-md border-gray-200
                                       bg-gray-50 text-gray-500 shadow-sm text-sm
                                       cursor-not-allowed">
-                        <p class="mt-1 text-xs text-gray-400">E-Mail-Änderung folgt in Kürze.</p>
                     </div>
 
                     {{-- mand_tel (optional) --}}
@@ -334,99 +342,6 @@
                                    focus:outline-none focus:ring-2
                                    focus:ring-indigo-500 focus:ring-offset-2">
                         Kontaktdaten speichern
-                    </button>
-                </div>
-
-            </form>
-        </div>
-
-        {{-- ── Sektion 2: Passwort ändern ──────────────────── --}}
-
-        {{-- Flash: Passwort gespeichert --}}
-        @if(session('password_status'))
-            <div class="mb-6 rounded-lg border border-indigo-200
-                        bg-indigo-50 px-4 py-3 text-sm text-indigo-700">
-                {{ session('password_status') }}
-            </div>
-        @endif
-
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-
-            <h2 class="text-sm font-semibold text-gray-800 tracking-wide mb-5">
-                Passwort ändern
-            </h2>
-
-            <form method="POST"
-                  action="{{ route('mandant.konto.password') }}"
-                  autocomplete="off">
-                @csrf
-                @method('PATCH')
-
-                <div class="space-y-4">
-
-                    <div>
-                        <label for="current_password"
-                               class="block text-sm font-medium text-gray-700">
-                            Aktuelles Passwort
-                        </label>
-                        <input id="current_password" name="current_password"
-                               type="password" required
-                               autocomplete="current-password"
-                               class="mt-1 block w-full rounded-md border-gray-300
-                                      shadow-sm text-sm
-                                      focus:border-indigo-500 focus:ring-indigo-500
-                                      @error('current_password') border-red-400 @enderror">
-                        @error('current_password')
-                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label for="password"
-                               class="block text-sm font-medium text-gray-700">
-                            Neues Passwort
-                        </label>
-                        <input id="password" name="password"
-                               type="password" required
-                               autocomplete="new-password"
-                               class="mt-1 block w-full rounded-md border-gray-300
-                                      shadow-sm text-sm
-                                      focus:border-indigo-500 focus:ring-indigo-500
-                                      @error('password') border-red-400 @enderror">
-                        <p class="text-sm text-gray-500 mt-1">Mindestanforderungen: 12 Zeichen, Groß- und Kleinbuchstaben, Ziffern, Sonderzeichen.</p>
-                        @error('password')
-                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label for="password_confirmation"
-                               class="block text-sm font-medium text-gray-700">
-                            Passwort bestätigen
-                        </label>
-                        <input id="password_confirmation"
-                               name="password_confirmation"
-                               type="password" required
-                               autocomplete="new-password"
-                               class="mt-1 block w-full rounded-md border-gray-300
-                                      shadow-sm text-sm
-                                      focus:border-indigo-500 focus:ring-indigo-500
-                                      @error('password_confirmation') border-red-400 @enderror">
-                        @error('password_confirmation')
-                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                </div>
-
-                <div class="mt-6">
-                    <button type="submit"
-                            class="w-full flex justify-center py-2 px-4 rounded-md
-                                   text-sm font-medium text-white bg-indigo-600
-                                   hover:bg-indigo-700 transition-colors
-                                   focus:outline-none focus:ring-2
-                                   focus:ring-indigo-500 focus:ring-offset-2">
-                        Passwort ändern
                     </button>
                 </div>
 

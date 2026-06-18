@@ -49,6 +49,10 @@ Route::middleware('web')->prefix('mandant')->name('mandant.')->group(function ()
         ->name('password.reset');
     Route::post('/password-reset/{token}', [MandPasswordResetController::class, 'handleReset'])
         ->name('password.reset.handle');
+
+    // ── E-Mail-Aenderung bestaetigen (oeffentlich erreichbar — Link aus Mail) ──
+    Route::get('/konto/email-bestaetigen/{token}', [MandantSelfController::class, 'confirmEmailChange'])
+        ->name('konto.email-bestaetigen');
 });
 
 // ── Authenticated area ────────────────────────────────────────
@@ -62,6 +66,10 @@ Route::middleware(['web', 'role:mand'])->prefix('mandant')->name('mandant.')->gr
         ->name('konto.update');
     Route::patch('/konto/passwort', [MandantSelfController::class, 'updatePassword'])
         ->name('konto.password');
+    Route::post('/konto/passwort', [MandantSelfController::class, 'updatePassword'])
+        ->name('konto.passwort');
+    Route::post('/konto/email-aendern', [MandantSelfController::class, 'requestEmailChange'])
+        ->name('konto.email-aendern');
 
     Route::get('/passwortliste',             [MandantPwListController::class, 'edit'])
         ->name('pwlist');

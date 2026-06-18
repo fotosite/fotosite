@@ -1,19 +1,21 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustSelfController.php
- * VERSION:     1.2.0
+ * VERSION:     1.3.0
  * AUTOR:       Martin Wagner
- * DATUM:       2026-06-13
+ * DATUM:       2026-06-18
  *
- * ZWECK:       Customer Eigenverwaltung — Kontaktdaten, Passwort, Galerien verwalten,
- *              Konto löschen.
+ * ZWECK:       Customer Eigenverwaltung — Kontaktdaten, Passwort, E-Mail-Adresse,
+ *              Galerien verwalten, Konto löschen.
  *
  * FUNCTIONS:   edit()              — Lädt CustUser via _cust_id aus Session;
  *                                     gibt customer.konto mit $cust zurück.
  *                                     Reads: userdb.cust_user.cust_id, alle Felder
- *              update()            — Validiert und speichert Kontaktdaten.
+ *              update()            — Validiert und speichert Kontaktdaten. cust_email
+ *                                     wird NICHT aus dem Request übernommen (Aenderung
+ *                                     läuft über requestEmailChange()/confirmEmailChange()).
  *                                     Reads:  userdb.cust_user.cust_id
- *                                     Writes: userdb.cust_user.cust_email, cust_firstname,
+ *                                     Writes: userdb.cust_user.cust_firstname,
  *                                             cust_lastname, cust_tel, cust_street+nr,
  *                                             cust_postcode_city, cust_company
  *              updatePassword()    — Validiert aktuelles + neues Passwort (Policy: min 10
@@ -23,6 +25,19 @@
  *                                     Reads:  userdb.cust_user.cust_id, cust_uname,
  *                                             cust_pw_hash
  *                                     Writes: userdb.cust_user.cust_pw_hash
+ *              requestEmailChange() — Validiert neue Adresse (unique); löscht offene
+ *                                     email_change-Invites des Cust; legt neuen Invite an
+ *                                     (inv_email = neue Adresse); sendet EmailChangeMail.
+ *                                     Reads:  userdb.cust_user.cust_id, cust_firstname
+ *                                     Writes: userdb.invite.* (DELETE alter Token,
+ *                                             INSERT neuer Token)
+ *              confirmEmailChange() — Sucht gültigen email_change-Invite per Token;
+ *                                     übernimmt inv_email als neue cust_email; löscht
+ *                                     den Invite (Single-Use, analog pw_reset-Flow).
+ *                                     Keine Session-/Login-Pflicht.
+ *                                     Reads:  userdb.invite.*
+ *                                     Writes: userdb.cust_user.cust_email,
+ *                                             userdb.invite (DELETE)
  *              galerien()          — Lädt alle cust_pcode-Einträge des Cust mit mandUser;
  *                                     gibt customer.galerien zurück.
  *                                     Reads: userdb.cust_pcode.*, userdb.mand_user.*
@@ -50,8 +65,13 @@
  *              App\Models\UserDb\CustPcode::where()
  *              App\Models\UserDb\Passkey::where()
  *              App\Models\UserDb\PasskeyDismissed::where()
+ *              App\Models\UserDb\Invite::where()->valid()->first()
+ *              App\Models\UserDb\Invite::create()
+ *              App\Mail\EmailChangeMail
  *              Illuminate\Support\Facades\Hash::check()
  *              Illuminate\Support\Facades\Hash::make()
+ *              Illuminate\Support\Facades\Mail::to()->send()
+ *              Illuminate\Support\Str::random()
  *              Illuminate\Validation\Rules\Password::min()
  *
  * DB ACCESS:   userdb.cust_user.cust_id, cust_uname, cust_email, cust_tel,
@@ -61,18 +81,29 @@
  *              cust_mailrequest (READ/WRITE/DELETE)
  *              userdb.passkey.user_type, user_id (DELETE)
  *              userdb.passkey_dismissed.user_type, user_id (DELETE)
+ *              userdb.invite.inv_id, inv_email, inv_token_hash, inv_type,
+ *              inv_user_type, inv_user_id, expires_at (email_change-Einträge)
+ *
+ * CHANGES:     1.3.0 (2026-06-18) update() — cust_email aus Validierung/Speicherung
+ *              entfernt (nicht editierbar); requestEmailChange()/confirmEmailChange()
+ *              ergänzt — E-Mail-Aenderung per Bestaetigungsmail (invite-Tabelle,
+ *              inv_type='email_change'); alte Adresse bleibt bis Bestaetigung aktiv.
  */
 
 namespace App\Http\Controllers\UserDb;
 
+use App\Mail\EmailChangeMail;
 use App\Models\UserDb\CustPcode;
 use App\Models\UserDb\CustUser;
+use App\Models\UserDb\Invite;
 use App\Models\UserDb\Passkey;
 use App\Models\UserDb\PasskeyDismissed;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 
 class CustSelfController extends UserDbController
@@ -103,7 +134,6 @@ class CustSelfController extends UserDbController
         }
 
         $validated = $request->validate([
-            'cust_email'         => ['required', 'email', 'max:255', "unique:userdb.cust_user,cust_email,{$custId},cust_id"],
             'cust_firstname'     => ['nullable', 'string', 'max:255'],
             'cust_lastname'      => ['nullable', 'string', 'max:255'],
             'cust_tel'           => ['nullable', 'string', 'max:255'],
@@ -154,6 +184,74 @@ class CustSelfController extends UserDbController
         return redirect()->route('home')
             ->with('status', 'Passwort geändert. Bitte melden Sie sich erneut an.')
             ->with('open_login_modal', 'cust');
+    }
+
+    public function requestEmailChange(Request $request): RedirectResponse
+    {
+        $custId = $request->session()->get('_cust_id');
+        $cust   = $custId ? CustUser::find($custId) : null;
+
+        if (! $cust) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return redirect()->route('customer.login');
+        }
+
+        $request->validate([
+            'email' => ['required', 'email', 'max:255', 'unique:userdb.cust_user,cust_email'],
+        ]);
+
+        Invite::where('inv_type', 'email_change')
+            ->where('inv_user_type', 'cust')
+            ->where('inv_user_id', $custId)
+            ->delete();
+
+        $token = Str::random(64);
+
+        Invite::create([
+            'inv_email'      => $request->email,
+            'inv_token_hash' => hash('sha256', $token),
+            'inv_type'       => 'email_change',
+            'inv_user_type'  => 'cust',
+            'inv_user_id'    => $custId,
+            'inv_mand_id'    => null,
+            'created_at'     => now(),
+            'expires_at'     => now()->addHours(24),
+        ]);
+
+        $confirmUrl = route('customer.konto.email-bestaetigen', ['token' => $token]);
+
+        Mail::to($request->email)->send(new EmailChangeMail($confirmUrl, $request->email, $cust->cust_firstname));
+
+        return redirect()->route('customer.dashboard')
+            ->with('email_change_status', "Bestätigungsmail wurde an {$request->email} gesendet.");
+    }
+
+    public function confirmEmailChange(Request $request, string $token): RedirectResponse
+    {
+        $invite = Invite::where('inv_token_hash', hash('sha256', $token))
+            ->where('inv_type', 'email_change')
+            ->where('inv_user_type', 'cust')
+            ->valid()
+            ->first();
+
+        if (! $invite) {
+            return redirect()->route('customer.login')
+                ->with('status', 'Der Bestätigungslink ist ungültig oder abgelaufen.');
+        }
+
+        $cust = CustUser::find($invite->inv_user_id);
+
+        if (! $cust) {
+            $invite->delete();
+            return redirect()->route('customer.login');
+        }
+
+        $cust->update(['cust_email' => $invite->inv_email]);
+        $invite->delete();
+
+        return redirect()->route('customer.login')
+            ->with('status', 'E-Mail-Adresse erfolgreich geändert. Bitte melden Sie sich an.');
     }
 
     public function galerien(Request $request): View|RedirectResponse
