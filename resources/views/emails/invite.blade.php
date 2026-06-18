@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/emails/invite.blade.php
-    VERSION: 1.5.0
-    DATE:    2026-06-17
+    VERSION: 1.6.0
+    DATE:    2026-06-18
 
     DESCRIPTION:
       E-Mail-Template für Einladungen und Passwort-Zurücksetzungen.
@@ -11,6 +11,10 @@
       $inviteUrl  — string, Einladungs- oder Reset-Link
       $type       — string, 'register' | 'pw_reset'
       $userType   — string, 'syst' | 'mand' | 'cust'
+
+    CHANGES: 1.6.0 (2026-06-18) pw_reset-Zweig: Button "Passwort ändern" ergänzt
+             (vorher nur reine URL als Text); URL-Text-Zeile um Praefix
+             "Oder verwende die URL:" ergänzt, analog zu cust-invite.blade.php.
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -134,8 +138,10 @@
                 <p>Sie haben Ihr Passwort vergessen? Kein Problem: mit
                 diesem Link können Sie ein neues Passwort festlegen:</p>
 
+                <a href="{{ $inviteUrl }}" class="btn">Passwort ändern</a>
+
                 <p style="word-break:break-all; font-size:12px; color:#666666;">
-                    {{ $inviteUrl }}
+                    Oder verwende die URL: {{ $inviteUrl }}
                 </p>
 
                 <p>Falls dies nicht von Ihnen veranlasst war, können Sie
