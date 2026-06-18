@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Passkey\MandPasskeyController;
+use App\Http\Controllers\PolicyController;
 use App\Http\Controllers\SessionDb\MandantPwListController;
 use App\Http\Controllers\UserDb\MandantCustController;
 use App\Http\Controllers\UserDb\MandantDashboardController;
@@ -70,6 +71,14 @@ Route::middleware(['web', 'role:mand'])->prefix('mandant')->name('mandant.')->gr
         ->name('konto.passwort');
     Route::post('/konto/email-aendern', [MandantSelfController::class, 'requestEmailChange'])
         ->name('konto.email-aendern');
+
+    // ── Policy-Update (DS/Upload-Bedingungen) — CheckPolicyVersion schliesst
+    //    sich selbst per routeIs('*.policy.*') aus, um Redirect-Schleifen zu
+    //    vermeiden ──────────────────────────────────────────────────────
+    Route::get('/policy-update',  [PolicyController::class, 'showMand'])
+        ->name('policy.update');
+    Route::post('/policy-update', [PolicyController::class, 'confirmMand'])
+        ->name('policy.confirm');
 
     Route::get('/passwortliste',             [MandantPwListController::class, 'edit'])
         ->name('pwlist');

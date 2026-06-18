@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        routes/system.php
- * VERSION:     1.4.0
+ * VERSION:     1.5.0
  *
  * DESCRIPTION:
  *   Routes for the /system area (role: syst).
@@ -28,6 +28,9 @@
  *   GET    /system/mandanten/{id}/edit           → SystemMandantController@edit
  *   PATCH  /system/mandanten/{id}                → SystemMandantController@update
  *   DELETE /system/mandanten/{id}                → SystemMandantController@destroy
+ *   GET    /system/policy-versionen               → SystemPolicyController@index
+ *   POST   /system/policy-versionen/ds            → SystemPolicyController@incrementDs
+ *   POST   /system/policy-versionen/upload        → SystemPolicyController@incrementUpload
  *
  * ROUTES (public — token):
  *   GET    /system/register/{token}              → SystemUserController@showRegister
@@ -41,6 +44,7 @@
 use App\Http\Controllers\UserDb\SystemDashboardController;
 use App\Http\Controllers\UserDb\SystemLoginController;
 use App\Http\Controllers\UserDb\SystemMandantController;
+use App\Http\Controllers\UserDb\SystemPolicyController;
 use App\Http\Controllers\UserDb\SystemProfileController;
 use App\Http\Controllers\UserDb\SystemUserController;
 use Illuminate\Support\Facades\Route;
@@ -84,6 +88,13 @@ Route::middleware(['web', 'role:syst'])
             ->name('mandanten.update');
         Route::delete('/mandanten/{id}', [SystemMandantController::class, 'destroy'])
             ->name('mandanten.destroy');
+
+        Route::get('/policy-versionen', [SystemPolicyController::class, 'index'])
+            ->name('policy.index');
+        Route::post('/policy-versionen/ds', [SystemPolicyController::class, 'incrementDs'])
+            ->name('policy.increment-ds');
+        Route::post('/policy-versionen/upload', [SystemPolicyController::class, 'incrementUpload'])
+            ->name('policy.increment-upload');
     });
 
 // ── Public token routes (no syst.auth) ───────────────────────

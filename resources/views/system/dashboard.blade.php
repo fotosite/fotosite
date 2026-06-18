@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/system/dashboard.blade.php
-    VERSION: 1.6.0
-    DATE:    2026-06-08
+    VERSION: 1.7.0
+    DATE:    2026-06-18
 
     DESCRIPTION:
       System-Dashboard — landing page after successful system login + 2FA.
@@ -10,10 +10,12 @@
 
     DISPLAYS:
       - Top bar with system user name and logout button
-      - Three navigation tiles:
+      - Navigation tiles:
           1. Eigenverwaltung     (stub — not yet built)
-          2. Mandantenverwaltung (stub — not yet built)
-          3. Content-Verwaltung  (placeholder — planned)
+          2. System-User
+          3. Galeristen-Verwaltung
+          4. Policy-Versionen verwalten
+          5. Content-Verwaltung  (placeholder — planned)
 
     DATA FROM CONTROLLER:
       $userName  (string) — syst_uname
@@ -22,7 +24,11 @@
       $lastName  (string) — syst_lastname
 
     ROUTES USED:
-      POST /system/logout — System logout (route('system.logout'))
+      POST /system/logout            — System logout (route('system.logout'))
+      GET  /system/policy-versionen  — Policy-Versionen verwalten (route('system.policy.index'))
+
+    CHANGES: 1.7.0 (2026-06-18) Kachel "Policy-Versionen verwalten" ergänzt
+             (route('system.policy.index')).
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -204,7 +210,41 @@
 
             </a>
 
-            {{-- ── 4. Content-Verwaltung (Platzhalter) ── --}}
+            {{-- ── 4. Policy-Versionen ── --}}
+            <a href="{{ route('system.policy.index') }}"
+               class="group relative flex flex-col gap-5 rounded-xl
+                      border border-gray-200 bg-white p-6 shadow-sm
+                      hover:border-amber-400 hover:shadow-md transition-all duration-200">
+
+                <div class="w-9 h-9 rounded-lg border border-gray-200
+                            bg-gray-100 flex items-center justify-center">
+                    <svg class="w-[18px] h-[18px] text-gray-500"
+                         xmlns="http://www.w3.org/2000/svg"
+                         fill="none" viewBox="0 0 24 24"
+                         stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0
+                                 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424
+                                 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664
+                                 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75
+                                 2.25 2.25 0 0 0-2.25-2.25h-1.5a2.25 2.25 0 0 0-2.25
+                                 2.25Zm-3 5.25h.008v.008H8.25v-.008ZM7.5 18.75h.008v.008H7.5
+                                 v-.008Z"/>
+                    </svg>
+                </div>
+
+                <div>
+                    <h2 class="text-sm font-semibold text-gray-800 tracking-wide mb-1">
+                        Policy-Versionen verwalten
+                    </h2>
+                    <p class="text-xs text-gray-500 leading-relaxed">
+                        Datenschutz- und Upload-Bedingungen-<br>Version erhöhen
+                    </p>
+                </div>
+
+            </a>
+
+            {{-- ── 5. Content-Verwaltung (Platzhalter) ── --}}
             <div class="relative flex flex-col gap-5 rounded-xl
                         border border-gray-100 bg-gray-50 p-6
                         opacity-30 cursor-default select-none">

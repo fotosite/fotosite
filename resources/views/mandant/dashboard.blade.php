@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/dashboard.blade.php
-    VERSION: 3.0.0
+    VERSION: 3.1.0
     DATE:    2026-06-18
 
     DESCRIPTION:
@@ -20,8 +20,13 @@
       GET  /mandant/passwortliste               — Passwortliste (route('mandant.pwlist'))
       GET  /mandant/passkeys                    — Passkey-Verwaltung (route('mandant.passkeys'))
       POST /mandant/passkeys/dismiss            — "Nie wieder fragen" (route('mandant.passkeys.dismiss'))
+      GET  customer.datenschutz.erlaeuterung          — Datenschutz-Erläuterung (neuer Tab)
+      GET  customer.datenschutz.upload-bedingungen-pdf — Upload-Bedingungen (neuer Tab)
 
-    CHANGES: 3.0.0 (2026-06-18) Passwort-Modal und E-Mail-Modal ergänzt (Buttons
+    CHANGES: 3.1.0 (2026-06-18) "Rechtliches"-Sektion ergänzt: Buttons
+             "Datenschutz-Erläuterung" / "Upload-Bedingungen", öffnen jeweils in
+             neuem Tab.
+             3.0.0 (2026-06-18) Passwort-Modal und E-Mail-Modal ergänzt (Buttons
              "Passwort ändern" / "E-Mail ändern"); body x-data um pwModalOpen/
              emailModalOpen erweitert (reopened bei Validierungsfehlern).
 --}}
@@ -108,6 +113,27 @@
                            hover:bg-indigo-100 transition-colors">
                 E-Mail ändern
             </button>
+        </div>
+
+        {{-- Rechtliches: Datenschutz / Upload-Bedingungen --}}
+        <div class="mb-8">
+            <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">
+                Rechtliches
+            </h2>
+            <div class="flex flex-wrap gap-3">
+                <a href="{{ route('customer.datenschutz.erlaeuterung') }}" target="_blank"
+                   class="px-4 py-2 text-sm font-medium text-gray-600
+                          bg-white border border-gray-300 rounded-lg
+                          hover:bg-gray-50 transition-colors">
+                    Datenschutz-Erläuterung
+                </a>
+                <a href="{{ route('customer.datenschutz.upload-bedingungen-pdf') }}" target="_blank"
+                   class="px-4 py-2 text-sm font-medium text-gray-600
+                          bg-white border border-gray-300 rounded-lg
+                          hover:bg-gray-50 transition-colors">
+                    Upload-Bedingungen
+                </a>
+            </div>
         </div>
 
         {{-- Modal: Passwort ändern --}}

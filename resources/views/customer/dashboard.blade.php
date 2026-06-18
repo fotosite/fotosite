@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/customer/dashboard.blade.php
-    VERSION: 2.2.0
+    VERSION: 2.3.0
     DATE:    2026-06-18
 
     DESCRIPTION:
@@ -22,8 +22,13 @@
       GET  customer.galerien            — Galerien-Verwaltung
       GET  customer.passkeys            — Passkey-Verwaltung
       POST customer.passkeys.dismiss    — "Nie wieder fragen"
+      GET  customer.datenschutz.erlaeuterung          — Datenschutz-Erläuterung (neuer Tab)
+      GET  customer.datenschutz.upload-bedingungen-pdf — Upload-Bedingungen (neuer Tab)
 
-    CHANGES: 2.2.0 (2026-06-18) Passwort-Modal und E-Mail-Modal ergänzt (Buttons
+    CHANGES: 2.3.0 (2026-06-18) "Rechtliches"-Sektion ergänzt: Buttons
+             "Datenschutz-Erläuterung" / "Upload-Bedingungen", öffnen jeweils in
+             neuem Tab.
+             2.2.0 (2026-06-18) Passwort-Modal und E-Mail-Modal ergänzt (Buttons
              "Passwort ändern" / "E-Mail ändern").
 --}}
 <!DOCTYPE html>
@@ -106,6 +111,27 @@
                            hover:bg-indigo-100 transition-colors">
                 E-Mail ändern
             </button>
+        </div>
+
+        {{-- Rechtliches: Datenschutz / Upload-Bedingungen --}}
+        <div class="mb-8">
+            <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">
+                Rechtliches
+            </h2>
+            <div class="flex flex-wrap gap-3">
+                <a href="{{ route('customer.datenschutz.erlaeuterung') }}" target="_blank"
+                   class="px-4 py-2 text-sm font-medium text-gray-600
+                          bg-white border border-gray-300 rounded-lg
+                          hover:bg-gray-50 transition-colors">
+                    Datenschutz-Erläuterung
+                </a>
+                <a href="{{ route('customer.datenschutz.upload-bedingungen-pdf') }}" target="_blank"
+                   class="px-4 py-2 text-sm font-medium text-gray-600
+                          bg-white border border-gray-300 rounded-lg
+                          hover:bg-gray-50 transition-colors">
+                    Upload-Bedingungen
+                </a>
+            </div>
         </div>
 
         {{-- Modal: Passwort ändern --}}

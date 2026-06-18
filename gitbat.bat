@@ -1,3 +1,3 @@
 git add -A
-git commit -m "fix: Erfolgsmeldung nach Kontoerstellung (cust+mand); login_page=mand fuer korrektes Modal-Tab"
-git tag registrierung_ok
+git commit -m "fix: cust Upload-Policy-Version dauerhaft in DB speichern statt nur per Session-Flag"
+git tag policy_popup_ok

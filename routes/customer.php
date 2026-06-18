@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DatenschutzController;
 use App\Http\Controllers\Passkey\CustPasskeyController;
+use App\Http\Controllers\PolicyController;
 use App\Http\Controllers\UserDb\CustDashboardController;
 use App\Http\Controllers\UserDb\CustLoginController;
 use App\Http\Controllers\UserDb\CustPasswordResetController;
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Customer Area Routes  (/customer/*)                    VERSION: 1.4.0
+| Customer Area Routes  (/customer/*)                    VERSION: 1.5.0
 |--------------------------------------------------------------------------
 | Routes for the customer-facing area.
 | Mix of public and authenticated routes.
@@ -36,6 +37,9 @@ use Illuminate\Support\Facades\Route;
 |          1.4.0 (2026-06-18) konto.passwort (POST, PW-Modal), konto.email-aendern
 |          (POST) und konto.email-bestaetigen/{token} (GET) ergänzt — E-Mail-Aenderung
 |          per Bestaetigungslink, siehe CustSelfController.
+|          1.5.0 (2026-06-18) policy.update (GET) / policy.confirm (POST) ergänzt —
+|          blockierendes Popup bei veralteter DS-/Upload-Policy-Version, siehe
+|          App\Http\Middleware\CheckPolicyVersion und PolicyController.
 */
 
 Route::middleware('web')->prefix('customer')->name('customer.')->group(function () {
@@ -98,6 +102,14 @@ Route::middleware('web')->prefix('customer')->name('customer.')->group(function 
         ->name('konto.email-bestaetigen');
     Route::delete('/konto',       [CustSelfController::class, 'deleteAccount'])
         ->name('konto.delete');
+
+    // ── Policy-Update (DS/Upload-Hinweis) — CheckPolicyVersion schliesst sich
+    //    selbst per routeIs('*.policy.*') aus, um Redirect-Schleifen zu
+    //    vermeiden ──────────────────────────────────────────────────────
+    Route::get('/policy-update',  [PolicyController::class, 'showCust'])
+        ->name('policy.update');
+    Route::post('/policy-update', [PolicyController::class, 'confirmCust'])
+        ->name('policy.confirm');
 
     // ── Galerien-Verwaltung ───────────────────────────────
     Route::get('/galerien', [CustSelfController::class, 'galerien'])
