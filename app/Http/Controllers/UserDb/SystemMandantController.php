@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/SystemMandantController.php
- * VERSION:     1.5.0
+ * VERSION:     1.6.0
  *
  * FUNCTIONS:   index()          — Lists all MandUser records ordered by mand_lastname.
  *                                 Reads: userdb.mand_user.*
@@ -45,7 +45,10 @@
  *              userdb.invite.*
  *              userdb.syst_user.syst_id, syst_uname
  *
- * CHANGES:     1.5.0 (2026-06-17) handleRegister() — deutschsprachige Fehlermeldungen für
+ * CHANGES:     1.6.0 (2026-06-18) handleRegister() — Adressfelder (mand_street+nr,
+ *              mand_postcode+city) als Pflichtfelder ergänzt; mand_tel/mand_company
+ *              auf nullable umgestellt (Fallback 'nicht vorhanden' bei leerem Wert)
+ *              1.5.0 (2026-06-17) handleRegister() — deutschsprachige Fehlermeldungen für
  *              ds_accepted.accepted und upload_terms_accepted.accepted
  *              1.4.0 (2026-06-16) handleRegister() — zwei DS-Checkboxen (ds_accepted,
  *              upload_terms_accepted) + Speicherung in mand_user (Datenschutz-Feature)
@@ -204,8 +207,10 @@ class SystemMandantController extends UserDbController
             'mand_uname'             => ['required', 'string', 'unique:userdb.mand_user,mand_uname'],
             'mand_firstname'         => ['required', 'string'],
             'mand_lastname'          => ['required', 'string'],
-            'mand_tel'               => ['required', 'string'],
-            'mand_company'           => ['required', 'string'],
+            'mand_street+nr'         => ['required', 'string', 'max:255'],
+            'mand_postcode+city'     => ['required', 'string', 'max:255'],
+            'mand_tel'               => ['nullable', 'string', 'max:255'],
+            'mand_company'           => ['nullable', 'string', 'max:255'],
             'password'               => ['required', 'min:12', 'confirmed'],
             'ds_accepted'            => ['accepted'],
             'upload_terms_accepted'  => ['accepted'],
@@ -219,11 +224,11 @@ class SystemMandantController extends UserDbController
             'mand_email'               => $invite->inv_email,
             'mand_firstname'           => $request->mand_firstname,
             'mand_lastname'            => $request->mand_lastname,
-            'mand_tel'                 => $request->mand_tel,
-            'mand_company'             => $request->mand_company,
+            'mand_tel'                 => $request->mand_tel ?? 'nicht vorhanden',
+            'mand_company'             => $request->mand_company ?? 'nicht vorhanden',
             'mand_pw_hash'             => Hash::make($request->password),
-            'mand_street+nr'           => '',
-            'mand_postcode+city'       => '',
+            'mand_street+nr'           => $request->{'mand_street+nr'},
+            'mand_postcode+city'       => $request->{'mand_postcode+city'},
             'mand_prefstat'            => 0,
             'active'                   => true,
             'has_public_content'       => false,

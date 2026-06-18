@@ -1,19 +1,22 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/MandantSelfController.php
- * VERSION:     1.4.0
+ * VERSION:     1.5.0
  * AUTOR:       Martin Wagner
- * DATUM:       2026-05-29
+ * DATUM:       2026-06-18
  *
  * ZWECK:       Mandant Eigenverwaltung — Kontodaten und Passwort bearbeiten.
  *
  * FUNCTIONS:   edit()           — Lädt MandUser via _mand_id aus Session;
  *                                  gibt mandant.konto mit $mand zurück.
  *                                  Reads: userdb.mand_user.mand_id, alle Felder
- *              update()         — Validiert und speichert Kontaktdaten.
+ *              update()         — Validiert und speichert Kontaktdaten. mand_email
+ *                                  wird NICHT aus dem Request übernommen (Aenderung
+ *                                  folgt in Schritt B). mand_tel/mand_company sind
+ *                                  optional, bei leer Fallback 'nicht vorhanden'.
  *                                  Reads:  userdb.mand_user.mand_id
- *                                  Writes: userdb.mand_user.mand_uname, mand_email,
- *                                          mand_tel, mand_firstname, mand_lastname,
+ *                                  Writes: userdb.mand_user.mand_uname, mand_tel,
+ *                                          mand_firstname, mand_lastname,
  *                                          mand_street+nr, mand_postcode+city,
  *                                          mand_company, mand_2fa_opt_in, mand_cust_2fa
  *              updatePassword() — Validiert aktuelles + neues Passwort (Policy:
@@ -33,6 +36,11 @@
  * DB ACCESS:   userdb.mand_user.mand_id, mand_uname, mand_email, mand_tel,
  *              mand_firstname, mand_lastname, mand_street+nr, mand_postcode+city,
  *              mand_company, mand_2fa_opt_in, mand_cust_2fa, mand_pw_hash
+ *
+ * CHANGES:     1.5.0 (2026-06-18) update() — mand_email aus Validierung/Speicherung
+ *              entfernt (nicht editierbar); mand_tel/mand_company auf nullable
+ *              umgestellt (Fallback 'nicht vorhanden'); unique-Pruefung auf mand_tel
+ *              entfernt (Mehrfachvorkommen von 'nicht vorhanden' sonst nicht moeglich)
  */
 
 namespace App\Http\Controllers\UserDb;
@@ -72,18 +80,19 @@ class MandantSelfController extends UserDbController
         }
 
         $validated = $request->validate([
-            'mand_uname'         => ['nullable', 'string', 'max:255', "unique:userdb.mand_user,mand_uname,{$mandId},mand_id"],
-            'mand_email'         => ['required', 'email',  'max:255', "unique:userdb.mand_user,mand_email,{$mandId},mand_id"],
-            'mand_tel'           => ['required', 'string', 'max:255', "unique:userdb.mand_user,mand_tel,{$mandId},mand_id"],
+            'mand_uname'         => ['required', 'string', 'max:255', "unique:userdb.mand_user,mand_uname,{$mandId},mand_id"],
+            'mand_tel'           => ['nullable', 'string', 'max:255'],
             'mand_firstname'     => ['required', 'string', 'max:255'],
             'mand_lastname'      => ['required', 'string', 'max:255'],
             'mand_street+nr'     => ['required', 'string', 'max:255'],
             'mand_postcode+city' => ['required', 'string', 'max:255'],
-            'mand_company'       => ['required', 'string', 'max:255'],
+            'mand_company'       => ['nullable', 'string', 'max:255'],
             'mand_2fa_opt_in'    => ['sometimes', 'boolean'],
             'mand_cust_2fa'      => ['required', 'integer', 'min:0', 'max:7'],
         ]);
 
+        $validated['mand_tel']        = $validated['mand_tel'] ?? 'nicht vorhanden';
+        $validated['mand_company']    = $validated['mand_company'] ?? 'nicht vorhanden';
         $validated['mand_2fa_opt_in'] = $request->boolean('mand_2fa_opt_in');
         $validated['mand_cust_2fa']   = (int) $validated['mand_cust_2fa'];
 

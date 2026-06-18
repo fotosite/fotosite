@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/mandant/konto.blade.php
-    VERSION: 1.5.0
-    DATE:    2026-06-08
+    VERSION: 1.6.0
+    DATE:    2026-06-18
 
     DESCRIPTION:
       Mandant Eigenverwaltung — Kontaktdaten und Passwort bearbeiten.
@@ -16,6 +16,10 @@
       PATCH mandant.konto.update    — Kontaktdaten speichern
       PATCH mandant.konto.password  — Passwort ändern
       POST  mandant.logout          — Abmelden
+
+    CHANGES: 1.6.0 (2026-06-18) mand_email auf readonly/nicht editierbar umgestellt
+             (Hinweis "E-Mail-Änderung folgt in Kürze"); mand_uname als Pflichtfeld
+             markiert; mand_tel/mand_company als optional markiert.
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -122,15 +126,15 @@
 
                 <div class="space-y-4">
 
-                    {{-- mand_uname (optional) --}}
+                    {{-- mand_uname --}}
                     <div>
                         <label for="mand_uname"
                                class="block text-sm font-medium text-gray-700">
                             Benutzername
-                            <span class="text-gray-400 font-normal">(optional)</span>
                         </label>
                         <input id="mand_uname" name="mand_uname" type="text"
                                value="{{ old('mand_uname', $mand->mand_uname) }}"
+                               required
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
                                       focus:border-indigo-500 focus:ring-indigo-500
@@ -140,33 +144,30 @@
                         @enderror
                     </div>
 
-                    {{-- mand_email --}}
+                    {{-- mand_email (nicht editierbar — Aenderung folgt in Schritt B) --}}
                     <div>
                         <label for="mand_email"
                                class="block text-sm font-medium text-gray-700">
                             E-Mail
                         </label>
-                        <input id="mand_email" name="mand_email" type="email"
-                               value="{{ old('mand_email', $mand->mand_email) }}"
-                               required
-                               class="mt-1 block w-full rounded-md border-gray-300
-                                      shadow-sm text-sm
-                                      focus:border-indigo-500 focus:ring-indigo-500
-                                      @error('mand_email') border-red-400 @enderror">
-                        @error('mand_email')
-                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                        @enderror
+                        <input id="mand_email" type="email"
+                               value="{{ $mand->mand_email }}"
+                               disabled readonly
+                               class="mt-1 block w-full rounded-md border-gray-200
+                                      bg-gray-50 text-gray-500 shadow-sm text-sm
+                                      cursor-not-allowed">
+                        <p class="mt-1 text-xs text-gray-400">E-Mail-Änderung folgt in Kürze.</p>
                     </div>
 
-                    {{-- mand_tel --}}
+                    {{-- mand_tel (optional) --}}
                     <div>
                         <label for="mand_tel"
                                class="block text-sm font-medium text-gray-700">
                             Telefon
+                            <span class="text-gray-400 font-normal">(optional)</span>
                         </label>
                         <input id="mand_tel" name="mand_tel" type="text"
                                value="{{ old('mand_tel', $mand->mand_tel) }}"
-                               required
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
                                       focus:border-indigo-500 focus:ring-indigo-500
@@ -251,15 +252,15 @@
                         @enderror
                     </div>
 
-                    {{-- mand_company --}}
+                    {{-- mand_company (optional) --}}
                     <div>
                         <label for="mand_company"
                                class="block text-sm font-medium text-gray-700">
                             Firma / Organisation
+                            <span class="text-gray-400 font-normal">(optional)</span>
                         </label>
                         <input id="mand_company" name="mand_company" type="text"
                                value="{{ old('mand_company', $mand->mand_company) }}"
-                               required
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
                                       focus:border-indigo-500 focus:ring-indigo-500

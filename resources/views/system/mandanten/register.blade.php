@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/system/mandanten/register.blade.php
-    VERSION: 1.5.0
-    DATE:    2026-06-17
+    VERSION: 1.6.0
+    DATE:    2026-06-18
 
     DESCRIPTION:
       Standalone mandant registration page for invited mandants.
@@ -14,6 +14,10 @@
 
     ROUTES USED:
       POST system.mand.register.handle — submit registration form
+
+    CHANGES: 1.6.0 (2026-06-18) Adressfelder (mand_street+nr, mand_postcode+city)
+             ergänzt; mand_tel/mand_company als optional gekennzeichnet;
+             Pflichtfelder mit Sternchen markiert; @error-Hervorhebung ergänzt.
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -65,7 +69,7 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700">
-                            E-Mail
+                            E-Mail-Adresse
                         </label>
                         <input type="email"
                                value="{{ $invite->inv_email }}"
@@ -78,66 +82,125 @@
                     <div>
                         <label for="mand_uname"
                                class="block text-sm font-medium text-gray-700">
-                            Benutzername
+                            Künstlername
+                            <span class="text-red-500">*</span>
                         </label>
                         <input id="mand_uname" name="mand_uname" type="text"
                                value="{{ old('mand_uname') }}"
                                required autofocus
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
-                                      focus:border-gray-500 focus:ring-gray-500">
+                                      focus:border-gray-500 focus:ring-gray-500
+                                      @error('mand_uname') border-red-400 @enderror">
+                        @error('mand_uname')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div>
                         <label for="mand_firstname"
                                class="block text-sm font-medium text-gray-700">
                             Vorname
+                            <span class="text-red-500">*</span>
                         </label>
                         <input id="mand_firstname" name="mand_firstname" type="text"
                                value="{{ old('mand_firstname') }}"
                                required
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
-                                      focus:border-gray-500 focus:ring-gray-500">
+                                      focus:border-gray-500 focus:ring-gray-500
+                                      @error('mand_firstname') border-red-400 @enderror">
+                        @error('mand_firstname')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div>
                         <label for="mand_lastname"
                                class="block text-sm font-medium text-gray-700">
                             Nachname
+                            <span class="text-red-500">*</span>
                         </label>
                         <input id="mand_lastname" name="mand_lastname" type="text"
                                value="{{ old('mand_lastname') }}"
                                required
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
-                                      focus:border-gray-500 focus:ring-gray-500">
+                                      focus:border-gray-500 focus:ring-gray-500
+                                      @error('mand_lastname') border-red-400 @enderror">
+                        @error('mand_lastname')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="mand_street_nr"
+                               class="block text-sm font-medium text-gray-700">
+                            Straße + Hausnummer
+                            <span class="text-red-500">*</span>
+                        </label>
+                        <input id="mand_street_nr" name="mand_street+nr" type="text"
+                               value="{{ old('mand_street+nr') }}"
+                               required
+                               class="mt-1 block w-full rounded-md border-gray-300
+                                      shadow-sm text-sm
+                                      focus:border-gray-500 focus:ring-gray-500
+                                      @error('mand_street+nr') border-red-400 @enderror">
+                        @error('mand_street+nr')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="mand_postcode_city"
+                               class="block text-sm font-medium text-gray-700">
+                            PLZ + Stadt
+                            <span class="text-red-500">*</span>
+                        </label>
+                        <input id="mand_postcode_city" name="mand_postcode+city" type="text"
+                               value="{{ old('mand_postcode+city') }}"
+                               required
+                               class="mt-1 block w-full rounded-md border-gray-300
+                                      shadow-sm text-sm
+                                      focus:border-gray-500 focus:ring-gray-500
+                                      @error('mand_postcode+city') border-red-400 @enderror">
+                        @error('mand_postcode+city')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div>
                         <label for="mand_tel"
                                class="block text-sm font-medium text-gray-700">
                             Telefon
+                            <span class="text-gray-400 font-normal">(optional)</span>
                         </label>
                         <input id="mand_tel" name="mand_tel" type="text"
                                value="{{ old('mand_tel') }}"
-                               required
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
-                                      focus:border-gray-500 focus:ring-gray-500">
+                                      focus:border-gray-500 focus:ring-gray-500
+                                      @error('mand_tel') border-red-400 @enderror">
+                        @error('mand_tel')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div>
                         <label for="mand_company"
                                class="block text-sm font-medium text-gray-700">
-                            Firma
+                            Firma / Organisation
+                            <span class="text-gray-400 font-normal">(optional)</span>
                         </label>
                         <input id="mand_company" name="mand_company" type="text"
                                value="{{ old('mand_company') }}"
-                               required
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
-                                      focus:border-gray-500 focus:ring-gray-500">
+                                      focus:border-gray-500 focus:ring-gray-500
+                                      @error('mand_company') border-red-400 @enderror">
+                        @error('mand_company')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div>
