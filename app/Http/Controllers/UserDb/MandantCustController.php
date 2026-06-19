@@ -1,9 +1,9 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/MandantCustController.php
- * VERSION:     1.7.0
+ * VERSION:     1.8.0
  * AUTHOR:      Martin Wagner
- * DATE:        2026-06-08
+ * DATE:        2026-06-19
  * PURPOSE:     Cust-Verwaltung durch Mandant — Einladen, Alias/Passcode-Verwaltung, Löschen
  *
  * FUNCTIONS:   index()   — Listet Mitglieder des eingeloggten Mandanten
@@ -26,10 +26,17 @@
  *                           Reads:  userdb.cust_pcode.pcode_id, mand_id
  *                           Writes: userdb.cust_pcode.cust_passcode, cust_alias
  *              destroy() — Entfernt Mitglieder-Zuordnung des Mandanten; löscht CustUser
- *                           wenn keine weitere Mand-Zuordnung existiert.
+ *                           (inkl. Passkey, PasskeyDismissed) wenn keine weitere
+ *                           Mand-Zuordnung existiert. Sendet vor der Löschung
+ *                           CustAccountDeletedMail an die hinterlegte cust_email —
+ *                           nur wenn der Account wirklich verwaist ist (letzte Referenz).
  *                           Reads:  userdb.cust_pcode.pcode_id, mand_id, cust_id
+ *                                   userdb.cust_user.cust_id, cust_email, cust_firstname,
+ *                                   cust_uname
  *                           Writes: userdb.cust_pcode (DELETE)
  *                                   userdb.cust_user (DELETE, nur wenn $remaining === 0)
+ *                                   userdb.passkey (DELETE, nur wenn $remaining === 0)
+ *                                   userdb.passkey_dismissed (DELETE, nur wenn $remaining === 0)
  *
  * CALLS:       App\Models\UserDb\MandUser::find()
  *              App\Models\UserDb\CustUser::where()->first()
@@ -38,26 +45,35 @@
  *              App\Models\UserDb\CustPcode::where()->with()->get()
  *              App\Models\UserDb\CustPcode::where()->first()
  *              App\Models\UserDb\CustPcode::where()->count()
+ *              App\Models\UserDb\Passkey::where()->delete()
+ *              App\Models\UserDb\PasskeyDismissed::where()->delete()
  *              App\Models\SessionDb\CustInvite::create()
  *              App\Mail\CustInviteMail
+ *              App\Mail\CustAccountDeletedMail
  *              Illuminate\Support\Facades\Mail::to()->send()
  *              Illuminate\Support\Str::random()
  *
  * DB ACCESS:   userdb.mand_user.mand_id, mand_uname
- *              userdb.cust_user.cust_id, cust_firstname, cust_lastname, cust_email (DELETE)
+ *              userdb.cust_user.cust_id, cust_firstname, cust_lastname, cust_uname,
+ *              cust_email (DELETE)
  *              userdb.cust_pcode.pcode_id, mand_id, cust_id, cust_passcode,
  *              pcode_prefstat, cust_alias
+ *              userdb.passkey.pk_id, user_type, user_id (DELETE)
+ *              userdb.passkey_dismissed.pd_id, user_type, user_id (DELETE)
  *              sessiondb.cust_invite.invite_id, mand_id, cust_email, cust_alias,
  *              sec_level, token, created_at, expires_at, used
  */
 
 namespace App\Http\Controllers\UserDb;
 
+use App\Mail\CustAccountDeletedMail;
 use App\Mail\CustInviteMail;
 use App\Models\SessionDb\CustInvite;
 use App\Models\UserDb\CustPcode;
 use App\Models\UserDb\CustUser;
 use App\Models\UserDb\MandUser;
+use App\Models\UserDb\Passkey;
+use App\Models\UserDb\PasskeyDismissed;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -174,7 +190,19 @@ class MandantCustController extends UserDbController
 
         $remaining = CustPcode::where('cust_id', $custId)->count();
         if ($remaining === 0) {
-            CustUser::find($custId)?->delete();
+            $cust = CustUser::find($custId);
+
+            if ($cust) {
+                $custEmail = $cust->cust_email;
+                $custName  = $cust->cust_firstname ?: ($cust->cust_uname ?: 'Hallo');
+
+                Mail::to($custEmail)->send(new CustAccountDeletedMail($custName));
+
+                Passkey::where('user_type', 'cust')->where('user_id', $custId)->delete();
+                PasskeyDismissed::where('user_type', 'cust')->where('user_id', $custId)->delete();
+
+                $cust->delete();
+            }
         }
 
         return redirect()->route('mandant.kunden.index')
