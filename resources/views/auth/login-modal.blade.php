@@ -1,12 +1,12 @@
 {{--
     FILE:    resources/views/auth/login-modal.blade.php
-    VERSION: 1.3.0
-    DATE:    2026-06-12
+    VERSION: 1.4.0
+    DATE:    2026-06-19
 
     DESCRIPTION:
       Startseite / Login-Modal der Fotogalerie.
       Rendert zwei Seiten über Alpine.js page-State:
-        page === 'cust' — Customer-Login (Tabs: Anonym / Registriert)
+        page === 'cust' — Customer-Login (Tabs: Kurzzeit-Passwort / Mitglied)
         page === 'mand' — Mandanten-Login
 
     ROUTES USED:
@@ -75,7 +75,7 @@
                             ? 'border-b-2 border-indigo-600 text-indigo-600'
                             : 'text-gray-400 hover:text-gray-600'"
                         class="mr-6 pb-2 text-sm font-medium transition-colors">
-                    Anonym
+                    Kurzzeit-Passwort
                 </button>
                 <button type="button"
                         @click="custTab = 'reg'"
@@ -83,12 +83,12 @@
                             ? 'border-b-2 border-indigo-600 text-indigo-600'
                             : 'text-gray-400 hover:text-gray-600'"
                         class="pb-2 text-sm font-medium transition-colors">
-                    Registriert
+                    Mitglied
                 </button>
             </div>
 
 
-            {{-- Tab: Anonym --}}
+            {{-- Tab: Kurzzeit-Passwort --}}
             <div x-show="custTab === 'anon'" x-cloak>
                 <form method="POST" action="{{ route('customer.login.anon') }}">
                     @csrf
@@ -123,7 +123,7 @@
             </div>
 
 
-            {{-- Tab: Registriert --}}
+            {{-- Tab: Mitglied --}}
             <div x-show="custTab === 'reg'" x-cloak>
 
                 {{-- Cust Passkey-Button (zunächst versteckt) --}}
