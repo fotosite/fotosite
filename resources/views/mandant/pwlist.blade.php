@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/mandant/pwlist.blade.php
-    VERSION: 1.18.0
-    DATE:    2026-06-08
+    VERSION: 1.19.0
+    DATE:    2026-06-19
 
     DESCRIPTION:
       Mandant Passwortliste — pw1–pw6 und Gültigkeitszeitraum bearbeiten.
@@ -18,6 +18,10 @@
       PATCH mandant.pwlist.update  — Passwortliste speichern
       POST  mandant.pwlist.check   — Passwort systemweit prüfen (JSON)
       POST  mandant.logout         — Abmelden
+
+    CHANGES: 1.19.0 (2026-06-19) partials.unsaved-changes-guard eingebunden;
+             Eingaben in pw1–pw6 sowie Gültigkeitszeitraum markieren dirty,
+             Speichern-Submit löscht dirty.
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -146,7 +150,10 @@
                       get fromInPast() { return this.validFrom && this.validFrom < this.today },
                       get untilInPast() { return this.validUntil && this.validUntil >= this.validFrom && this.validUntil < this.today },
                       get untilBeforeFrom() { return this.validFrom && this.validUntil && this.validUntil < this.validFrom }
-                  }">
+                  }"
+                  @input="$store.unsavedGuard.markDirty()"
+                  @change="$store.unsavedGuard.markDirty()"
+                  @submit="$store.unsavedGuard.clearDirty()">
                 @csrf
                 @method('PATCH')
 
@@ -621,7 +628,7 @@
                                        dateFormat: 'Y-m-d',
                                        allowInput: true,
                                        locale: 'de',
-                                       onChange: (dates, dateStr) => { validFrom = dateStr; }
+                                       onChange: (dates, dateStr) => { validFrom = dateStr; $store.unsavedGuard.markDirty(); }
                                    })"
                                    value="{{ old('valid_from', $pwlist?->valid_from?->format('Y-m-d') ?? '') }}"
                                    class="mt-1 block w-full rounded-md border-gray-300
@@ -649,7 +656,7 @@
                                        dateFormat: 'Y-m-d',
                                        allowInput: true,
                                        locale: 'de',
-                                       onChange: (dates, dateStr) => { validUntil = dateStr; }
+                                       onChange: (dates, dateStr) => { validUntil = dateStr; $store.unsavedGuard.markDirty(); }
                                    })"
                                    value="{{ old('valid_until', $pwlist?->valid_until?->format('Y-m-d') ?? '') }}"
                                    class="mt-1 block w-full rounded-md border-gray-300
@@ -704,5 +711,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/de.js"></script>
+
+    @include('partials.unsaved-changes-guard')
 </body>
 </html>

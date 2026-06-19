@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/mandant/passkey/index.blade.php
-    VERSION: 1.7.0
-    DATE:    2026-06-08
+    VERSION: 1.8.0
+    DATE:    2026-06-19
 
     DESCRIPTION:
       Passkey-Verwaltung für Mandanten — Liste aller registrierten Passkeys,
@@ -23,6 +23,11 @@
       PATCH /mandant/passkeys/{id}/rename     — Umbenennen (route('mandant.passkeys.rename'))
       DELETE /mandant/passkeys/{id}           — Löschen (route('mandant.passkeys.destroy'))
       GET  /mandant/dashboard                 — Zurück (route('mandant.dashboard'))
+
+    CHANGES: 1.8.0 (2026-06-19) partials.unsaved-changes-guard eingebunden;
+             Gerätename-Umbenennen markiert dirty solange ungespeichert
+             (Eingabefeld @input), clearDirty nach erfolgreichem Speichern
+             bzw. Abbrechen (Escape).
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -279,8 +284,9 @@
                                 <input x-show="editing"
                                        x-model="name"
                                        x-ref="nameInput"
-                                       @keydown.enter="saveRename({{ $passkey->pk_id }}, name); editing = false"
-                                       @keydown.escape="editing = false"
+                                       @input="$store.unsavedGuard.markDirty()"
+                                       @keydown.enter="saveRename({{ $passkey->pk_id }}, name); editing = false; $store.unsavedGuard.clearDirty()"
+                                       @keydown.escape="editing = false; $store.unsavedGuard.clearDirty()"
                                        type="text"
                                        maxlength="100"
                                        class="w-full max-w-[180px] rounded border border-indigo-300
@@ -310,7 +316,7 @@
                                         Umbenennen
                                     </button>
                                     <button x-show="editing"
-                                            @click="saveRename({{ $passkey->pk_id }}, name); editing = false"
+                                            @click="saveRename({{ $passkey->pk_id }}, name); editing = false; $store.unsavedGuard.clearDirty()"
                                             class="text-xs text-green-600 hover:text-green-800
                                                    font-medium transition-colors">
                                         Speichern
@@ -474,6 +480,8 @@
             }
         }
     </script>
+
+    @include('partials.unsaved-changes-guard')
 
 </body>
 </html>

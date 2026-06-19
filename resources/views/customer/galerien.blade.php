@@ -1,23 +1,49 @@
 {{--
     FILE:    resources/views/customer/galerien.blade.php
-    VERSION: 2.1.0
-    DATE:    2026-06-13
+    VERSION: 3.1.0
+    DATE:    2026-06-19
 
     DESCRIPTION:
-      Customer Galerien-Verwaltung — E-Mail-Einstellungen (ein gemeinsames Formular),
-      Reihenfolge per Up/Down (separate Formulare via HTML form-Attribut, da HTML
-      keine verschachtelten <form>-Elemente erlaubt), Galerie entfernen.
+      Customer Galerien-Verwaltung — E-Mail-Einstellungen (Checkbox) und Reihenfolge
+      (Up/Down) speichern JEWEILS SOFORT per AJAX (fetch), kein Formular, kein
+      "Einstellungen speichern"-Button, kein Page-Reload. Nach jeder erfolgreichen
+      Aktion erscheint ein Bestätigungs-Popup ("Einstellungen gespeichert" + OK,
+      blendet zusätzlich nach 2,5s automatisch aus). Galerie entfernen weiterhin
+      über natives Form-Submit mit window.confirm() (sofortige, bestätigte
+      Löschaktion — kein "ungespeicherter" Zwischenzustand).
       Standalone (kein Layout-Erbe). Accent-Farbe: indigo.
 
     DATA FROM CONTROLLER:
       $pcodes — Collection<CustPcode> mit mandUser (eager-loaded), sortiert ASC pcode_prefstat
 
     ROUTES USED:
-      GET    customer.dashboard                — Zurück-Link (mit Dirty-Check)
-      POST   customer.galerien.save-settings   — E-Mail-Einstellungen speichern
-      PATCH  customer.galerien.reorder         — Reihenfolge ändern
+      GET    customer.dashboard                — Zurück-Link
+      POST   customer.galerien.save-settings   — Mailrequest-Checkbox sofort speichern (AJAX/JSON)
+      PATCH  customer.galerien.reorder         — Reihenfolge ändern (AJAX/JSON)
       DELETE customer.galerien.remove          — Galerie / Konto löschen
       POST   customer.logout                   — Abmelden
+
+    CHANGES: 3.1.0 (2026-06-19) Bestätigungs-Popup angepasst: sichtbarer Rahmen
+             (border-indigo-200, passend zum Erfolgs-Flash-Stil der Seite)
+             ergänzt; OK-Button entfernt — reines Hinweis-Popup ohne
+             Interaktion, blendet nur noch automatisch nach 2,5s aus.
+             3.0.0 (2026-06-19) Unsaved-Changes-Guard auf dieser Seite komplett
+             entfernt (kein @include('partials.unsaved-changes-guard') mehr) —
+             es gibt nichts mehr, was "ungespeichert" bleiben kann, da Checkbox
+             und Reihenfolge jetzt jeweils sofort per AJAX speichern statt über
+             ein gemeinsames Formular mit "Einstellungen speichern"-Button.
+             Mini-Reorder-Forms (form="..."-Attribut-Workaround) entfernt,
+             ersetzt durch fetch() + DOM-Zeilentausch. Neues Bestätigungs-Popup
+             (eigenes x-data, settings-saved-Event) nach jeder Sofortspeicherung.
+             2.3.0 (2026-06-19) Bugfix Runde 4: @change/@submit auf dem
+             Einstellungs-<form> wurden von Alpine nie gebunden, weil kein
+             Vorfahre-Element (auch nicht <body>) ein x-data hatte. Fix:
+             x-data="{}" direkt auf dem <form> ergänzt.
+             2.2.0 (2026-06-19) Eigene Zurück-Link-Dirty-Logik (window.confirm)
+             durch partials.unsaved-changes-guard ersetzt (Alpine.store
+             'unsavedGuard'); Reihenfolge-/Entfernen-Aktionen sind sofort
+             persistierte Server-Submits und setzen daher kein dirty — nur
+             die E-Mail-Einstellungs-Checkboxen lösen dirty aus.
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -25,6 +51,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Meine Galerien · Fotogalerie</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -70,27 +97,15 @@
     </header>
 
     {{-- ══════════════════════════════════════════════════════
-         MAIN — x-data für Dirty-Tracking (Scope für settingsForm + Zurück-Link)
+         MAIN
     ══════════════════════════════════════════════════════ --}}
-    <main class="mx-auto max-w-3xl px-6 pt-10 pb-24"
-          x-data="{ dirty: false }">
+    <main class="mx-auto max-w-3xl px-6 pt-10 pb-24">
 
-        {{-- Zurück-Link mit Dirty-Check --}}
+        {{-- Zurück-Link --}}
         <div class="mt-4 mb-6">
             <a href="{{ route('customer.dashboard') }}"
-               @click.prevent="
-                   if (dirty) {
-                       if (confirm('Einstellungen nicht gespeichert. Willst du diese jetzt speichern?')) {
-                           $refs.settingsForm.submit();
-                       } else {
-                           window.location.href = '{{ route('customer.dashboard') }}';
-                       }
-                   } else {
-                       window.location.href = '{{ route('customer.dashboard') }}';
-                   }
-               "
                class="inline-flex items-center gap-1.5 text-xs text-indigo-500
-                      hover:text-indigo-700 transition-colors cursor-pointer">
+                      hover:text-indigo-700 transition-colors">
                 <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg"
                      fill="none" viewBox="0 0 24 24" stroke-width="2"
                      stroke="currentColor">
@@ -126,101 +141,71 @@
             </div>
         @else
 
-            {{-- ── Mini-Formulare für Reorder ──────────────────────────── --}}
-            {{-- HTML erlaubt keine verschachtelten <form>-Elemente.        --}}
-            {{-- Reorder-Buttons im Layout nutzen das form="..."-Attribut   --}}
-            {{-- um diese Formulare zu referenzieren (HTML5-Standard).      --}}
-            @foreach($pcodes as $pcode)
-                <form id="reorder-up-{{ $pcode->pcode_id }}"
-                      method="POST"
-                      action="{{ route('customer.galerien.reorder', ['pcodeId' => $pcode->pcode_id, 'direction' => 'up']) }}">
-                    @csrf
-                    @method('PATCH')
-                </form>
-                <form id="reorder-down-{{ $pcode->pcode_id }}"
-                      method="POST"
-                      action="{{ route('customer.galerien.reorder', ['pcodeId' => $pcode->pcode_id, 'direction' => 'down']) }}">
-                    @csrf
-                    @method('PATCH')
-                </form>
-            @endforeach
+            {{-- ── Galerien-Liste — Checkbox + Reihenfolge speichern sofort per AJAX ── --}}
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm mb-6
+                        divide-y divide-gray-100"
+                 id="galerien-list">
+                @foreach($pcodes as $pcode)
+                    <div class="flex flex-col md:flex-row md:items-center
+                                md:justify-between gap-2 md:gap-4 px-4 py-4"
+                         data-pcode-row
+                         data-pcode-id="{{ $pcode->pcode_id }}">
 
-            {{-- ── Einstellungs-Formular ───────────────────────────────── --}}
-            <form method="POST"
-                  action="{{ route('customer.galerien.save-settings') }}"
-                  x-ref="settingsForm"
-                  @change="dirty = true">
-                @csrf
+                        {{-- Galerist-Name --}}
+                        <span class="text-sm font-medium text-gray-800 shrink-0">
+                            {{ $pcode->mandUser?->mand_uname ?? '—' }}
+                        </span>
 
-                <div class="bg-white rounded-xl border border-gray-200 shadow-sm mb-6
-                            divide-y divide-gray-100">
-                    @foreach($pcodes as $pcode)
-                        <div class="flex flex-col md:flex-row md:items-center
-                                    md:justify-between gap-2 md:gap-4 px-4 py-4">
+                        {{-- Checkbox E-Mail-Benachrichtigung — speichert sofort per AJAX --}}
+                        <label class="flex items-center gap-2 text-sm
+                                      text-gray-600 cursor-pointer select-none">
+                            <input type="checkbox"
+                                   data-mailrequest-checkbox
+                                   data-pcode-id="{{ $pcode->pcode_id }}"
+                                   @checked($pcode->cust_mailrequest)
+                                   onchange="saveMailrequest(this)"
+                                   class="h-4 w-4 rounded border-gray-300
+                                          text-indigo-600 focus:ring-indigo-400">
+                            Neuigkeiten per Email erhalten
+                        </label>
 
-                            {{-- Galerist-Name --}}
-                            <span class="text-sm font-medium text-gray-800 shrink-0">
-                                {{ $pcode->mandUser?->mand_uname ?? '—' }}
-                            </span>
-
-                            {{-- Checkbox E-Mail-Benachrichtigung --}}
-                            <label class="flex items-center gap-2 text-sm
-                                          text-gray-600 cursor-pointer select-none">
-                                <input type="checkbox"
-                                       name="mailrequest_{{ $pcode->pcode_id }}"
-                                       value="1"
-                                       @checked($pcode->cust_mailrequest)
-                                       class="h-4 w-4 rounded border-gray-300
-                                              text-indigo-600 focus:ring-indigo-400">
-                                Neuigkeiten per Email erhalten
-                            </label>
-
-                            {{-- Up/Down via form-Attribut (kein Nesting in settingsForm) --}}
-                            <div class="flex gap-1 md:ml-auto">
-                                <button type="submit"
-                                        form="reorder-up-{{ $pcode->pcode_id }}"
-                                        {{ $loop->first ? 'disabled' : '' }}
-                                        class="p-1.5 rounded-md border border-gray-200
-                                               text-gray-500 hover:bg-gray-50
-                                               transition-colors
-                                               disabled:opacity-30 disabled:cursor-not-allowed">
-                                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg"
-                                         fill="none" viewBox="0 0 24 24" stroke-width="2.5"
-                                         stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                              d="m4.5 15.75 7.5-7.5 7.5 7.5"/>
-                                    </svg>
-                                </button>
-                                <button type="submit"
-                                        form="reorder-down-{{ $pcode->pcode_id }}"
-                                        {{ $loop->last ? 'disabled' : '' }}
-                                        class="p-1.5 rounded-md border border-gray-200
-                                               text-gray-500 hover:bg-gray-50
-                                               transition-colors
-                                               disabled:opacity-30 disabled:cursor-not-allowed">
-                                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg"
-                                         fill="none" viewBox="0 0 24 24" stroke-width="2.5"
-                                         stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                              d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
-                                    </svg>
-                                </button>
-                            </div>
-
+                        {{-- Up/Down — speichert sofort per AJAX, kein Page-Reload --}}
+                        <div class="flex gap-1 md:ml-auto">
+                            <button type="button"
+                                    data-reorder="up"
+                                    onclick="reorderGalerie({{ $pcode->pcode_id }}, 'up', this)"
+                                    {{ $loop->first ? 'disabled' : '' }}
+                                    class="p-1.5 rounded-md border border-gray-200
+                                           text-gray-500 hover:bg-gray-50
+                                           transition-colors
+                                           disabled:opacity-30 disabled:cursor-not-allowed">
+                                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg"
+                                     fill="none" viewBox="0 0 24 24" stroke-width="2.5"
+                                     stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="m4.5 15.75 7.5-7.5 7.5 7.5"/>
+                                </svg>
+                            </button>
+                            <button type="button"
+                                    data-reorder="down"
+                                    onclick="reorderGalerie({{ $pcode->pcode_id }}, 'down', this)"
+                                    {{ $loop->last ? 'disabled' : '' }}
+                                    class="p-1.5 rounded-md border border-gray-200
+                                           text-gray-500 hover:bg-gray-50
+                                           transition-colors
+                                           disabled:opacity-30 disabled:cursor-not-allowed">
+                                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg"
+                                     fill="none" viewBox="0 0 24 24" stroke-width="2.5"
+                                     stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+                                </svg>
+                            </button>
                         </div>
-                    @endforeach
-                </div>
 
-                <button type="submit"
-                        class="w-full md:w-auto rounded-lg bg-indigo-600 px-5
-                               py-3 md:py-2 text-sm font-semibold text-white
-                               hover:bg-indigo-700 transition-colors
-                               focus:outline-none focus:ring-2
-                               focus:ring-indigo-500 focus:ring-offset-2">
-                    Einstellungen speichern
-                </button>
-
-            </form>
+                    </div>
+                @endforeach
+            </div>
 
             {{-- ── Galerie entfernen ───────────────────────────── --}}
             <div class="mt-8 bg-white rounded-xl border border-gray-200 shadow-sm p-6"
@@ -298,6 +283,95 @@
             </span>
         </div>
     </footer>
+
+    {{-- ══════════════════════════════════════════════════════
+         BESTÄTIGUNGS-POPUP — nach jeder sofort gespeicherten Änderung
+         (Checkbox-Toggle oder Reihenfolge). Reines Hinweis-Popup ohne
+         Interaktion, blendet nach 2,5s automatisch aus. Eigenes x-data,
+         unabhängig davon, ob <body> selbst ein x-data hat.
+    ══════════════════════════════════════════════════════ --}}
+    <div x-data="{ show: false }"
+         x-show="show"
+         x-cloak
+         @settings-saved.window="show = true; setTimeout(() => show = false, 2500)"
+         class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[100]">
+        <div class="bg-white rounded-xl border border-indigo-200 p-6 max-w-xs w-full mx-4 shadow-xl text-center">
+            <p class="text-sm font-medium text-gray-800">
+                Einstellungen gespeichert
+            </p>
+        </div>
+    </div>
+
+    {{-- ══════════════════════════════════════════════════════
+         JAVASCRIPT — Sofortspeicherung Checkbox + Reihenfolge
+    ══════════════════════════════════════════════════════ --}}
+    <script>
+        function csrfToken() {
+            return document.querySelector('meta[name="csrf-token"]').content;
+        }
+
+        function notifySaved() {
+            window.dispatchEvent(new CustomEvent('settings-saved'));
+        }
+
+        async function saveMailrequest(checkbox) {
+            const pcodeId = checkbox.dataset.pcodeId;
+            const checked = checkbox.checked;
+            try {
+                const res = await fetch('{{ route('customer.galerien.save-settings') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken(),
+                    },
+                    body: JSON.stringify({ pcode_id: pcodeId, mailrequest: checked }),
+                });
+                const data = await res.json();
+                if (!res.ok || !data.success) throw new Error('save failed');
+                notifySaved();
+            } catch (e) {
+                checkbox.checked = !checked;
+                alert('Fehler beim Speichern. Bitte erneut versuchen.');
+            }
+        }
+
+        function updateReorderButtonStates() {
+            const rows = document.querySelectorAll('#galerien-list [data-pcode-row]');
+            rows.forEach((row, i) => {
+                row.querySelector('[data-reorder="up"]').disabled   = (i === 0);
+                row.querySelector('[data-reorder="down"]').disabled = (i === rows.length - 1);
+            });
+        }
+
+        async function reorderGalerie(pcodeId, direction, button) {
+            try {
+                const res = await fetch(`/customer/galerien/${pcodeId}/reorder/${direction}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken(),
+                    },
+                });
+                const data = await res.json();
+                if (!res.ok || !data.success) throw new Error('reorder failed');
+
+                const row     = button.closest('[data-pcode-row]');
+                const sibling = direction === 'up' ? row.previousElementSibling : row.nextElementSibling;
+                if (sibling) {
+                    if (direction === 'up') {
+                        row.parentNode.insertBefore(row, sibling);
+                    } else {
+                        row.parentNode.insertBefore(sibling, row);
+                    }
+                }
+                updateReorderButtonStates();
+                notifySaved();
+            } catch (e) {
+                alert('Fehler beim Verschieben. Bitte erneut versuchen.');
+            }
+        }
+    </script>
 
 </body>
 </html>

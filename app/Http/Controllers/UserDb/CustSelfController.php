@@ -1,9 +1,9 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustSelfController.php
- * VERSION:     1.4.0
+ * VERSION:     1.5.0
  * AUTOR:       Martin Wagner
- * DATUM:       2026-06-18
+ * DATUM:       2026-06-19
  *
  * ZWECK:       Customer Eigenverwaltung — Kontaktdaten, Passwort, E-Mail-Adresse,
  *              Galerien verwalten, Konto löschen.
@@ -46,12 +46,16 @@
  *                                     gibt customer.galerien zurück.
  *                                     Reads: userdb.cust_pcode.*, userdb.mand_user.*
  *              reorderGalerie()    — Tauscht pcode_prefstat zweier benachbarter Einträge
- *                                     (up/down); weist sequenzielle Werte zu.
+ *                                     (up/down); weist sequenzielle Werte zu. Gibt bei
+ *                                     AJAX/JSON-Request (Accept: application/json) JSON
+ *                                     statt Redirect zurück (sofortiges Speichern ohne
+ *                                     Page-Reload).
  *                                     Reads/Writes: userdb.cust_pcode.pcode_prefstat
- *              saveSettings()      — Setzt cust_mailrequest für alle pcode-Einträge des
- *                                     Cust auf Basis der übermittelten Checkboxen;
- *                                     Checkbox-Fehlende → false (unchecked sendet nichts).
- *                                     Reads:  userdb.cust_pcode.pcode_id
+ *              saveSettings()      — Setzt cust_mailrequest für GENAU EINEN pcode-Eintrag
+ *                                     (AJAX-Einzelspeicherung pro Checkbox-Toggle, kein
+ *                                     Formular/Button mehr). Erwartet JSON-Body
+ *                                     {pcode_id, mailrequest}; gibt JSON zurück.
+ *                                     Reads:  userdb.cust_pcode.pcode_id, cust_id
  *                                     Writes: userdb.cust_pcode.cust_mailrequest
  *              removeGalerie()     — Löscht einen pcode-Eintrag; bei letztem Eintrag:
  *                                     destroyAccount(). Redirect zu galerien oder home.
@@ -88,7 +92,13 @@
  *              userdb.invite.inv_id, inv_email, inv_token_hash, inv_type,
  *              inv_user_type, inv_user_id, expires_at (email_change-Einträge)
  *
- * CHANGES:     1.4.0 (2026-06-18) update() — cust_uname als Pflichtfeld ergänzt (mit
+ * CHANGES:     1.5.0 (2026-06-19) saveSettings() von Multi-Checkbox-Form-Submit
+ *              (Redirect+Flash) auf AJAX-Einzelspeicherung pro Checkbox umgestellt
+ *              (JSON-Request/-Response, kein "Einstellungen speichern"-Button mehr
+ *              auf customer/galerien.blade.php); reorderGalerie() gibt bei
+ *              AJAX-Requests jetzt JSON statt Redirect zurück, damit auch die
+ *              Reihenfolge-Aenderung ohne Page-Reload sofort speichert.
+ *              1.4.0 (2026-06-18) update() — cust_uname als Pflichtfeld ergänzt (mit
  *              unique-Pruefung — cust_user.cust_uname hat laut DDL einen UNIQUE-
  *              Constraint); cust_firstname/cust_lastname/cust_street+nr/
  *              cust_postcode_city von nullable auf required umgestellt; cust_tel/
@@ -109,6 +119,7 @@ use App\Models\UserDb\Invite;
 use App\Models\UserDb\Passkey;
 use App\Models\UserDb\PasskeyDismissed;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -288,7 +299,7 @@ class CustSelfController extends UserDbController
         return view('customer.galerien', compact('pcodes'));
     }
 
-    public function reorderGalerie(Request $request, int $pcodeId, string $direction): RedirectResponse
+    public function reorderGalerie(Request $request, int $pcodeId, string $direction): RedirectResponse|JsonResponse
     {
         $custId = $request->session()->get('_cust_id');
         $cust   = $custId ? CustUser::find($custId) : null;
@@ -306,12 +317,16 @@ class CustSelfController extends UserDbController
 
         $index = $pcodes->search(fn($p) => $p->pcode_id === $pcodeId);
         if ($index === false) {
-            return redirect()->route('customer.galerien');
+            return $request->wantsJson()
+                ? response()->json(['success' => false], 404)
+                : redirect()->route('customer.galerien');
         }
 
         $swapIndex = $direction === 'up' ? $index - 1 : $index + 1;
         if ($swapIndex < 0 || $swapIndex >= $pcodes->count()) {
-            return redirect()->route('customer.galerien');
+            return $request->wantsJson()
+                ? response()->json(['success' => false], 422)
+                : redirect()->route('customer.galerien');
         }
 
         // Reorder collection and assign sequential pcode_prefstat values
@@ -324,29 +339,39 @@ class CustSelfController extends UserDbController
             }
         }
 
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
+
         return redirect()->route('customer.galerien');
     }
 
-    public function saveSettings(Request $request): RedirectResponse
+    public function saveSettings(Request $request): JsonResponse
     {
         $custId = $request->session()->get('_cust_id');
         $cust   = $custId ? CustUser::find($custId) : null;
 
         if (! $cust) {
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-            return redirect()->route('customer.login');
+            return response()->json(['success' => false], 401);
         }
 
-        $pcodes = CustPcode::where('cust_id', $custId)->get();
+        $validated = $request->validate([
+            'pcode_id'    => ['required', 'integer'],
+            'mailrequest' => ['required', 'boolean'],
+        ]);
 
-        foreach ($pcodes as $pcode) {
-            $pcode->cust_mailrequest = $request->has("mailrequest_{$pcode->pcode_id}");
-            $pcode->save();
+        $pcode = CustPcode::where('cust_id', $custId)
+            ->where('pcode_id', $validated['pcode_id'])
+            ->first();
+
+        if (! $pcode) {
+            return response()->json(['success' => false], 404);
         }
 
-        return redirect()->route('customer.galerien')
-            ->with('status', 'Einstellungen gespeichert.');
+        $pcode->cust_mailrequest = $validated['mailrequest'];
+        $pcode->save();
+
+        return response()->json(['success' => true]);
     }
 
     public function removeGalerie(Request $request, int $pcodeId): RedirectResponse

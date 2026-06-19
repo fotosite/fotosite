@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/mandant/konto.blade.php
-    VERSION: 1.7.0
-    DATE:    2026-06-18
+    VERSION: 1.8.0
+    DATE:    2026-06-19
 
     DESCRIPTION:
       Mandant Eigenverwaltung — Kontaktdaten bearbeiten. Passwort- und E-Mail-Änderung
@@ -17,7 +17,11 @@
       PATCH mandant.konto.update    — Kontaktdaten speichern
       POST  mandant.logout          — Abmelden
 
-    CHANGES: 1.7.0 (2026-06-18) Passwort-Bereich entfernt (jetzt PW-Modal auf
+    CHANGES: 1.8.0 (2026-06-19) Lokales dirty-Flag/beforeunload durch
+             partials.unsaved-changes-guard ersetzt (Alpine.store('unsavedGuard'));
+             Zurück-Link wird jetzt per eigenem Modal statt nur per beforeunload
+             abgefangen.
+             1.7.0 (2026-06-18) Passwort-Bereich entfernt (jetzt PW-Modal auf
              mandant/dashboard.blade.php); mand_email-Hinweistext entfernt (Hinweis
              jetzt im E-Mail-Modal); Change-Tracking via Alpine dirty-Flag +
              beforeunload-Handler ergänzt.
@@ -125,11 +129,9 @@
             <form method="POST"
                   action="{{ route('mandant.konto.update') }}"
                   autocomplete="off"
-                  x-data="{ dirty: false }"
-                  x-init="window.addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } })"
-                  @input="dirty = true"
-                  @change="dirty = true"
-                  @submit="dirty = false">
+                  @input="$store.unsavedGuard.markDirty()"
+                  @change="$store.unsavedGuard.markDirty()"
+                  @submit="$store.unsavedGuard.clearDirty()">
                 @csrf
                 @method('PATCH')
 
@@ -365,6 +367,8 @@
             </span>
         </div>
     </footer>
+
+    @include('partials.unsaved-changes-guard')
 
 </body>
 </html>

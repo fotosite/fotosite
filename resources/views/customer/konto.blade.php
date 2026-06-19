@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/customer/konto.blade.php
-    VERSION: 1.4.0
-    DATE:    2026-06-18
+    VERSION: 1.6.0
+    DATE:    2026-06-19
 
     DESCRIPTION:
       Customer Eigenverwaltung — Kontaktdaten bearbeiten. Passwort- und E-Mail-Änderung
@@ -18,7 +18,18 @@
       DELETE customer.konto.delete   — Konto löschen
       POST   customer.logout         — Abmelden
 
-    CHANGES: 1.4.0 (2026-06-18) cust_uname-Feld ergänzt (Pflicht); cust_firstname/
+    CHANGES: 1.6.0 (2026-06-19) Bugfix Runde 4: @input/@change/@submit auf dem
+             Kontaktdaten-<form> wurden von Alpine nie gebunden, weil kein
+             Vorfahre-Element (auch nicht <body>) ein x-data hatte — Alpine
+             durchläuft ein Element ohne x-data-Vorfahren nicht als
+             Komponenten-Baum, Direktiven blieben wirkungslose HTML-Attribute.
+             Fix: x-data="{}" direkt auf dem <form> ergänzt, spannt einen
+             minimalen Alpine-Scope ohne Seiteneffekte auf.
+             1.5.0 (2026-06-19) Lokales dirty-Flag/beforeunload durch
+             partials.unsaved-changes-guard ersetzt (Alpine.store('unsavedGuard'));
+             Zurück-Link wird jetzt per eigenem Modal statt nur per beforeunload
+             abgefangen.
+             1.4.0 (2026-06-18) cust_uname-Feld ergänzt (Pflicht); cust_firstname/
              cust_lastname/cust_street+nr/cust_postcode_city von optional auf
              Pflichtfeld umgestellt; cust_tel/cust_company bleiben optional.
              1.3.0 (2026-06-18) Passwort-Bereich entfernt (jetzt PW-Modal auf
@@ -124,11 +135,10 @@
             <form method="POST"
                   action="{{ route('customer.konto.update') }}"
                   autocomplete="off"
-                  x-data="{ dirty: false }"
-                  x-init="window.addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } })"
-                  @input="dirty = true"
-                  @change="dirty = true"
-                  @submit="dirty = false">
+                  x-data="{}"
+                  @input="$store.unsavedGuard.markDirty()"
+                  @change="$store.unsavedGuard.markDirty()"
+                  @submit="$store.unsavedGuard.clearDirty()">
                 @csrf
                 @method('PATCH')
 
@@ -342,6 +352,8 @@
             </span>
         </div>
     </footer>
+
+    @include('partials.unsaved-changes-guard')
 
 </body>
 </html>

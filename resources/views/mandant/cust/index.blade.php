@@ -1,8 +1,8 @@
 {{--
     FILE:    resources/views/mandant/cust/index.blade.php
-    VERSION: 3.3.0
+    VERSION: 3.4.0
     AUTHOR:  Martin Wagner
-    DATE:    2026-06-12
+    DATE:    2026-06-19
 
     DESCRIPTION:
       Mitgliederliste des eingeloggten Mandanten.
@@ -18,6 +18,12 @@
       PATCH  /mandant/kunden/{id}/passcode        — Alias + Stufe ändern (route('mandant.kunden.passcode'))
       DELETE /mandant/kunden/{id}                 — Entfernen (route('mandant.kunden.destroy'))
       GET    /mandant/dashboard                   — Dashboard (route('mandant.dashboard'))
+
+    CHANGES: 3.4.0 (2026-06-19) partials.unsaved-changes-guard eingebunden;
+             Alias-/Sicherheitsstufe-Bearbeitungsformulare (mobile + desktop)
+             markieren dirty, eigener Submit löscht dirty. Entfernen-Formulare
+             bleiben ohne dirty (sofortige, bestätigte Lösch-Aktion, keine
+             ungespeicherten Daten).
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -152,7 +158,10 @@
                         {{-- Bearbeiten-Formular --}}
                         <form method="POST"
                               action="{{ route('mandant.kunden.passcode', $cust->pcode_id) }}"
-                              class="mb-2">
+                              class="mb-2"
+                              @input="$store.unsavedGuard.markDirty()"
+                              @change="$store.unsavedGuard.markDirty()"
+                              @submit="$store.unsavedGuard.clearDirty()">
                             @csrf
                             @method('PATCH')
                             <div class="grid grid-cols-1 gap-2 mb-2">
@@ -252,7 +261,10 @@
                                 <td class="px-4 py-3">
                                     <form method="POST"
                                           action="{{ route('mandant.kunden.passcode', $cust->pcode_id) }}"
-                                          class="flex items-center gap-2">
+                                          class="flex items-center gap-2"
+                                          @input="$store.unsavedGuard.markDirty()"
+                                          @change="$store.unsavedGuard.markDirty()"
+                                          @submit="$store.unsavedGuard.clearDirty()">
                                         @csrf
                                         @method('PATCH')
 
@@ -345,6 +357,8 @@
             </span>
         </div>
     </footer>
+
+    @include('partials.unsaved-changes-guard')
 
 </body>
 </html>
