@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Models/UserDb/CustUser.php
- * VERSION:     1.3.0
+ * VERSION:     1.4.0
  *
  * FUNCTIONS:   passcodes()     — hasMany CustPcode via cust_id
  *
@@ -11,9 +11,11 @@
  *              cust_firstname, cust_lastname, cust_street+nr,
  *              cust_postcode_city, cust_company, cust_pw_hash, cust_2fa_opt_in,
  *              ds_accepted_at, ds_version, upload_terms_accepted_at,
- *              upload_terms_version
+ *              upload_terms_version, show_welcome
  *
- * CHANGES:     1.3.0 (2026-06-18) upload_terms_accepted_at, upload_terms_version
+ * CHANGES:     1.4.0 (2026-06-20) show_welcome ergänzt (Willkommensseite
+ *              beim ersten Login, siehe CheckWelcome-Middleware)
+ *              1.3.0 (2026-06-18) upload_terms_accepted_at, upload_terms_version
  *              ergänzt (DDL um diese Spalten erweitert — Policy-Versions-Popup
  *              speichert Upload-Bedingungen-Zustimmung jetzt dauerhaft in der DB
  *              statt nur per Session-Flag)
@@ -45,12 +47,14 @@ class CustUser extends UserDbModel
         'ds_version',
         'upload_terms_accepted_at',
         'upload_terms_version',
+        'show_welcome',
     ];
 
     protected $casts = [
         'cust_2fa_opt_in'          => 'boolean',
         'ds_accepted_at'           => 'datetime',
         'upload_terms_accepted_at' => 'datetime',
+        'show_welcome'             => 'boolean',
     ];
 
     protected $hidden = ['cust_pw_hash'];

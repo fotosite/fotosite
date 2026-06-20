@@ -8,6 +8,7 @@ use App\Http\Controllers\UserDb\MandantDashboardController;
 use App\Http\Controllers\UserDb\MandantLoginController;
 use App\Http\Controllers\UserDb\MandantSelfController;
 use App\Http\Controllers\UserDb\MandPasswordResetController;
+use App\Http\Controllers\WelcomeScreenController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -79,6 +80,14 @@ Route::middleware(['web', 'role:mand'])->prefix('mandant')->name('mandant.')->gr
         ->name('policy.update');
     Route::post('/policy-update', [PolicyController::class, 'confirmMand'])
         ->name('policy.confirm');
+
+    // ── Willkommensseite (erster Login, show_welcome) — CheckWelcome
+    //    schliesst sich selbst per routeIs('*.welcome*') aus, um
+    //    Redirect-Schleifen zu vermeiden ─────────────────────────────────
+    Route::get('/willkommen',  [WelcomeScreenController::class, 'showMand'])
+        ->name('welcome');
+    Route::post('/willkommen', [WelcomeScreenController::class, 'confirmMand'])
+        ->name('welcome.confirm');
 
     Route::get('/passwortliste',             [MandantPwListController::class, 'edit'])
         ->name('pwlist');

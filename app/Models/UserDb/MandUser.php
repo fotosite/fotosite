@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Models/UserDb/MandUser.php
- * VERSION:     1.5.0
+ * VERSION:     1.6.0
  *
  * FUNCTIONS:   passcodes()     — hasMany CustPcode via mand_id
  *
@@ -14,9 +14,11 @@
  *              mand_cust_2fa (integer) — Ab welcher Sicherheitsstufe (0–6) 2FA
  *              für Mitglieder erzwungen wird. 0=nie, 7=immer, Standard=3
  *              ds_accepted_at, ds_version,
- *              upload_terms_accepted_at, upload_terms_version
+ *              upload_terms_accepted_at, upload_terms_version, show_welcome
  *
- * CHANGES:     1.5.0 (2026-06-16) ds_accepted_at, ds_version, upload_terms_accepted_at,
+ * CHANGES:     1.6.0 (2026-06-20) show_welcome ergänzt (Willkommensseite
+ *              beim ersten Login, siehe CheckWelcome-Middleware)
+ *              1.5.0 (2026-06-16) ds_accepted_at, ds_version, upload_terms_accepted_at,
  *              upload_terms_version ergänzt (Datenschutz-Feature)
  */
 
@@ -50,6 +52,7 @@ class MandUser extends UserDbModel
         'ds_version',
         'upload_terms_accepted_at',
         'upload_terms_version',
+        'show_welcome',
     ];
 
     protected $casts = [
@@ -60,6 +63,7 @@ class MandUser extends UserDbModel
         'valid_to'                => 'date',
         'ds_accepted_at'          => 'datetime',
         'upload_terms_accepted_at'=> 'datetime',
+        'show_welcome'            => 'boolean',
     ];
 
     protected $hidden = ['mand_pw_hash'];
