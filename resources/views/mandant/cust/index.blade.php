@@ -1,13 +1,26 @@
 {{--
     FILE:    resources/views/mandant/cust/index.blade.php
-    VERSION: 3.4.0
+    VERSION: 3.7.2
     AUTHOR:  Martin Wagner
-    DATE:    2026-06-19
+    DATE:    2026-06-20
 
     DESCRIPTION:
       Mitgliederliste des eingeloggten Mandanten.
       Zeigt alle CustPcode-Einträge. Spalte "Mitglied" zeigt cust_alias + E-Mail (grau).
       Alias und Sicherheitsstufe gemeinsam editierbar (PATCH). Eintrag entfernbar (DELETE).
+      sec_level wird über ein kompaktes Custom-Dropdown (Alpine.js) statt eines
+      nativen <select> gewählt; Formular-Submit bleibt klassisch (kein AJAX).
+      Mobile-Card (<768px): Alias, E-Mail, sec_level-Dropdown gestapelt,
+      Speichern/Entfernen-Buttons nebeneinander (Speichern-Button per
+      HTML5 form-Attribut an das PATCH-Formular gebunden, Entfernen bleibt
+      eigenes DELETE-Formular).
+      Steuerleiste oberhalb der Liste: client-seitige Sortierung (E-Mail/
+      Alias/Sicherheitsstufe, togglende Richtung, Default Alias aufsteigend)
+      und Live-Suche (Alias ODER E-Mail, startsWith, case-insensitive) via
+      Alpine-Komponente custListState() — siehe <script> am Dateiende. Die
+      Blade-Zeilen (Formulare, CSRF, Dropdowns) bleiben unverändert im DOM;
+      Sortierung verschiebt nur vorhandene Knoten (appendChild), Filter
+      blendet per x-show aus.
 
     DATA FROM CONTROLLER:
       $custs — Collection<CustPcode> mit eager-geladenem custUser
@@ -19,6 +32,40 @@
       DELETE /mandant/kunden/{id}                 — Entfernen (route('mandant.kunden.destroy'))
       GET    /mandant/dashboard                   — Dashboard (route('mandant.dashboard'))
 
+    CHANGES: 3.7.2 (2026-06-20) UI-Korrekturen Steuerleiste: Label "Sortieren:"
+             vor den drei Sortier-Buttons ergänzt; "Suche in:"-Combobox war zu
+             schmal (Optionstext von Pfeil/Rand verdeckt) — Breite auf
+             min-w-[9rem] mit pr-7 (Platz für Dropdown-Pfeil) vergrößert.
+    CHANGES: 3.7.1 (2026-06-20) Bugfix: x-data="custListState(@json($memberData))"
+             auf dem Listen-Container war in doppelte Anführungszeichen
+             gefasst, @json() erzeugt aber selbst doppelt-quotetes JSON
+             ("id":1,...) — der HTML-Parser schloss das x-data-Attribut beim
+             ersten " aus dem JSON vorzeitig, wodurch Alpine den Ausdruck nie
+             gültig auswerten konnte (komplette Liste blieb leer, da matches()
+             im kaputten Scope nicht existierte). Fix: Attribut auf einfache
+             Anführungszeichen umgestellt — offizielle Laravel-Empfehlung für
+             @json() in HTML-Attributen.
+    CHANGES: 3.7.0 (2026-06-20) Sortier-Buttons (E-Mail/Alias/Sicherheitsstufe,
+             Default Alias asc, Klick auf aktives Feld togglet Richtung,
+             ↑/↓-Anzeige) + Live-Suche (Feldwahl Alias/E-Mail, startsWith,
+             case-insensitive) ergänzt. $custs als $memberData (id/alias/
+             email/sec_level) per @json in custListState(...) x-data
+             initialisiert; localeCompare(..., 'de', {sensitivity:'base'})
+             für Alias/E-Mail-Sortierung (Umlaute korrekt), numerischer
+             Vergleich für sec_level. Reihenfolge wird per DOM-appendChild
+             auf den bestehenden, unveränderten Blade-Zeilen umgesetzt (kein
+             x-for/Neu-Rendering), damit CSRF-Tokens, route()-URLs,
+             Custom-Dropdowns und form="..."-Bindung unberührt bleiben.
+    CHANGES: 3.6.0 (2026-06-20) Mobile-Card-Ansicht (<768px) neu geordnet:
+             Zeile 1 Alias, Zeile 2 E-Mail, Zeile 3 sec_level-Dropdown,
+             Zeile 4 Speichern+Entfernen nebeneinander (flex). Stufen-Badge
+             entfernt (redundant zum Dropdown). Desktop/Tablet-Ansicht
+             unverändert.
+    CHANGES: 3.5.0 (2026-06-20) Natives sec_level-<select> durch kompaktes
+             Custom-Dropdown (Alpine x-data, Hidden-Input) ersetzt, Trigger
+             zeigt nur die Stufenzahl, Liste zeigt Zahl + Bezeichnung.
+             $levels einmalig vor die Mitgliederliste gehoben statt pro Zeile
+             doppelt deklariert.
     CHANGES: 3.4.0 (2026-06-19) partials.unsaved-changes-guard eingebunden;
              Alias-/Sicherheitsstufe-Bearbeitungsformulare (mobile + desktop)
              markieren dirty, eigener Submit löscht dirty. Entfernen-Formulare
@@ -38,7 +85,17 @@
 <body class="min-h-screen bg-gray-50 text-gray-900 antialiased"
       x-data>
 
-    @php $mandUname = \App\Models\UserDb\MandUser::find(session('_mand_id'))?->mand_uname ?? ''; @endphp
+    @php
+        $mandUname = \App\Models\UserDb\MandUser::find(session('_mand_id'))?->mand_uname ?? '';
+        $levels = [
+            1 => 'Bekannte',
+            2 => 'Großfamilie',
+            3 => 'Freunde',
+            4 => 'Enge Freunde & Kernfamilie',
+            5 => 'Vertraulich',
+            6 => 'Streng vertraulich',
+        ];
+    @endphp
 
     {{-- ══════════════════════════════════════════════════════
          TOP BAR
@@ -131,95 +188,173 @@
                 Noch keine Mitglieder eingeladen.
             </div>
         @else
+            @php
+                $memberData = $custs->map(fn($c) => [
+                    'id'        => $c->pcode_id,
+                    'alias'     => $c->cust_alias ?? '',
+                    'email'     => $c->custUser?->cust_email ?? '',
+                    'sec_level' => (int) $c->cust_passcode,
+                ])->values();
+            @endphp
+            <div x-data='custListState(@json($memberData))'>
+
+                {{-- Steuerleiste: Sortierung + Suche (gilt für Desktop und Mobile) --}}
+                <div class="mb-3 flex flex-wrap items-center gap-3">
+
+                    {{-- Sortier-Buttons: genau ein Feld aktiv, Klick auf aktives Feld togglet Richtung --}}
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-sm text-gray-500 shrink-0">Sortieren:</span>
+                        <button type="button"
+                                @click="setSort('email')"
+                                class="inline-flex items-center gap-1 rounded-lg border px-3 h-8 text-xs font-medium
+                                       transition-colors duration-150"
+                                :class="sortField === 'email'
+                                    ? 'border-indigo-300 bg-indigo-50 text-indigo-700'
+                                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'">
+                            E-Mail
+                            <span x-show="sortField === 'email'" x-text="sortDir === 'asc' ? '↑' : '↓'"></span>
+                        </button>
+                        <button type="button"
+                                @click="setSort('alias')"
+                                class="inline-flex items-center gap-1 rounded-lg border px-3 h-8 text-xs font-medium
+                                       transition-colors duration-150"
+                                :class="sortField === 'alias'
+                                    ? 'border-indigo-300 bg-indigo-50 text-indigo-700'
+                                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'">
+                            Alias
+                            <span x-show="sortField === 'alias'" x-text="sortDir === 'asc' ? '↑' : '↓'"></span>
+                        </button>
+                        <button type="button"
+                                @click="setSort('sec_level')"
+                                class="inline-flex items-center gap-1 rounded-lg border px-3 h-8 text-xs font-medium
+                                       transition-colors duration-150"
+                                :class="sortField === 'sec_level'
+                                    ? 'border-indigo-300 bg-indigo-50 text-indigo-700'
+                                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'">
+                            Sicherheitsstufe
+                            <span x-show="sortField === 'sec_level'" x-text="sortDir === 'asc' ? '↑' : '↓'"></span>
+                        </button>
+                    </div>
+
+                    {{-- Live-Suche: Feldwahl + Suchbegriff (startsWith, case-insensitive) --}}
+                    <div class="flex items-center gap-2 sm:ml-auto">
+                        <select x-model="searchField"
+                                class="min-w-[9rem] rounded-lg border border-gray-300 bg-white pl-2 pr-7 h-8 text-xs text-gray-700
+                                       focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                            <option value="alias">Suche in: Alias</option>
+                            <option value="email">Suche in: E-Mail</option>
+                        </select>
+                        <input type="text"
+                               x-model="searchTerm"
+                               placeholder="Suchbegriff…"
+                               class="rounded-lg border border-gray-300 bg-white px-3 h-8 text-xs text-gray-700 shadow-sm
+                                      focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                    </div>
+                </div>
+
             <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
 
                 {{-- Mobile: Card-Liste --}}
-                <div class="md:hidden divide-y divide-gray-100">
+                <div class="md:hidden divide-y divide-gray-100" data-member-list="mobile">
                     @foreach($custs as $cust)
-                    <div class="p-4">
+                    @php $custFormId = 'cust-form-'.$cust->pcode_id; @endphp
+                    <div class="p-4 space-y-2"
+                         data-member-id="{{ $cust->pcode_id }}"
+                         x-show="matches({{ $cust->pcode_id }})">
 
-                        {{-- Zeile 1: Alias + Sicherheitsstufe-Badge --}}
-                        <div class="flex items-center justify-between gap-2 mb-1">
-                            <span class="font-semibold text-sm text-gray-800">
-                                {{ $cust->cust_alias ?: '—' }}
-                            </span>
-                            <span class="shrink-0 inline-flex items-center rounded-full
-                                         bg-indigo-100 px-2.5 py-0.5
-                                         text-xs font-medium text-indigo-700">
-                                Stufe {{ $cust->cust_passcode }}
-                            </span>
-                        </div>
-
-                        {{-- Zeile 2: E-Mail --}}
-                        <div class="text-xs text-gray-400 mb-3">
-                            {{ $cust->custUser?->cust_email ?? '—' }}
-                        </div>
-
-                        {{-- Bearbeiten-Formular --}}
-                        <form method="POST"
+                        {{-- Bearbeiten-Formular: Zeile 1 Alias, Zeile 2 E-Mail, Zeile 3 sec_level --}}
+                        <form id="{{ $custFormId }}"
+                              method="POST"
                               action="{{ route('mandant.kunden.passcode', $cust->pcode_id) }}"
-                              class="mb-2"
+                              class="space-y-2"
                               @input="$store.unsavedGuard.markDirty()"
                               @change="$store.unsavedGuard.markDirty()"
                               @submit="$store.unsavedGuard.clearDirty()">
                             @csrf
                             @method('PATCH')
-                            <div class="grid grid-cols-1 gap-2 mb-2">
-                                <input type="text"
-                                       name="cust_alias"
-                                       value="{{ $cust->cust_alias }}"
-                                       required
-                                       placeholder="Alias"
-                                       class="w-full rounded-lg border border-gray-300
-                                              bg-white px-3 h-10 text-sm text-gray-800 shadow-sm
-                                              focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                                <select name="sec_level"
-                                        class="w-full rounded-lg border border-gray-300 bg-white
-                                               px-2 h-10 text-sm text-gray-800 shadow-sm
-                                               focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                                    @php
-                                        $levels = [
-                                            1 => 'Bekannte',
-                                            2 => 'Großfamilie',
-                                            3 => 'Freunde',
-                                            4 => 'Enge Freunde & Kernfamilie',
-                                            5 => 'Vertraulich',
-                                            6 => 'Streng vertraulich',
-                                        ];
-                                    @endphp
-                                    @foreach($levels as $val => $label)
-                                        <option value="{{ $val }}"
-                                            {{ (int)$cust->cust_passcode === $val ? 'selected' : '' }}>
-                                            {{ $val }} — {{ $label }}
-                                        </option>
-                                    @endforeach
-                                </select>
+
+                            {{-- Zeile 1: Alias --}}
+                            <input type="text"
+                                   name="cust_alias"
+                                   value="{{ $cust->cust_alias }}"
+                                   required
+                                   placeholder="Alias"
+                                   class="w-full rounded-lg border border-gray-300
+                                          bg-white px-3 h-11 text-sm text-gray-800 shadow-sm
+                                          focus:outline-none focus:ring-2 focus:ring-indigo-400">
+
+                            {{-- Zeile 2: E-Mail (nur Anzeige) --}}
+                            <div class="text-xs text-gray-400 px-1">
+                                {{ $cust->custUser?->cust_email ?? '—' }}
                             </div>
+
+                            {{-- Zeile 3: sec_level Custom-Dropdown --}}
+                            <div class="relative"
+                                 x-data="{ open: false, val: {{ (int)$cust->cust_passcode }} }"
+                                 @click.outside="open = false"
+                                 @keydown.escape="open = false">
+                                <button type="button"
+                                        @click="open = !open"
+                                        :aria-expanded="open"
+                                        aria-haspopup="listbox"
+                                        class="w-14 h-11 rounded-lg border border-gray-300 bg-white
+                                               text-sm font-medium text-gray-800 shadow-sm
+                                               hover:border-indigo-400 focus:outline-none
+                                               focus:ring-2 focus:ring-indigo-400"
+                                        x-text="val">
+                                </button>
+                                <div x-show="open"
+                                     x-transition:enter="transition ease-out duration-150"
+                                     x-transition:enter-start="opacity-0 scale-95"
+                                     x-transition:enter-end="opacity-100 scale-100"
+                                     x-transition:leave="transition ease-in duration-75"
+                                     x-transition:leave-start="opacity-100 scale-100"
+                                     x-transition:leave-end="opacity-0 scale-95"
+                                     style="display: none;"
+                                     role="listbox"
+                                     class="absolute z-30 mt-1 w-56 rounded-lg border border-gray-200
+                                            bg-white shadow-lg py-1">
+                                    @foreach($levels as $val => $label)
+                                        <button type="button"
+                                                role="option"
+                                                @click="val = {{ $val }}; open = false; $store.unsavedGuard.markDirty()"
+                                                :class="val === {{ $val }} ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-700'"
+                                                class="block w-full text-left px-3 py-1.5 text-xs hover:bg-indigo-50 hover:text-indigo-700">
+                                            {{ $val }} — {{ $label }}
+                                        </button>
+                                    @endforeach
+                                </div>
+                                <input type="hidden" name="sec_level" :value="val">
+                            </div>
+                        </form>
+
+                        {{-- Zeile 4: Speichern + Entfernen nebeneinander --}}
+                        <div class="flex gap-2">
                             <button type="submit"
-                                    class="w-full h-10 rounded-lg border border-indigo-200
+                                    form="{{ $custFormId }}"
+                                    class="flex-1 h-11 rounded-lg border border-indigo-200
                                            bg-indigo-50 px-4 text-sm font-medium text-indigo-700
                                            hover:bg-indigo-100 transition-colors duration-150">
                                 Speichern
                             </button>
-                        </form>
-
-                        {{-- Entfernen --}}
-                        <form method="POST"
-                              action="{{ route('mandant.kunden.destroy', $cust->pcode_id) }}"
-                              x-data
-                              @submit.prevent="
-                                  if (confirm('Mitglied wirklich entfernen?'))
-                                      $el.submit()
-                              ">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit"
-                                    class="w-full h-10 rounded-lg border border-red-200
-                                           bg-red-50 px-4 text-sm font-medium text-red-600
-                                           hover:bg-red-100 transition-colors duration-150">
-                                Entfernen
-                            </button>
-                        </form>
+                            <form method="POST"
+                                  action="{{ route('mandant.kunden.destroy', $cust->pcode_id) }}"
+                                  class="flex-1"
+                                  x-data
+                                  @submit.prevent="
+                                      if (confirm('Mitglied wirklich entfernen?'))
+                                          $el.submit()
+                                  ">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit"
+                                        class="w-full h-11 rounded-lg border border-red-200
+                                               bg-red-50 px-4 text-sm font-medium text-red-600
+                                               hover:bg-red-100 transition-colors duration-150">
+                                    Entfernen
+                                </button>
+                            </form>
+                        </div>
 
                     </div>
                     @endforeach
@@ -243,9 +378,11 @@
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
+                    <tbody class="divide-y divide-gray-100" data-member-list="desktop">
                         @foreach($custs as $cust)
-                            <tr class="hover:bg-gray-50 transition-colors duration-100">
+                            <tr class="hover:bg-gray-50 transition-colors duration-100"
+                                data-member-id="{{ $cust->pcode_id }}"
+                                x-show="matches({{ $cust->pcode_id }})">
 
                                 {{-- Mitglied: Alias + E-Mail --}}
                                 <td class="px-4 py-3">
@@ -261,7 +398,7 @@
                                 <td class="px-4 py-3">
                                     <form method="POST"
                                           action="{{ route('mandant.kunden.passcode', $cust->pcode_id) }}"
-                                          class="flex items-center gap-2"
+                                          class="flex flex-wrap items-center gap-2"
                                           @input="$store.unsavedGuard.markDirty()"
                                           @change="$store.unsavedGuard.markDirty()"
                                           @submit="$store.unsavedGuard.clearDirty()">
@@ -273,31 +410,48 @@
                                                value="{{ $cust->cust_alias }}"
                                                required
                                                placeholder="Alias"
-                                               class="flex-[2] min-w-0 rounded-lg border border-gray-300 bg-white
+                                               class="flex-1 min-w-[6rem] rounded-lg border border-gray-300 bg-white
                                                       px-2 py-1.5 text-xs text-gray-800 shadow-sm
                                                       focus:outline-none focus:ring-2 focus:ring-indigo-400">
 
-                                        <select name="sec_level"
-                                                class="flex-1 rounded-lg border border-gray-300 bg-white
-                                                       px-2 py-1.5 text-xs text-gray-800 shadow-sm
-                                                       focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                                            @php
-                                                $levels = [
-                                                    1 => 'Bekannte',
-                                                    2 => 'Großfamilie',
-                                                    3 => 'Freunde',
-                                                    4 => 'Enge Freunde & Kernfamilie',
-                                                    5 => 'Vertraulich',
-                                                    6 => 'Streng vertraulich',
-                                                ];
-                                            @endphp
-                                            @foreach($levels as $val => $label)
-                                                <option value="{{ $val }}"
-                                                    {{ (int)$cust->cust_passcode === $val ? 'selected' : '' }}>
-                                                    {{ $val }} — {{ $label }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                        {{-- Custom-Dropdown sec_level: Trigger zeigt nur die Stufenzahl --}}
+                                        <div class="relative shrink-0"
+                                             x-data="{ open: false, val: {{ (int)$cust->cust_passcode }} }"
+                                             @click.outside="open = false"
+                                             @keydown.escape="open = false">
+                                            <button type="button"
+                                                    @click="open = !open"
+                                                    :aria-expanded="open"
+                                                    aria-haspopup="listbox"
+                                                    class="w-9 h-8 rounded-lg border border-gray-300 bg-white
+                                                           text-xs font-medium text-gray-800 shadow-sm
+                                                           hover:border-indigo-400 focus:outline-none
+                                                           focus:ring-2 focus:ring-indigo-400"
+                                                    x-text="val">
+                                            </button>
+                                            <div x-show="open"
+                                                 x-transition:enter="transition ease-out duration-150"
+                                                 x-transition:enter-start="opacity-0 scale-95"
+                                                 x-transition:enter-end="opacity-100 scale-100"
+                                                 x-transition:leave="transition ease-in duration-75"
+                                                 x-transition:leave-start="opacity-100 scale-100"
+                                                 x-transition:leave-end="opacity-0 scale-95"
+                                                 style="display: none;"
+                                                 role="listbox"
+                                                 class="absolute z-30 mt-1 w-56 rounded-lg border border-gray-200
+                                                        bg-white shadow-lg py-1">
+                                                @foreach($levels as $val => $label)
+                                                    <button type="button"
+                                                            role="option"
+                                                            @click="val = {{ $val }}; open = false; $store.unsavedGuard.markDirty()"
+                                                            :class="val === {{ $val }} ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-700'"
+                                                            class="block w-full text-left px-3 py-1.5 text-xs hover:bg-indigo-50 hover:text-indigo-700">
+                                                        {{ $val }} — {{ $label }}
+                                                    </button>
+                                                @endforeach
+                                            </div>
+                                            <input type="hidden" name="sec_level" :value="val">
+                                        </div>
 
                                         <button type="submit"
                                                 class="rounded-lg border border-indigo-200
@@ -338,6 +492,7 @@
                 </table>
 
             </div>
+            </div>
         @endif
 
     </main>
@@ -359,6 +514,74 @@
     </footer>
 
     @include('partials.unsaved-changes-guard')
+
+    {{-- Sortierung + Live-Suche der Mitgliederliste (Desktop + Mobile teilen
+         sich diesen Zustand über das gemeinsame x-data="custListState(...)"
+         auf dem umschließenden Listen-Container). Zeilen bleiben normale,
+         serverseitig gerenderte Blade-Zeilen mit allen Formularen/CSRF-Tokens
+         unverändert — Sortierung verschiebt nur vorhandene DOM-Knoten
+         (appendChild), Filter blendet nur per x-show aus/ein. --}}
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('custListState', (members) => ({
+                members: members,
+                sortField: 'alias',
+                sortDir: 'asc',
+                searchField: 'alias',
+                searchTerm: '',
+
+                setSort(field) {
+                    if (this.sortField === field) {
+                        this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        this.sortField = field;
+                        this.sortDir = 'asc';
+                    }
+                    this.reorderDom();
+                },
+
+                matches(id) {
+                    const term = this.searchTerm.trim().toLocaleLowerCase('de');
+                    if (term === '') return true;
+                    const member = this.members.find((m) => m.id === id);
+                    if (!member) return false;
+                    const value = (this.searchField === 'email' ? member.email : member.alias)
+                        .toLocaleLowerCase('de');
+                    return value.startsWith(term);
+                },
+
+                sortedIds() {
+                    const list = [...this.members];
+                    list.sort((a, b) => {
+                        let res;
+                        if (this.sortField === 'sec_level') {
+                            res = a.sec_level - b.sec_level;
+                        } else {
+                            res = a[this.sortField].localeCompare(b[this.sortField], 'de', { sensitivity: 'base' });
+                        }
+                        return this.sortDir === 'asc' ? res : -res;
+                    });
+                    return list.map((m) => m.id);
+                },
+
+                reorderDom() {
+                    this.$nextTick(() => {
+                        const ids = this.sortedIds();
+                        this.$root.querySelectorAll('[data-member-list]').forEach((container) => {
+                            ids.forEach((id) => {
+                                const row = container.querySelector(`[data-member-id="${id}"]`);
+                                if (row) container.appendChild(row);
+                            });
+                        });
+                    });
+                },
+
+                init() {
+                    this.reorderDom();
+                },
+            }));
+        });
+    </script>
 
 </body>
 </html>

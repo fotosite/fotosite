@@ -1,3 +1,3 @@
 git add -A
-git commit -m "fix: Bestaetigungs-Popup auf Galerien-Seite ohne OK-Button, mit sichtbarem Rahmen"
-git tag galerien_ajax_ok
+git commit -m "fix: Label Sortieren: ergaenzt, Suche-in-Combobox-Breite vergroessert"
+git tag mand_mitgliederliste_ok
