@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/customer/dashboard.blade.php
-    VERSION: 2.3.0
-    DATE:    2026-06-18
+    VERSION: 2.4.0
+    DATE:    2026-06-20
 
     DESCRIPTION:
       Kunden-Dashboard — Verwaltungsübersicht für registrierte Mitglieder (cust).
@@ -24,8 +24,11 @@
       POST customer.passkeys.dismiss    — "Nie wieder fragen"
       GET  customer.datenschutz.erlaeuterung          — Datenschutz-Erläuterung (neuer Tab)
       GET  customer.datenschutz.upload-bedingungen-pdf — Upload-Bedingungen (neuer Tab)
+      GET  customer.faq.index                   — FAQ und Infos
 
-    CHANGES: 2.3.0 (2026-06-18) "Rechtliches"-Sektion ergänzt: Buttons
+    CHANGES: 2.4.0 (2026-06-20) Button "FAQ und Infos" in der Rechtliches-
+             Sektion ergänzt, Link zu customer.faq.index (siehe FaqController).
+             2.3.0 (2026-06-18) "Rechtliches"-Sektion ergänzt: Buttons
              "Datenschutz-Erläuterung" / "Upload-Bedingungen", öffnen jeweils in
              neuem Tab.
              2.2.0 (2026-06-18) Passwort-Modal und E-Mail-Modal ergänzt (Buttons
@@ -130,6 +133,12 @@
                           bg-white border border-gray-300 rounded-lg
                           hover:bg-gray-50 transition-colors">
                     Upload-Bedingungen
+                </a>
+                <a href="{{ route('customer.faq.index') }}"
+                   class="px-4 py-2 text-sm font-medium text-gray-600
+                          bg-white border border-gray-300 rounded-lg
+                          hover:bg-gray-50 transition-colors">
+                    FAQ und Infos
                 </a>
             </div>
         </div>

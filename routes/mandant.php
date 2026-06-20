@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\FaqController;
 use App\Http\Controllers\Passkey\MandPasskeyController;
 use App\Http\Controllers\PolicyController;
 use App\Http\Controllers\SessionDb\MandantPwListController;
@@ -106,6 +107,12 @@ Route::middleware(['web', 'role:mand'])->prefix('mandant')->name('mandant.')->gr
         ->name('kunden.passcode');
     Route::delete('/kunden/{id}',            [MandantCustController::class, 'destroy'])
         ->name('kunden.destroy');
+
+    // ── FAQ & Infos — dynamische, dateibasierte Liste, keine DB-Beteiligung ─
+    Route::get('/faq',        [FaqController::class, 'indexMand'])
+        ->name('faq.index');
+    Route::get('/faq/{slug}', [FaqController::class, 'showMand'])
+        ->name('faq.show');
 
     Route::get('/passkeys',                  [MandPasskeyController::class, 'index'])
         ->name('passkeys');

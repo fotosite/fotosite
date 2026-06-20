@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DatenschutzController;
+use App\Http\Controllers\FaqController;
 use App\Http\Controllers\Passkey\CustPasskeyController;
 use App\Http\Controllers\PolicyController;
 use App\Http\Controllers\UserDb\CustDashboardController;
@@ -132,6 +133,12 @@ Route::middleware('web')->prefix('customer')->name('customer.')->group(function 
     Route::delete('/galerien/{pcodeId}',
         [CustSelfController::class, 'removeGalerie'])
         ->name('galerien.remove');
+
+    // ── FAQ & Infos — dynamische, dateibasierte Liste, keine DB-Beteiligung ─
+    Route::get('/faq',        [FaqController::class, 'indexCust'])
+        ->name('faq.index');
+    Route::get('/faq/{slug}', [FaqController::class, 'showCust'])
+        ->name('faq.show');
 
     // ── Passkey-Verwaltung (authentifiziert, role:cust folgt) ─
     Route::get('/passkeys',                  [CustPasskeyController::class, 'index'])

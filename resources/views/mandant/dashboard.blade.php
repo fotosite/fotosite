@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/mandant/dashboard.blade.php
-    VERSION: 3.1.0
-    DATE:    2026-06-18
+    VERSION: 3.2.0
+    DATE:    2026-06-20
 
     DESCRIPTION:
       Mandanten-Dashboard — Einstiegsseite nach erfolgreichem Mand-Login + 2FA.
@@ -22,8 +22,11 @@
       POST /mandant/passkeys/dismiss            — "Nie wieder fragen" (route('mandant.passkeys.dismiss'))
       GET  customer.datenschutz.erlaeuterung          — Datenschutz-Erläuterung (neuer Tab)
       GET  customer.datenschutz.upload-bedingungen-pdf — Upload-Bedingungen (neuer Tab)
+      GET  mandant.faq.index                    — FAQ und Infos
 
-    CHANGES: 3.1.0 (2026-06-18) "Rechtliches"-Sektion ergänzt: Buttons
+    CHANGES: 3.2.0 (2026-06-20) Button "FAQ und Infos" in der Rechtliches-
+             Sektion ergänzt, Link zu mandant.faq.index (siehe FaqController).
+             3.1.0 (2026-06-18) "Rechtliches"-Sektion ergänzt: Buttons
              "Datenschutz-Erläuterung" / "Upload-Bedingungen", öffnen jeweils in
              neuem Tab.
              3.0.0 (2026-06-18) Passwort-Modal und E-Mail-Modal ergänzt (Buttons
@@ -132,6 +135,12 @@
                           bg-white border border-gray-300 rounded-lg
                           hover:bg-gray-50 transition-colors">
                     Upload-Bedingungen
+                </a>
+                <a href="{{ route('mandant.faq.index') }}"
+                   class="px-4 py-2 text-sm font-medium text-gray-600
+                          bg-white border border-gray-300 rounded-lg
+                          hover:bg-gray-50 transition-colors">
+                    FAQ und Infos
                 </a>
             </div>
         </div>
