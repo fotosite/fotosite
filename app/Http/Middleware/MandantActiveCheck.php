@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Middleware/MandantActiveCheck.php
- * VERSION:     1.1.0
+ * VERSION:     1.2.0
  *
  * FUNCTIONS:   handle(Request, Closure)       — Verifies the authenticated Mandant
  *                  account is active and not expired. Reads _mand_id from the session.
@@ -17,6 +17,11 @@
  *              Illuminate\Http\Request::session()::regenerateToken()
  *
  * DB ACCESS:   userdb.mand_user.mand_id, active, valid_to
+ *
+ * CHANGES:     1.2.0 (2026-06-21) invalidateAndRedirect() zeigte fälschlich
+ *              auf route('login') (Breeze-Standard) statt auf das
+ *              mand-spezifische Login wie ValidateUserExists/RequireRole.
+ *              Korrigiert auf route('mandant.login').
  */
 
 namespace App\Http\Middleware;
@@ -62,7 +67,7 @@ class MandantActiveCheck
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login')
+        return redirect()->route('mandant.login')
             ->withErrors(['account' => $message]);
     }
 }

@@ -1,0 +1,44 @@
+
+
+Anmelden mit Fingerabdruck:
+
+Meldest du dich mit deinem Fingerabdruck an deinem Rechner und Mobilgeräten an? Dann lege mit der Fotogalerie einen Passkey mit einem Fingerabdruck an! Danach brauchst du kein nerviges Tippen für Email und Passwort, nur deinen Fingerabruck und schon bis du eingeloggt. 
+
+
+Dein Fingerabdruck ist dein Passkey:
+
+Du kannst Passkeys am Notebook, oder auch auf einem Mobilgerät anlegen. Benutze dabei einfach immer den gleichen Fingerabdruck, den du auch für das Gerät selbst benutzt.
+
+Die Funktion zum Registrieren eines Passkeys findest du in deinem Einstellungen-Fenster. 
+
+
+Für Galeristen: 
+
+Wenn du einen Galeristen-User hast, dann kannst du dich wahlweise als Galerist oder als ein Mitglied (Testuser) mit deinem Fingerabdruck anmelden.
+
+
+Ein Passkey für alle deine Geräte: 
+
+Kannst du die Fotogalerie mit deinem Fingerabdruck auch auf anderen Geräten verwenden? - Die Antwort ist JA!
+
+Am einfachsten ist es mit deinen Mobilgeräten: 
+Mit Android oder den iPhone funktioniert es am besten. Einmal auf irgendeinem Gerät registrieren, und du kannst den Passkey auf allen deinen Mobilgeräten verwenden. Bei Apple gilt das zusätzlich für dein Notebook.
+
+Windows, Google und der Chrome-Browser: 
+
+Auch wenn du einen Windows-Rechner und Android-Geräte hast, kannst du dich auch auf allen Geräten mit einem Fingerabdruck an der Fotogalerie anmelden. Dazu brauchst du dann der Chrome-Browser von Google. Google hat ein eigenes Passwort-System, das geräteübergreifend funktioniert. Du musst die Fotogalerie dann mit Chrome auf allen Geräten verwenden.
+
+
+Geht das auch mit Fireox ?
+Ich selbst verwende Chrome aber nicht so gerne, da er sehr großzügig mit unseren Daten umgeht. Ich verwende lieber Firefox. Leider funtkioniert ein Passkey bei Firefox immer nur auf einem Gerät. Die gute Nachricht ist: Das Anlegen eines Passkeys ist schnell gemacht. Lege auf jedem Gerät einen Passkey mit dem selben Fingerabruck auf jedem Gerät an. Das muss auf jedem GErät nur einmal gemacht werden, und dann hast du bessern Datenschutz, und einen komfortablen Login.
+
+Edge:
+Bei Edge kannst es genauso machen, wie bei Firefox. 
+
+
+
+
+
+
+
+

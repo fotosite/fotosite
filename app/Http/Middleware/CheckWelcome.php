@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Middleware/CheckWelcome.php
- * VERSION:     1.0.0
+ * VERSION:     1.1.0
  *
  * ZWECK:       Prüft nach dem Login, ob mand/cust die Willkommensseite noch
  *              nicht gesehen hat (show_welcome = 1, Default bei Account-
@@ -26,6 +26,12 @@
  *
  * DB ACCESS:   userdb.mand_user.mand_id, show_welcome
  *              userdb.cust_user.cust_id, show_welcome
+ *
+ * CHANGES:     1.1.0 (2026-06-21) Ausschluss um '*.policy.*' erweitert —
+ *              verhindert Redirect-Ping-Pong mit CheckPolicyVersion, wenn
+ *              ein Account gleichzeitig show_welcome=1 UND eine veraltete
+ *              ds_version/upload_terms_version hat (typisch: frisch
+ *              eingeladener mand nach Passwort-Reset).
  */
 
 namespace App\Http\Middleware;
@@ -40,7 +46,7 @@ class CheckWelcome
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->routeIs('*.welcome*')) {
+        if ($request->routeIs('*.welcome*') || $request->routeIs('*.policy.*')) {
             return $next($request);
         }
 

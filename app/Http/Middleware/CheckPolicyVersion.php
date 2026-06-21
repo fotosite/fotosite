@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Middleware/CheckPolicyVersion.php
- * VERSION:     1.1.0
+ * VERSION:     1.2.0
  *
  * ZWECK:       Prüft nach dem Login, ob mand/cust die aktuelle Datenschutz- und
  *              Upload-Policy-Version kennen. Falls nicht: Redirect auf die
@@ -35,6 +35,11 @@
  * CHANGES:     1.1.0 (2026-06-18) cust-Upload-Zweig: Vergleich gegen
  *              cust_user.upload_terms_version statt Session-Flag
  *              (_cust_upload_hinweis_version) — analog zum mand-Zweig.
+ *              1.2.0 (2026-06-21) Ausschluss um '*.welcome*' erweitert —
+ *              verhindert Redirect-Ping-Pong mit CheckWelcome, wenn ein
+ *              Account gleichzeitig show_welcome=1 UND eine veraltete
+ *              ds_version/upload_terms_version hat (typisch: frisch
+ *              eingeladener mand nach Passwort-Reset).
  */
 
 namespace App\Http\Middleware;
@@ -50,7 +55,7 @@ class CheckPolicyVersion
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->routeIs('*.policy.*')) {
+        if ($request->routeIs('*.policy.*') || $request->routeIs('*.welcome*')) {
             return $next($request);
         }
 
