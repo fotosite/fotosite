@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Middleware/CheckWelcome.php
- * VERSION:     1.1.0
+ * VERSION:     1.2.0
  *
  * ZWECK:       Prüft nach dem Login, ob mand/cust die Willkommensseite noch
  *              nicht gesehen hat (show_welcome = 1, Default bei Account-
@@ -32,6 +32,11 @@
  *              ein Account gleichzeitig show_welcome=1 UND eine veraltete
  *              ds_version/upload_terms_version hat (typisch: frisch
  *              eingeladener mand nach Passwort-Reset).
+ *              1.2.0 (2026-06-21) Ausschluss um '*.datenschutz.*' erweitert
+ *              — analog zu CheckPolicyVersion: die "ansehen"-Links auf der
+ *              Policy-Update-Seite öffnen customer.datenschutz.* im selben
+ *              Browser; ohne Ausschluss könnte show_welcome=1 denselben
+ *              Bounce-Effekt auslösen.
  */
 
 namespace App\Http\Middleware;
@@ -46,7 +51,7 @@ class CheckWelcome
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->routeIs('*.welcome*') || $request->routeIs('*.policy.*')) {
+        if ($request->routeIs('*.welcome*') || $request->routeIs('*.policy.*') || $request->routeIs('*.datenschutz.*')) {
             return $next($request);
         }
 

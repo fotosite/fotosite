@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Middleware/CheckPolicyVersion.php
- * VERSION:     1.2.0
+ * VERSION:     1.3.0
  *
  * ZWECK:       Prüft nach dem Login, ob mand/cust die aktuelle Datenschutz- und
  *              Upload-Policy-Version kennen. Falls nicht: Redirect auf die
@@ -40,6 +40,12 @@
  *              Account gleichzeitig show_welcome=1 UND eine veraltete
  *              ds_version/upload_terms_version hat (typisch: frisch
  *              eingeladener mand nach Passwort-Reset).
+ *              1.3.0 (2026-06-21) Ausschluss um '*.datenschutz.*' erweitert —
+ *              die "ansehen"-Links auf der Policy-Update-Seite öffnen die
+ *              DS-Erläuterung/Upload-Bedingungen-PDF (routes/customer.php,
+ *              customer.datenschutz.*) im selben Browser/derselben Session;
+ *              ohne Ausschluss bounced dieser Check den Nutzer zurück auf
+ *              policy.update, bevor er die Erläuterung lesen kann.
  */
 
 namespace App\Http\Middleware;
@@ -55,7 +61,7 @@ class CheckPolicyVersion
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->routeIs('*.policy.*') || $request->routeIs('*.welcome*')) {
+        if ($request->routeIs('*.policy.*') || $request->routeIs('*.welcome*') || $request->routeIs('*.datenschutz.*')) {
             return $next($request);
         }
 
