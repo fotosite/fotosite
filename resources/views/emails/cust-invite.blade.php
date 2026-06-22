@@ -1,17 +1,18 @@
 {{--
     FILE:    resources/views/emails/cust-invite.blade.php
-    VERSION: 1.5.0
-    DATE:    2026-06-17
+    VERSION: 1.7.0
+    DATE:    2026-06-22
 
     DESCRIPTION:
       Einladungs-E-Mail an neues Mitglied — enthält Registrierungslink (48 h gültig)
       sowie alternativen Zugang über Kurzzeit-Passwort.
 
     DATA FROM MAILABLE:
-      $registerUrl   — string, Registrierungslink (48 h gültig)
-      $mandUname     — string, Benutzername des einladenden Mandanten
-      $custName      — string, interner Alias des Mitglieds (Fallback: 'dort')
-      $mandFirstname — string, Vorname des Mandanten im Genitiv (z. B. "Martins")
+      $registerUrl      — string, Registrierungslink (48 h gültig)
+      $mandUname        — string, Benutzername des einladenden Mandanten
+      $custName         — string, interner Alias des Mitglieds (Fallback: 'dort')
+      $mandFirstname    — string, Vorname des Mandanten im Genitiv (z. B. "Martins")
+      $mandFirstnameNom — string, Vorname des Mandanten im Nominativ (roher Wert)
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -99,7 +100,7 @@
         <div class="body">
             <p>Hallo {{ $custName }},</p>
 
-            <p>Dies ist eine Einladung, die Fotogalerie von {{ $mandFirstname }} anzusehen.<br>
+            <p>Dies ist eine Einladung, die Fotogalerie von {{ $mandFirstnameNom }} anzusehen.<br>
                {{ genitivName($mandUname) }} Künstlername als Galerist:in lautet {{ $mandUname }}.</p>
 
             <p>Benutze diesen Button, um ein Konto anzulegen:</p>
@@ -111,7 +112,7 @@
             </p>
 
             <p>Du kannst die Fotogalerie auch ohne Konto besuchen. Wenn du kein Konto anlegen
-               möchtest, frage {{ $mandFirstname }} nach einem Kurzzeit-Passwort.</p>
+               möchtest, frage {{ $mandFirstnameNom }} nach einem Kurzzeit-Passwort.</p>
 
             <p style="font-size:13px; color:#555555; border-left:3px solid #1a1a2e;
                       padding:8px 12px; margin:0 0 20px 0;">

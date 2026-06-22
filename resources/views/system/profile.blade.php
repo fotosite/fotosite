@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/system/profile.blade.php
-    VERSION: 1.1.2
-    DATE:    2026-06-08
+    VERSION: 1.3.0
+    DATE:    2026-06-22
 
     DESCRIPTION:
       System-Eigenverwaltung — profile and password management for the
@@ -23,6 +23,11 @@
       PATCH system.profile.update  — update profile fields
       PATCH system.profile.password — update password
       POST  logout                 — Breeze logout
+
+    CHANGES: 1.3.0 (2026-06-22) Read-only-Anzeige "Primärer System-User: Ja/Nein"
+             ergänzt ($user->is_primary, text-gray-600, kein Eingabefeld).
+             1.2.0 (2026-06-22) Begleittext zur E-Mail-Adresse ergänzt (Hinweis
+             auf 2FA-Codes und Passwort-Erneuerung; Feld ist aktiv/editierbar).
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -162,6 +167,7 @@
                                    class="mt-1 block w-full rounded-md border-gray-300
                                           shadow-sm text-sm
                                           focus:border-gray-500 focus:ring-gray-500">
+                            <p class="mt-1 text-sm text-gray-600">Diese E-Mail-Adresse wird genutzt, um dir Sicherheitscodes bei einem 2-Faktor-Login zu senden. Sie wird auch verwendet, wenn du dein Passwort erneuern musst. Verwende daher eine E-Mail-Adresse, auf die du in solchen Fällen zugreifen kannst, z.B. mit einem E-Mail-Programm auf deinem Handy.</p>
                         </div>
 
                         <div>
@@ -204,6 +210,10 @@
                         </div>
 
                     </div>
+
+                    <p class="mt-4 text-sm text-gray-600">
+                        Primärer System-User: {{ $user?->is_primary ? 'Ja' : 'Nein' }}
+                    </p>
 
                     <div class="mt-6">
                         <button type="submit"

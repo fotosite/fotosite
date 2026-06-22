@@ -1,15 +1,18 @@
 <?php
 /**
  * FILE:        app/Mail/CustInviteMail.php
- * VERSION:     1.4.0
+ * VERSION:     1.5.0
  * AUTHOR:      Martin Wagner
- * DATE:        2026-06-08
+ * DATE:        2026-06-22
  * PURPOSE:     Einladungs-E-Mail an neues Mitglied — enthält Registrierungslink (48 h gültig)
  *
  * FUNCTIONS:   __construct()   — Nimmt $invite (CustInvite), $registerUrl und $mandUname entgegen
  *              envelope()      — Betreff: "Einladung zur Fotogalerie"
- *              content()       — Gibt emails.cust-invite View zurück (mit registerUrl, mandUname, custName, mandFirstname)
+ *              content()       — Gibt emails.cust-invite View zurück (mit registerUrl, mandUname,
+ *                                custName, mandFirstname, mandFirstnameNom)
  *                                Lädt MandUser via invite->mand_id; übergibt genitivName(mand_firstname)
+ *                                als mandFirstname sowie den rohen mand_firstname (Nominativ)
+ *                                als mandFirstnameNom
  *              attachments()   — Gibt leeres Array zurück
  *
  * CALLS:       App\Models\UserDb\MandUser::find()
@@ -53,6 +56,7 @@ class CustInviteMail extends Mailable
                 'mandUname'     => $this->mandUname,
                 'custName'      => $this->invite->cust_alias ?? 'dort',
                 'mandFirstname' => genitivName($mand?->mand_firstname ?? ''),
+                'mandFirstnameNom' => $mand?->mand_firstname ?? '',
             ],
         );
     }

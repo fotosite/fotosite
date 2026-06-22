@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/system/mandanten/register.blade.php
-    VERSION: 1.6.0
-    DATE:    2026-06-18
+    VERSION: 1.8.0
+    DATE:    2026-06-22
 
     DESCRIPTION:
       Standalone mandant registration page for invited mandants.
@@ -18,6 +18,10 @@
     CHANGES: 1.6.0 (2026-06-18) Adressfelder (mand_street+nr, mand_postcode+city)
              ergänzt; mand_tel/mand_company als optional gekennzeichnet;
              Pflichtfelder mit Sternchen markiert; @error-Hervorhebung ergänzt.
+             1.7.0 (2026-06-22) Begleittext zur E-Mail-Adresse ergänzt (Hinweis
+             auf 2FA-Codes und Passwort-Erneuerung).
+             1.8.0 (2026-06-22) Begleittext zur E-Mail-Adresse durch Hinweis auf
+             Voreinstellung ersetzt (Feld ist read-only).
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -77,6 +81,7 @@
                                class="mt-1 block w-full rounded-md border-gray-200
                                       bg-gray-50 text-gray-500 shadow-sm text-sm
                                       cursor-not-allowed">
+                        <p class="mt-1 text-sm text-gray-600">Diese E-Mail-Adresse ist eine Voreinstellung, die später geändert werden kann.</p>
                     </div>
 
                     <div>

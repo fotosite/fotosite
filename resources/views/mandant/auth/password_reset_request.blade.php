@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/mandant/auth/password_reset_request.blade.php
-    VERSION: 1.0.0
-    DATE:    2026-06-12
+    VERSION: 1.1.0
+    DATE:    2026-06-22
 
     DESCRIPTION:
       Passwort-Zurücksetzen-Anfrage für Galerist:innen.
@@ -66,18 +66,20 @@
             <form method="POST" action="{{ route('mandant.password.reset.send') }}" autocomplete="off">
                 @csrf
 
-                <div>
+                <div x-data="{ dirty: false }">
                     <label for="mand_email"
                            class="block text-sm font-medium text-gray-700 mb-1">
-                        E-Mail-Adresse
+                        E-Mail
                     </label>
                     <input id="mand_email" name="mand_email" type="email"
                            required autofocus
                            value="{{ old('mand_email') }}"
+                           placeholder="ihre@email.de"
                            autocomplete="email"
+                           @input="dirty = true"
                            class="w-full rounded-lg border px-3 py-2.5 md:py-2 text-sm text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 @error('mand_email') border-red-400 bg-red-50 @else border-gray-300 @enderror">
                     @error('mand_email')
-                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-xs text-red-600" x-show="!dirty">{{ $message }}</p>
                     @enderror
                 </div>
 

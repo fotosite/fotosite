@@ -1,9 +1,9 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/MandantLoginController.php
- * VERSION:     1.12.0
+ * VERSION:     1.13.0
  * AUTOR:       Martin Wagner
- * DATUM:       2026-06-08
+ * DATUM:       2026-06-22
  *
  * ZWECK:       Mand-Login mit 2FA und Passkey — Formular anzeigen, Credentials prüfen,
  *              2FA-Code verifizieren, Passkey-Options liefern, Passkey-Assertion prüfen,
@@ -46,8 +46,9 @@
  *                                          user_type, user_id, sign_count
  *                                          userdb.mand_user.mand_id
  *                                  Writes: userdb.passkey.sign_count, last_used_at
- *              logout()          — Invalidiert die Session und leitet zu mandant.login
- *                                  mit status-Flash 'Sie wurden erfolgreich abgemeldet.'
+ *              logout()          — Invalidiert die Session und leitet zu route('home')
+ *                                  (Login-Modal) mit status-Flash
+ *                                  'Sie wurden erfolgreich abgemeldet.'
  *                                  Reads: —
  *
  * CALLS:       App\Models\UserDb\MandUser::where()->first()
@@ -375,7 +376,7 @@ class MandantLoginController extends UserDbController
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('mandant.login')
+        return redirect()->route('home')
             ->with('status', 'Sie wurden erfolgreich abgemeldet.');
     }
 }

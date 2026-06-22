@@ -1,8 +1,8 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/SystemLoginController.php
- * VERSION:     1.3.1
- * DATUM:       2026-06-08
+ * VERSION:     1.5.0
+ * DATUM:       2026-06-22
  *
  * FUNCTIONS:   login()           — Zeigt das System-Login-Formular an.
  *                                  Reads: —
@@ -15,14 +15,15 @@
  *              verifyTwoFactor() — Delegiert Prüfung an TwofaService::verify();
  *                                  bei Fehler: Redirect zurück ohne Details +
  *                                  show_2fa-Flash; bei Erfolg: Session regenerieren,
- *                                  _user_type und _syst_id schreiben,
+ *                                  _user_type, _syst_id und _is_primary schreiben,
  *                                  2fa_syst_id löschen, Redirect zu /system/dashboard.
- *                                  Reads: —
+ *                                  Reads: userdb.syst_user.is_primary
  *              logout()          — Session invalidieren + Token regenerieren;
- *                                  Redirect zu /backstage.
+ *                                  Redirect zu route('home') (Login-Modal).
  *                                  Reads: —
  *
  * CALLS:       App\Models\UserDb\SystUser::where()->first()
+ *              App\Models\UserDb\SystUser::find()
  *              App\Services\SessionDb\TwofaService::generate()
  *              App\Services\SessionDb\TwofaService::verify()
  *              App\Mail\TwoFactorCodeMail
@@ -31,10 +32,15 @@
  *              Illuminate\Support\Facades\DB::connection('sessiondb')->table()->delete()
  *              App\Models\SessionDb\Session::where()->delete()
  *
- * DB ACCESS:   userdb.syst_user.syst_id, syst_email, syst_pw_hash, syst_firstname
+ * DB ACCESS:   userdb.syst_user.syst_id, syst_email, syst_pw_hash, syst_firstname,
+ *              is_primary
  *              sessiondb.twofa_code.* (via TwofaService)
  *              sessiondb.session.expires_at (DELETE abgelaufene Sessions bei Login)
  *              sessiondb.session.sess_token (DELETE eigene Session bei Logout)
+ *
+ * CHANGES:     1.5.0 (2026-06-22) verifyTwoFactor() schreibt zusätzlich _is_primary
+ *              in die Session (aus userdb.syst_user.is_primary) — Grundlage für
+ *              Berechtigungsprüfungen rund um primäre System-User.
  */
 
 namespace App\Http\Controllers\UserDb;
@@ -101,6 +107,7 @@ class SystemLoginController extends UserDbController
 
         $request->session()->put('_user_type', 'syst');
         $request->session()->put('_syst_id', $systId);
+        $request->session()->put('_is_primary', (bool) SystUser::find($systId)?->is_primary);
         $request->session()->forget('2fa_syst_id');
 
         DB::connection('sessiondb')
@@ -121,6 +128,6 @@ class SystemLoginController extends UserDbController
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('system.backstage.login');
+        return redirect()->route('home');
     }
 }

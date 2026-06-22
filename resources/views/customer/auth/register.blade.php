@@ -1,8 +1,8 @@
 {{--
     FILE:    resources/views/customer/auth/register.blade.php
-    VERSION: 1.6.0
+    VERSION: 1.8.0
     AUTHOR:  Martin Wagner
-    DATE:    2026-06-18
+    DATE:    2026-06-22
 
     DESCRIPTION:
       Mitglieder-Registrierungsformular — wird per Einladungs-Token aufgerufen.
@@ -23,6 +23,10 @@
              optional umgestellt; cust_company-Label vereinheitlicht ("Firma /
              Organisation"); Change-Tracking via Alpine dirty-Flag + beforeunload
              ergänzt (Passwortfelder von dirty-Tracking ausgenommen).
+             1.7.0 (2026-06-22) Begleittext zur E-Mail-Adresse ergänzt (Hinweis
+             auf 2FA-Codes und Passwort-Erneuerung).
+             1.8.0 (2026-06-22) Begleittext zur E-Mail-Adresse durch Hinweis auf
+             Voreinstellung ersetzt (Feld ist read-only).
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -190,6 +194,7 @@
                     @error('cust_email')
                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                     @enderror
+                    <p class="mt-1 text-sm text-gray-600">Diese E-Mail-Adresse ist eine Voreinstellung, die später geändert werden kann.</p>
                 </div>
 
                 {{-- Telefon (optional) --}}

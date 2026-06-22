@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/SystemMandantController.php
- * VERSION:     1.7.0
+ * VERSION:     1.8.0
  *
  * FUNCTIONS:   index()          — Lists all MandUser records ordered by mand_lastname.
  *                                 Reads: userdb.mand_user.*
@@ -16,8 +16,23 @@
  *                                 Reads:  userdb.mand_user.mand_id
  *                                 Writes: userdb.mand_user.active, valid_to,
  *                                         has_public_content, mand_cust_2fa
- *              destroy()        — Deletes MandUser by $id.
- *                                 Writes: userdb.mand_user (DELETE)
+ *              destroy()        — Cust-Kaskade (analog MandantCustController@destroy)
+ *                                 vor der mand-Löschung: entfernt alle cust_pcode-
+ *                                 Einträge dieses Mandanten; verwaiste cust_user
+ *                                 (kein cust_pcode mehr übrig) erhalten
+ *                                 CustAccountDeletedMail und werden inkl.
+ *                                 passkey/passkey_dismissed gelöscht; löscht
+ *                                 sessiondb.cust_invite-Einträge dieses Mandanten;
+ *                                 löscht abschließend MandUser by $id.
+ *                                 Reads:  userdb.cust_pcode.pcode_id, mand_id, cust_id
+ *                                         userdb.cust_user.cust_id, cust_email,
+ *                                         cust_firstname, cust_uname
+ *                                 Writes: userdb.cust_pcode (DELETE)
+ *                                         userdb.cust_user (DELETE, nur wenn verwaist)
+ *                                         userdb.passkey (DELETE, nur wenn verwaist)
+ *                                         userdb.passkey_dismissed (DELETE, nur wenn verwaist)
+ *                                         sessiondb.cust_invite (DELETE)
+ *                                         userdb.mand_user (DELETE)
  *              showRegister()   — Validates mand register token; returns register form.
  *                                 Reads: userdb.invite.*
  *              handleRegister() — Creates MandUser from register invite inkl.
@@ -32,7 +47,14 @@
  *              App\Models\UserDb\SystUser::find()
  *              App\Models\UserDb\Invite::where()->valid()->first()
  *              App\Models\UserDb\Invite::create()
+ *              App\Models\UserDb\CustPcode::where()->get()
+ *              App\Models\UserDb\CustPcode::where()->count()
+ *              App\Models\UserDb\CustUser::find()->delete()
+ *              App\Models\UserDb\Passkey::where()->delete()
+ *              App\Models\UserDb\PasskeyDismissed::where()->delete()
+ *              App\Models\SessionDb\CustInvite::where()->delete()
  *              App\Mail\InviteMail
+ *              App\Mail\CustAccountDeletedMail
  *              Illuminate\Support\Facades\Hash::make()
  *              Illuminate\Support\Facades\Mail::to()->send()
  *              Illuminate\Support\Str::random()
@@ -44,8 +66,18 @@
  *              ds_accepted_at, ds_version, upload_terms_accepted_at, upload_terms_version
  *              userdb.invite.*
  *              userdb.syst_user.syst_id, syst_uname
+ *              userdb.cust_pcode.pcode_id, mand_id, cust_id (DELETE)
+ *              userdb.cust_user.cust_id, cust_email, cust_firstname, cust_uname (DELETE)
+ *              userdb.passkey.pk_id, user_type, user_id (DELETE)
+ *              userdb.passkey_dismissed.pd_id, user_type, user_id (DELETE)
+ *              sessiondb.cust_invite.invite_id, mand_id (DELETE)
  *
- * CHANGES:     1.7.0 (2026-06-18) handleRegister() — Erfolgsmeldung nach Kontoerstellung
+ * CHANGES:     1.8.0 (2026-06-22) destroy() — Cust-Kaskade ergänzt (analog
+ *              MandantCustController@destroy): verwaiste cust_user werden vor der
+ *              mand-Löschung per CustAccountDeletedMail benachrichtigt und gelöscht
+ *              (inkl. passkey/passkey_dismissed); cust_pcode- und
+ *              sessiondb.cust_invite-Einträge dieses Mandanten werden entfernt.
+ *              1.7.0 (2026-06-18) handleRegister() — Erfolgsmeldung nach Kontoerstellung
  *              aktualisiert ("Konto erfolgreich angelegt..."); login_page='mand'
  *              zusätzlich geflasht, damit das Login-Modal (auth/login-modal.blade.php)
  *              direkt die Galerist:innen-Seite zeigt statt auf den Cust-Tab zu fallen
@@ -61,9 +93,15 @@
 
 namespace App\Http\Controllers\UserDb;
 
+use App\Mail\CustAccountDeletedMail;
 use App\Mail\InviteMail;
+use App\Models\SessionDb\CustInvite;
+use App\Models\UserDb\CustPcode;
+use App\Models\UserDb\CustUser;
 use App\Models\UserDb\Invite;
 use App\Models\UserDb\MandUser;
+use App\Models\UserDb\Passkey;
+use App\Models\UserDb\PasskeyDismissed;
 use App\Models\UserDb\SystUser;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -174,6 +212,33 @@ class SystemMandantController extends UserDbController
         if (! $mandant) {
             abort(404);
         }
+
+        $pcodes = CustPcode::where('mand_id', $id)->get();
+
+        foreach ($pcodes as $pcode) {
+            $custId = $pcode->cust_id;
+
+            $pcode->delete();
+
+            $remaining = CustPcode::where('cust_id', $custId)->count();
+            if ($remaining === 0) {
+                $cust = CustUser::find($custId);
+
+                if ($cust) {
+                    $custEmail = $cust->cust_email;
+                    $custName  = $cust->cust_firstname ?: ($cust->cust_uname ?: 'Hallo');
+
+                    Mail::to($custEmail)->send(new CustAccountDeletedMail($custName));
+
+                    Passkey::where('user_type', 'cust')->where('user_id', $custId)->delete();
+                    PasskeyDismissed::where('user_type', 'cust')->where('user_id', $custId)->delete();
+
+                    $cust->delete();
+                }
+            }
+        }
+
+        CustInvite::where('mand_id', $id)->delete();
 
         $mandant->delete();
 

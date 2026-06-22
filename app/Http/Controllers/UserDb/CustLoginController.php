@@ -1,9 +1,9 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustLoginController.php
- * VERSION:     1.12.0
+ * VERSION:     1.14.0
  * AUTOR:       Martin Wagner
- * DATUM:       2026-06-13
+ * DATUM:       2026-06-22
  *
  * ZWECK:       Cust-Login — registrierter Login mit optionaler 2FA,
  *              anonymer Login per Passwort-Sequenz, Passkey-Login, Logout.
@@ -12,8 +12,10 @@
  *                                  öffnet das Login-Modal auf der Startseite automatisch.
  *                                  Reads: —
  *              handleLogin()     — Validiert cust_email + password; sucht CustUser;
- *                                  ermittelt bevorzugten Mandanten via CustPcode;
- *                                  prüft 2FA-Pflicht via mand_cust_2fa; baut Session
+ *                                  ermittelt bevorzugten Mandanten via CustPcode
+ *                                  (für Session-Daten); prüft 2FA-Pflicht über ALLE
+ *                                  cust_pcode-Kontexte des cust (mand_cust_2fa je
+ *                                  Mandant) — ein Treffer löst 2FA aus; baut Session
  *                                  direkt (OS via detectOsPlatform() erkennen, Browser
  *                                  via detectBrowser() erkennen, ua_hash berechnen,
  *                                  _prompt_passkey/_passkey_os/_passkey_browser/
@@ -190,10 +192,27 @@ class CustLoginController extends UserDbController
                 ->with('cust_tab', 'reg');
         }
 
-        $secLevel  = (int) $pcode->cust_passcode;
-        $threshold = $mand->mand_cust_2fa;
+        $pcodes = CustPcode::where('cust_id', $cust->cust_id)->get();
 
-        if ($secLevel >= $threshold && $threshold < 7) {
+        $require2fa = false;
+
+        foreach ($pcodes as $candidate) {
+            $candidateMand = MandUser::find($candidate->mand_id);
+
+            if (! $candidateMand) {
+                continue;
+            }
+
+            $secLevel  = (int) $candidate->cust_passcode;
+            $threshold = $candidateMand->mand_cust_2fa;
+
+            if ($threshold > 0 && $secLevel >= $threshold && $threshold < 7) {
+                $require2fa = true;
+                break;
+            }
+        }
+
+        if ($require2fa) {
             $code = $this->twofaService->generateCode('cust', $cust->cust_id, 0);
 
             Mail::to($cust->cust_email)

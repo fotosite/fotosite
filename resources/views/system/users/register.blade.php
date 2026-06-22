@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/system/users/register.blade.php
-    VERSION: 1.1.1
-    DATE:    2026-06-08
+    VERSION: 1.3.0
+    DATE:    2026-06-22
 
     DESCRIPTION:
       Standalone registration page for invited system users.
@@ -14,6 +14,11 @@
 
     ROUTES USED:
       POST system.register.handle — submit registration form
+
+    CHANGES: 1.2.0 (2026-06-22) Begleittext zur E-Mail-Adresse ergänzt (Hinweis
+             auf 2FA-Codes und Passwort-Erneuerung).
+             1.3.0 (2026-06-22) Begleittext zur E-Mail-Adresse durch Hinweis auf
+             Voreinstellung ersetzt (Feld ist read-only).
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -76,6 +81,7 @@
                                class="mt-1 block w-full rounded-md border-gray-200
                                       bg-gray-50 text-gray-500 shadow-sm text-sm
                                       cursor-not-allowed">
+                        <p class="mt-1 text-sm text-gray-600">Diese E-Mail-Adresse ist eine Voreinstellung, die später geändert werden kann.</p>
                     </div>
 
                     <div>

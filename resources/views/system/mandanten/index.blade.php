@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/system/mandanten/index.blade.php
-    VERSION: 1.1.0
-    DATE:    2026-06-08
+    VERSION: 1.2.0
+    DATE:    2026-06-22
 
     DESCRIPTION:
       Mandantenverwaltung overview — invite new mandants, list existing mandants,
@@ -117,14 +117,17 @@
                 <div class="flex-1">
                     <label for="email"
                            class="block text-sm font-medium text-gray-700 mb-1">
-                        E-Mail-Adresse
+                        E-Mail
                     </label>
                     <input id="email" name="email" type="email"
                            value="{{ old('email') }}"
-                           placeholder="name@beispiel.de"
+                           placeholder="ihre@email.de"
                            required
                            class="block w-full rounded-md border-gray-300 shadow-sm
                                   text-sm focus:border-gray-500 focus:ring-gray-500">
+                    @error('email')
+                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                    @enderror
                 </div>
                 <button type="submit"
                         class="flex-shrink-0 py-2 px-4 rounded-md text-sm font-medium

@@ -1,23 +1,31 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/SystemUserController.php
- * VERSION:     1.1.0
+ * VERSION:     1.2.0
  *
  * FUNCTIONS:   index()               — Lists all SystUser records ordered by syst_lastname.
  *                                      Reads: userdb.syst_user.*
  *              invite()              — Validates email, creates register invite, sends InviteMail.
- *                                      Writes: userdb.invite.*
+ *                                      is_primary wird nur übernommen, wenn der eingeloggte
+ *                                      syst selbst is_primary ist (sonst auf false erzwungen).
+ *                                      Reads:  sessiondb.session (_is_primary, via Session)
+ *                                      Writes: userdb.invite.* (inkl. is_primary)
  *              sendPasswordReset()   — Creates pw_reset invite for user $id, sends InviteMail.
  *                                      Reads:  userdb.syst_user.syst_id, syst_email
  *                                      Writes: userdb.invite.*
- *              destroy()             — Deletes SystUser by $id (guards against self-delete).
- *                                      Reads:  userdb.syst_user.syst_id
+ *              destroy()             — Deletes SystUser by $id (guards against self-delete,
+ *                                      gegen Löschen eines primären syst und erlaubt
+ *                                      Löschung nur durch einen primären syst).
+ *                                      Reads:  userdb.syst_user.syst_id, is_primary
  *                                      Writes: userdb.syst_user (DELETE)
  *              showRegister()        — Validates register token; returns register form view.
  *                                      Reads: userdb.invite.*
- *              handleRegister()      — Creates SystUser from register invite; deletes invite.
- *                                      Reads:  userdb.invite.*
- *                                      Writes: userdb.syst_user.*, userdb.invite (DELETE)
+ *              handleRegister()      — Creates SystUser from register invite; übernimmt
+ *                                      is_primary aus dem Invite; schreibt _is_primary in
+ *                                      Session; deletes invite.
+ *                                      Reads:  userdb.invite.* (inkl. is_primary)
+ *                                      Writes: userdb.syst_user.* (inkl. is_primary),
+ *                                              userdb.invite (DELETE)
  *              showPasswordReset()   — Validates pw_reset token; returns password form view.
  *                                      Reads: userdb.invite.*
  *              handlePasswordReset() — Updates syst_pw_hash from pw_reset invite; deletes invite.
@@ -37,8 +45,14 @@
  *
  * DB ACCESS:   userdb.syst_user.syst_id, syst_uname, syst_email, syst_tel,
  *              syst_firstname, syst_lastname, syst_pw_hash, syst_street+nr,
- *              syst_pcode+city, syst_company
- *              userdb.invite.*
+ *              syst_pcode+city, syst_company, is_primary
+ *              userdb.invite.* (inkl. is_primary)
+ *
+ * CHANGES:     1.2.0 (2026-06-22) is_primary-Feature ergänzt: invite() übernimmt
+ *              is_primary nur bei primärem Einlader, handleRegister() überträgt
+ *              is_primary auf den neuen SystUser und in die Session (_is_primary),
+ *              destroy() schützt primäre System-User vor Löschung und erlaubt das
+ *              Löschen nur durch primäre System-User.
  */
 
 namespace App\Http\Controllers\UserDb;
@@ -69,6 +83,12 @@ class SystemUserController extends UserDbController
             'email' => ['required', 'email', 'unique:userdb.syst_user,syst_email'],
         ]);
 
+        $isPrimary = (bool) $request->input('is_primary', 0);
+
+        if (! $request->session()->get('_is_primary')) {
+            $isPrimary = false;
+        }
+
         $token = Str::random(64);
 
         Invite::create([
@@ -80,6 +100,7 @@ class SystemUserController extends UserDbController
             'inv_mand_id'    => null,
             'created_at'     => now(),
             'expires_at'     => now()->addHours(24),
+            'is_primary'     => $isPrimary,
         ]);
 
         $url = route('system.register', ['token' => $token]);
@@ -129,6 +150,14 @@ class SystemUserController extends UserDbController
 
         if ($id === (int) $request->session()->get('_syst_id')) {
             return back()->withErrors(['delete' => 'Sie können sich nicht selbst löschen.']);
+        }
+
+        if ((bool) $user->is_primary) {
+            abort(403);
+        }
+
+        if (! $request->session()->get('_is_primary')) {
+            abort(403);
         }
 
         $user->delete();
@@ -182,7 +211,10 @@ class SystemUserController extends UserDbController
             'syst_street+nr'  => '',
             'syst_pcode+city' => '',
             'syst_company'    => '',
+            'is_primary'      => (bool) $invite->is_primary,
         ]);
+
+        $request->session()->put('_is_primary', (bool) $invite->is_primary);
 
         $invite->delete();
 

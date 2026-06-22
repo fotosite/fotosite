@@ -1,8 +1,8 @@
 {{--
     FILE:    resources/views/mandant/cust/einladen.blade.php
-    VERSION: 1.4.0
+    VERSION: 1.5.0
     AUTHOR:  Martin Wagner
-    DATE:    2026-06-08
+    DATE:    2026-06-22
 
     DESCRIPTION:
       Einladungsformular für neue Mitglieder.
@@ -94,23 +94,25 @@
             @csrf
 
             {{-- E-Mail --}}
-            <div>
+            <div x-data="{ dirty: false }">
                 <label for="cust_email"
                        class="block text-sm font-medium text-gray-700 mb-1.5">
-                    E-Mail-Adresse
+                    E-Mail
                 </label>
                 <input type="email"
                        id="cust_email"
                        name="cust_email"
                        value="{{ old('cust_email') }}"
+                       placeholder="ihre@email.de"
                        required
                        autocomplete="off"
+                       @input="dirty = true"
                        class="w-full rounded-lg border px-3 py-2 text-sm
                               text-gray-800 shadow-sm
                               focus:outline-none focus:ring-2 focus:ring-indigo-400
                               @error('cust_email') border-red-400 bg-red-50 @else border-gray-300 @enderror">
                 @error('cust_email')
-                    <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
+                    <p class="mt-1.5 text-xs text-red-600" x-show="!dirty">{{ $message }}</p>
                 @enderror
             </div>
 

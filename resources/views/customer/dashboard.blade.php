@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/customer/dashboard.blade.php
-    VERSION: 2.4.0
-    DATE:    2026-06-20
+    VERSION: 2.6.0
+    DATE:    2026-06-22
 
     DESCRIPTION:
       Kunden-Dashboard — Verwaltungsübersicht für registrierte Mitglieder (cust).
@@ -26,7 +26,11 @@
       GET  customer.datenschutz.upload-bedingungen-pdf — Upload-Bedingungen (neuer Tab)
       GET  customer.faq.index                   — FAQ und Infos
 
-    CHANGES: 2.4.0 (2026-06-20) Button "FAQ und Infos" in der Rechtliches-
+    CHANGES: 2.6.0 (2026-06-22) Begleittext im E-Mail-Modal ersetzt durch
+             Hinweis auf 2FA-Codes und Passwort-Erneuerung.
+             2.5.0 (2026-06-22) E-Mail-Feld im E-Mail-Modal vereinheitlicht:
+             Placeholder ergänzt, Fehlermeldung blendet sich bei Eingabe aus.
+             2.4.0 (2026-06-20) Button "FAQ und Infos" in der Rechtliches-
              Sektion ergänzt, Link zu customer.faq.index (siehe FaqController).
              2.3.0 (2026-06-18) "Rechtliches"-Sektion ergänzt: Buttons
              "Datenschutz-Erläuterung" / "Upload-Bedingungen", öffnen jeweils in
@@ -230,23 +234,22 @@
                 <form method="POST" action="{{ route('customer.konto.email-aendern') }}" autocomplete="off">
                     @csrf
                     <div class="space-y-3">
-                        <div>
+                        <div x-data="{ dirty: false }">
                             <label class="block text-sm font-medium text-gray-700">
                                 Neue E-Mail-Adresse
                             </label>
                             <input name="email" type="email" required
+                                   placeholder="ihre@email.de"
+                                   @input="dirty = true"
                                    class="mt-1 block w-full rounded-md border-gray-300
                                           shadow-sm text-sm
                                           focus:border-indigo-500 focus:ring-indigo-500
                                           @error('email') border-red-400 @enderror">
                             @error('email')
-                                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                <p class="mt-1 text-xs text-red-600" x-show="!dirty">{{ $message }}</p>
                             @enderror
                         </div>
-                        <p class="text-xs text-gray-400">
-                            An die neue Adresse wird eine Bestätigungsmail gesendet.
-                            Erst nach Bestätigung wird die Adresse geändert.
-                        </p>
+                        <p class="mt-1 text-sm text-gray-600">Diese E-Mail-Adresse wird genutzt, um dir Sicherheitscodes bei einem 2-Faktor-Login zu senden. Sie wird auch verwendet, wenn du dein Passwort erneuern musst. Verwende daher eine E-Mail-Adresse, auf die du in solchen Fällen zugreifen kannst, z.B. mit einem E-Mail-Programm auf deinem Handy.</p>
                     </div>
                     <div class="mt-5 flex gap-3">
                         <button type="button" @click="emailModalOpen = false"

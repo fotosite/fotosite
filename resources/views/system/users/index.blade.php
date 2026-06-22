@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/system/users/index.blade.php
-    VERSION: 1.0.2
-    DATE:    2026-06-08
+    VERSION: 1.3.0
+    DATE:    2026-06-22
 
     DESCRIPTION:
       System-User management — invite new users, list existing users,
@@ -11,12 +11,25 @@
       $users         (Collection<SystUser>) — all system users ordered by syst_lastname
       $currentSystId (int)                  — session _syst_id of logged-in user
 
+    SESSION KEYS USED:
+      _is_primary — bool, gesetzt von SystemLoginController::verifyTwoFactor()
+                    bzw. SystemUserController::handleRegister(); steuert, ob die
+                    is_primary-Checkbox im Einladungsformular gerendert wird.
+
     ROUTES USED:
       POST   system.users.invite            — send invite email
       POST   system.users.password-reset    — send password reset email
       DELETE system.users.destroy           — delete user
       GET    system.dashboard               — back link
       POST   logout                         — Breeze logout
+
+    CHANGES: 1.3.0 (2026-06-22) Löschen-Button in der Userliste nur sichtbar wenn
+             $user->is_primary === false UND $user->syst_id !== $currentSystId
+             (= session('_syst_id'), wie in SystemLoginController gesetzt).
+             Serverseitiger abort(403)-Schutz in SystemUserController::destroy()
+             bleibt zusätzlich bestehen.
+             1.2.0 (2026-06-22) is_primary-Checkbox im Einladungsformular ergänzt
+             (nur sichtbar für eingeloggte primäre System-User, session _is_primary).
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -130,15 +143,29 @@
                 <div class="flex-1">
                     <label for="email"
                            class="block text-sm font-medium text-gray-700 mb-1">
-                        E-Mail-Adresse
+                        E-Mail
                     </label>
                     <input id="email" name="email" type="email"
                            value="{{ old('email') }}"
-                           placeholder="name@beispiel.de"
+                           placeholder="ihre@email.de"
                            required
                            class="block w-full rounded-md border-gray-300 shadow-sm
                                   text-sm focus:border-gray-500 focus:ring-gray-500">
                 </div>
+
+                @if(session('_is_primary'))
+                    <div class="flex items-center pb-2">
+                        <input type="hidden" name="is_primary" value="0">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox"
+                                   id="is_primary" name="is_primary"
+                                   value="1"
+                                   class="h-4 w-4 rounded border-gray-300 text-gray-800
+                                          focus:ring-gray-500">
+                            <span class="text-sm text-gray-700">Primärer System-User</span>
+                        </label>
+                    </div>
+                @endif
 
                 <button type="submit"
                         class="flex-shrink-0 py-2 px-4 rounded-md text-sm font-medium
@@ -208,8 +235,8 @@
                                             </button>
                                         </form>
 
-                                        {{-- Delete (not self) --}}
-                                        @if($user->syst_id !== $currentSystId)
+                                        {{-- Delete (not self, not primary) --}}
+                                        @if(! $user->is_primary && $user->syst_id !== $currentSystId)
                                             <form method="POST"
                                                   action="{{ route('system.users.destroy', $user->syst_id) }}">
                                                 @csrf
