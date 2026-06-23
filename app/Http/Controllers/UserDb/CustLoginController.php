@@ -1,12 +1,18 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustLoginController.php
- * VERSION:     1.14.0
+ * VERSION:     1.15.0
  * AUTOR:       Martin Wagner
- * DATUM:       2026-06-22
+ * DATUM:       2026-06-23
  *
  * ZWECK:       Cust-Login — registrierter Login mit optionaler 2FA,
  *              anonymer Login per Passwort-Sequenz, Passkey-Login, Logout.
+ *
+ * CHANGES:     1.15.0 (2026-06-23) handleLogin() — verwaister Account (kein
+ *              cust_pcode-Eintrag mehr vorhanden) wird bei Login-Versuch
+ *              still geloescht (cust_user + passkey + passkey_dismissed),
+ *              Rueckmeldung bleibt die generische Credentials-Fehlermeldung
+ *              (kein Hinweis auf Loeschung, keine Mail).
  *
  * FUNCTIONS:   showLogin()       — Redirect zu home (/) mit Flash open_login_modal='cust';
  *                                  öffnet das Login-Modal auf der Startseite automatisch.
@@ -89,11 +95,14 @@
  *              App\Models\SessionDb\Session::where()->delete()
  *
  * DB ACCESS:   userdb.cust_user.cust_id, cust_email, cust_pw_hash, cust_firstname
+ *              (DELETE bei verwaistem Account ohne cust_pcode-Eintrag)
  *              userdb.cust_pcode.pcode_id, cust_id, mand_id, cust_passcode, pcode_prefstat
  *              userdb.mand_user.mand_id, mand_cust_2fa
  *              userdb.passkey.credential_id, public_key, user_type, user_id,
  *              sign_count, last_used_at
+ *              (DELETE bei verwaistem Account ohne cust_pcode-Eintrag)
  *              userdb.passkey_dismissed.user_type, user_id, os, ua_hash
+ *              (DELETE bei verwaistem Account ohne cust_pcode-Eintrag)
  *              sessiondb.pw_list.mand_id, pw1, pw2, pw3, pw4, pw5, pw6,
  *              valid_from, valid_until
  *              sessiondb.twofa_code.* (via TwofaService)
@@ -177,8 +186,20 @@ class CustLoginController extends UserDbController
             ->first();
 
         if (! $pcode) {
+            // Verwaister Account (kein cust_pcode-Eintrag mehr) — still löschen,
+            // identische Fehlermeldung wie bei falschen Credentials zurückgeben.
+            Passkey::where('user_type', 'cust')
+                ->where('user_id', $cust->cust_id)
+                ->delete();
+
+            \App\Models\UserDb\PasskeyDismissed::where('user_type', 'cust')
+                ->where('user_id', $cust->cust_id)
+                ->delete();
+
+            CustUser::find($cust->cust_id)?->delete();
+
             return back()
-                ->withErrors(['credentials' => 'Kein Mandant zugeordnet.'])
+                ->withErrors(['credentials' => 'Diese Zugangsdaten sind uns nicht bekannt.'])
                 ->with('login_page', 'cust')
                 ->with('cust_tab', 'reg');
         }

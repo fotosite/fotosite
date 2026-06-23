@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/customer/dashboard.blade.php
-    VERSION: 2.6.0
-    DATE:    2026-06-22
+    VERSION: 2.7.0
+    DATE:    2026-06-23
 
     DESCRIPTION:
       Kunden-Dashboard — Verwaltungsübersicht für registrierte Mitglieder (cust).
@@ -26,7 +26,9 @@
       GET  customer.datenschutz.upload-bedingungen-pdf — Upload-Bedingungen (neuer Tab)
       GET  customer.faq.index                   — FAQ und Infos
 
-    CHANGES: 2.6.0 (2026-06-22) Begleittext im E-Mail-Modal ersetzt durch
+    CHANGES: 2.7.0 (2026-06-23) Spam-Hinweis im E-Mail-Modal ergänzt: weist
+             darauf hin, dass die Bestätigungsmail oft im Spam-Ordner landet.
+             2.6.0 (2026-06-22) Begleittext im E-Mail-Modal ersetzt durch
              Hinweis auf 2FA-Codes und Passwort-Erneuerung.
              2.5.0 (2026-06-22) E-Mail-Feld im E-Mail-Modal vereinheitlicht:
              Placeholder ergänzt, Fehlermeldung blendet sich bei Eingabe aus.
@@ -250,6 +252,9 @@
                             @enderror
                         </div>
                         <p class="mt-1 text-sm text-gray-600">Diese E-Mail-Adresse wird genutzt, um dir Sicherheitscodes bei einem 2-Faktor-Login zu senden. Sie wird auch verwendet, wenn du dein Passwort erneuern musst. Verwende daher eine E-Mail-Adresse, auf die du in solchen Fällen zugreifen kannst, z.B. mit einem E-Mail-Programm auf deinem Handy.</p>
+                        <p class="mt-2 text-sm text-amber-600">Bitte denk daran, dass E-Mails wie
+                        diese oft im Spam-Ordner landen. Wenn du die E-Mail nicht bekommst,
+                        prüfe den Spam-Ordner.</p>
                     </div>
                     <div class="mt-5 flex gap-3">
                         <button type="button" @click="emailModalOpen = false"

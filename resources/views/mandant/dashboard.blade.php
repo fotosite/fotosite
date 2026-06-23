@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/mandant/dashboard.blade.php
-    VERSION: 3.4.0
-    DATE:    2026-06-22
+    VERSION: 3.5.0
+    DATE:    2026-06-23
 
     DESCRIPTION:
       Mandanten-Dashboard — Einstiegsseite nach erfolgreichem Mand-Login + 2FA.
@@ -24,7 +24,9 @@
       GET  customer.datenschutz.upload-bedingungen-pdf — Upload-Bedingungen (neuer Tab)
       GET  mandant.faq.index                    — FAQ und Infos
 
-    CHANGES: 3.4.0 (2026-06-22) Begleittext im E-Mail-Modal ersetzt durch
+    CHANGES: 3.5.0 (2026-06-23) Spam-Hinweis im E-Mail-Modal ergänzt: weist
+             darauf hin, dass die Bestätigungsmail oft im Spam-Ordner landet.
+             3.4.0 (2026-06-22) Begleittext im E-Mail-Modal ersetzt durch
              Hinweis auf 2FA-Codes und Passwort-Erneuerung.
              3.3.0 (2026-06-22) E-Mail-Feld im E-Mail-Modal vereinheitlicht:
              Placeholder ergänzt, Fehlermeldung blendet sich bei Eingabe aus.
@@ -255,6 +257,9 @@
                             @enderror
                         </div>
                         <p class="mt-1 text-sm text-gray-600">Diese E-Mail-Adresse wird genutzt, um Ihnen Sicherheitscodes bei einem 2-Faktor-Login zu senden. Sie wird auch verwendet, wenn Sie Ihr Passwort erneuern müssen. Verwenden Sie daher eine E-Mail-Adresse, auf die Sie in solchen Fällen zugreifen können, z.B. mit einem E-Mail-Programm auf Ihrem Handy.</p>
+                        <p class="mt-2 text-sm text-amber-600">Bitte denken Sie daran, dass E-Mails
+                        wie diese oft im Spam-Ordner landen. Wenn Sie die E-Mail nicht bekommen,
+                        prüfen Sie den Spam-Ordner.</p>
                     </div>
                     <div class="mt-5 flex gap-3">
                         <button type="button" @click="emailModalOpen = false"

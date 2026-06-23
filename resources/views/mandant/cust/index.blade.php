@@ -1,8 +1,8 @@
 {{--
     FILE:    resources/views/mandant/cust/index.blade.php
-    VERSION: 3.7.2
+    VERSION: 3.7.5
     AUTHOR:  Martin Wagner
-    DATE:    2026-06-20
+    DATE:    2026-06-23
 
     DESCRIPTION:
       Mitgliederliste des eingeloggten Mandanten.
@@ -32,6 +32,24 @@
       DELETE /mandant/kunden/{id}                 — Entfernen (route('mandant.kunden.destroy'))
       GET    /mandant/dashboard                   — Dashboard (route('mandant.dashboard'))
 
+    CHANGES: 3.7.5 (2026-06-23) Desktop-Dropdown-Trigger sec_level: w-9 -> w-14,
+             da die schmale Breite fuer Ziffer + Chevron-Icon (3.7.4) zu eng war.
+    CHANGES: 3.7.4 (2026-06-23) sec_level-Dropdown-Trigger (Mobile + Desktop)
+             optisch als Combobox gekennzeichnet: Button-Inhalt von x-text
+             (ueberschreibt innerHTML komplett) auf ein <span x-text="val">
+             umgestellt, daneben Chevron-Down-SVG als Geschwisterelement.
+             Button-Klassen um inline-flex items-center justify-between
+             gap-1 px-2 py-1 ergaenzt, damit Zahl und Pfeil nebeneinander
+             sitzen (border/bg/rounded waren bereits vorhanden). Nur
+             bestehende Tailwind-Klassen, kein Rebuild noetig.
+    CHANGES: 3.7.3 (2026-06-23) overflow-hidden auf dem Listen-Rahmen
+             (rounded-xl border bg-white) entfernte das ausklappende
+             sec_level-Custom-Dropdown, da dessen absolut positioniertes
+             Optionsmenue ueber den Rahmenrand hinausragt und vom
+             Eltern-Container abgeschnitten/unbedienbar wurde. Fix:
+             overflow-hidden -> overflow-visible; abgerundete Ecken bleiben
+             ueber border-radius (rounded-xl) erhalten, overflow-hidden war
+             dafuer nicht erforderlich.
     CHANGES: 3.7.2 (2026-06-20) UI-Korrekturen Steuerleiste: Label "Sortieren:"
              vor den drei Sortier-Buttons ergänzt; "Suche in:"-Combobox war zu
              schmal (Optionstext von Pfeil/Rand verdeckt) — Breite auf
@@ -252,7 +270,7 @@
                     </div>
                 </div>
 
-            <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
+            <div class="rounded-xl border border-gray-200 bg-white overflow-visible">
 
                 {{-- Mobile: Card-Liste --}}
                 <div class="md:hidden divide-y divide-gray-100" data-member-list="mobile">
@@ -297,11 +315,17 @@
                                         @click="open = !open"
                                         :aria-expanded="open"
                                         aria-haspopup="listbox"
-                                        class="w-14 h-11 rounded-lg border border-gray-300 bg-white
+                                        class="w-14 h-11 inline-flex items-center justify-between gap-1
+                                               rounded-lg border border-gray-300 bg-white px-2 py-1
                                                text-sm font-medium text-gray-800 shadow-sm
                                                hover:border-indigo-400 focus:outline-none
-                                               focus:ring-2 focus:ring-indigo-400"
-                                        x-text="val">
+                                               focus:ring-2 focus:ring-indigo-400">
+                                    <span x-text="val"></span>
+                                    <svg class="inline-block ml-1 w-3 h-3 text-gray-500" fill="none"
+                                         stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M19 9l-7 7-7-7"/>
+                                    </svg>
                                 </button>
                                 <div x-show="open"
                                      x-transition:enter="transition ease-out duration-150"
@@ -423,11 +447,17 @@
                                                     @click="open = !open"
                                                     :aria-expanded="open"
                                                     aria-haspopup="listbox"
-                                                    class="w-9 h-8 rounded-lg border border-gray-300 bg-white
+                                                    class="w-14 h-8 inline-flex items-center justify-between gap-1
+                                                           rounded-lg border border-gray-300 bg-white px-2 py-1
                                                            text-xs font-medium text-gray-800 shadow-sm
                                                            hover:border-indigo-400 focus:outline-none
-                                                           focus:ring-2 focus:ring-indigo-400"
-                                                    x-text="val">
+                                                           focus:ring-2 focus:ring-indigo-400">
+                                                <span x-text="val"></span>
+                                                <svg class="inline-block ml-1 w-3 h-3 text-gray-500" fill="none"
+                                                     stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                          d="M19 9l-7 7-7-7"/>
+                                                </svg>
                                             </button>
                                             <div x-show="open"
                                                  x-transition:enter="transition ease-out duration-150"
