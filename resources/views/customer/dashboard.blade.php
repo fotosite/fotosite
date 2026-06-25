@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/customer/dashboard.blade.php
-    VERSION: 2.7.0
-    DATE:    2026-06-23
+    VERSION: 2.8.0
+    DATE:    2026-06-25
 
     DESCRIPTION:
       Kunden-Dashboard — Verwaltungsübersicht für registrierte Mitglieder (cust).
@@ -26,6 +26,10 @@
       GET  customer.datenschutz.upload-bedingungen-pdf — Upload-Bedingungen (neuer Tab)
       GET  customer.faq.index                   — FAQ und Infos
 
+    CHANGES: 2.8.0 (2026-06-25) Android-Touch-Targets vergroessert: Logout-
+             Button, Passwort/E-Mail-aendern-Buttons, Rechtliches-Links,
+             Modal-Buttons (Abbrechen/Speichern/Senden) und Passkey-Banner-
+             Aktionen auf min-h-11 angehoben.
     CHANGES: 2.7.0 (2026-06-23) Spam-Hinweis im E-Mail-Modal ergänzt: weist
              darauf hin, dass die Bestätigungsmail oft im Spam-Ordner landet.
              2.6.0 (2026-06-22) Begleittext im E-Mail-Modal ersetzt durch
@@ -81,7 +85,7 @@
                 <form method="POST" action="{{ route('customer.logout') }}">
                     @csrf
                     <button type="submit"
-                            class="text-xs text-gray-400 hover:text-red-500
+                            class="min-h-11 py-2 px-3 text-sm text-gray-400 hover:text-red-500
                                    transition-colors duration-150 tracking-wide">
                         Abmelden
                     </button>
@@ -109,13 +113,13 @@
         {{-- Sicherheits-Aktionen: Passwort / E-Mail ändern --}}
         <div class="flex flex-wrap gap-3 mb-8">
             <button type="button" @click="pwModalOpen = true"
-                    class="px-4 py-2 text-sm font-medium text-indigo-700
+                    class="px-4 py-2 min-h-11 text-sm font-medium text-indigo-700
                            bg-indigo-50 border border-indigo-200 rounded-lg
                            hover:bg-indigo-100 transition-colors">
                 Passwort ändern
             </button>
             <button type="button" @click="emailModalOpen = true"
-                    class="px-4 py-2 text-sm font-medium text-indigo-700
+                    class="px-4 py-2 min-h-11 text-sm font-medium text-indigo-700
                            bg-indigo-50 border border-indigo-200 rounded-lg
                            hover:bg-indigo-100 transition-colors">
                 E-Mail ändern
@@ -129,19 +133,19 @@
             </h2>
             <div class="flex flex-wrap gap-3">
                 <a href="{{ route('customer.datenschutz.erlaeuterung') }}" target="_blank"
-                   class="px-4 py-2 text-sm font-medium text-gray-600
+                   class="px-4 py-2 min-h-11 text-sm font-medium text-gray-600
                           bg-white border border-gray-300 rounded-lg
                           hover:bg-gray-50 transition-colors">
                     Datenschutz-Erläuterung
                 </a>
                 <a href="{{ route('customer.datenschutz.upload-bedingungen-pdf') }}" target="_blank"
-                   class="px-4 py-2 text-sm font-medium text-gray-600
+                   class="px-4 py-2 min-h-11 text-sm font-medium text-gray-600
                           bg-white border border-gray-300 rounded-lg
                           hover:bg-gray-50 transition-colors">
                     Upload-Bedingungen
                 </a>
                 <a href="{{ route('customer.faq.index') }}"
-                   class="px-4 py-2 text-sm font-medium text-gray-600
+                   class="px-4 py-2 min-h-11 text-sm font-medium text-gray-600
                           bg-white border border-gray-300 rounded-lg
                           hover:bg-gray-50 transition-colors">
                     FAQ und Infos
@@ -205,12 +209,12 @@
                     </div>
                     <div class="mt-5 flex gap-3">
                         <button type="button" @click="pwModalOpen = false"
-                                class="w-full px-4 py-2 text-sm text-gray-500
+                                class="w-full px-4 py-2 min-h-11 text-sm text-gray-500
                                        border border-gray-300 rounded-lg hover:bg-gray-50">
                             Abbrechen
                         </button>
                         <button type="submit"
-                                class="w-full px-4 py-2 text-sm font-medium text-white
+                                class="w-full px-4 py-2 min-h-11 text-sm font-medium text-white
                                        bg-indigo-600 rounded-lg hover:bg-indigo-700">
                             Speichern
                         </button>
@@ -258,12 +262,12 @@
                     </div>
                     <div class="mt-5 flex gap-3">
                         <button type="button" @click="emailModalOpen = false"
-                                class="w-full px-4 py-2 text-sm text-gray-500
+                                class="w-full px-4 py-2 min-h-11 text-sm text-gray-500
                                        border border-gray-300 rounded-lg hover:bg-gray-50">
                             Abbrechen
                         </button>
                         <button type="submit"
-                                class="w-full px-4 py-2 text-sm font-medium text-white
+                                class="w-full px-4 py-2 min-h-11 text-sm font-medium text-white
                                        bg-indigo-600 rounded-lg hover:bg-indigo-700">
                             Senden
                         </button>
@@ -305,7 +309,7 @@
             </div>
             <div class="flex flex-col gap-2 md:flex-row md:gap-3 w-full md:w-auto">
                 <a href="{{ route('customer.passkeys') }}"
-                   class="w-full md:w-auto text-center px-4 py-3 md:py-2
+                   class="w-full md:w-auto text-center px-4 py-3 md:py-2 min-h-11
                           bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700">
                     Einrichten
                 </a>
@@ -318,12 +322,12 @@
                             'Content-Type': 'application/json'
                         }
                     })"
-                    class="w-full md:w-auto px-4 py-3 md:py-2 text-sm text-gray-500
+                    class="w-full md:w-auto px-4 py-3 md:py-2 min-h-11 text-sm text-gray-500
                            border border-gray-300 rounded-lg hover:bg-gray-50">
                     Nie wieder
                 </button>
                 <button @click="open = false"
-                        class="w-full md:w-auto px-4 py-3 md:py-2 text-sm text-gray-400
+                        class="w-full md:w-auto px-4 py-3 md:py-2 min-h-11 text-sm text-gray-400
                                hover:text-gray-600">
                     Später
                 </button>

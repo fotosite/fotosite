@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/system/users/index.blade.php
-    VERSION: 1.3.0
-    DATE:    2026-06-22
+    VERSION: 1.3.1
+    DATE:    2026-06-25
 
     DESCRIPTION:
       System-User management — invite new users, list existing users,
@@ -30,6 +30,10 @@
              bleibt zusätzlich bestehen.
              1.2.0 (2026-06-22) is_primary-Checkbox im Einladungsformular ergänzt
              (nur sichtbar für eingeloggte primäre System-User, session _is_primary).
+    CHANGES: 1.3.1 (2026-06-25) Android-Touch-Targets vergroessert: Logout-
+             Button, Zurueck-Link, Einladung-senden-Button und Tabellen-
+             Aktionen (Passwort-Reset/Löschen) auf min-h-11 angehoben;
+             betroffene text-xs auf text-sm.
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -73,7 +77,7 @@
                 <form method="POST" action="{{ route('system.logout') }}">
                     @csrf
                     <button type="submit"
-                            class="text-xs text-gray-400 hover:text-red-500
+                            class="min-h-11 py-2 px-3 text-sm text-gray-400 hover:text-red-500
                                    transition-colors duration-150 tracking-wide">
                         Abmelden
                     </button>
@@ -91,7 +95,7 @@
         {{-- Back link --}}
         <div class="mt-4 mb-6">
             <a href="{{ route('system.dashboard') }}"
-               class="inline-flex items-center gap-1.5 text-xs text-indigo-500
+               class="inline-flex items-center gap-1.5 min-h-11 py-2 text-sm text-indigo-500
                       hover:text-indigo-700 transition-colors">
                 <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg"
                      fill="none" viewBox="0 0 24 24" stroke-width="2"
@@ -168,7 +172,7 @@
                 @endif
 
                 <button type="submit"
-                        class="flex-shrink-0 py-2 px-4 rounded-md text-sm font-medium
+                        class="flex-shrink-0 py-2 px-4 min-h-11 rounded-md text-sm font-medium
                                text-white bg-gray-800 hover:bg-gray-700 transition-colors
                                focus:outline-none focus:ring-2 focus:ring-gray-500
                                focus:ring-offset-2">
@@ -229,7 +233,7 @@
                                             @csrf
                                             <button type="submit"
                                                     x-on:click="if(!confirm('Reset-Mail senden?')) $event.preventDefault()"
-                                                    class="text-xs text-gray-500 hover:text-amber-600
+                                                    class="inline-flex items-center min-h-11 py-2 text-sm text-gray-500 hover:text-amber-600
                                                            transition-colors tracking-wide">
                                                 Passwort-Reset senden
                                             </button>
@@ -243,7 +247,7 @@
                                                 @method('DELETE')
                                                 <button type="submit"
                                                         x-on:click="if(!confirm('System-User wirklich löschen?')) $event.preventDefault()"
-                                                        class="text-xs text-red-400 hover:text-red-600
+                                                        class="inline-flex items-center min-h-11 py-2 text-sm text-red-400 hover:text-red-600
                                                                transition-colors tracking-wide">
                                                     Löschen
                                                 </button>

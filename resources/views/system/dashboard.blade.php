@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/system/dashboard.blade.php
-    VERSION: 1.7.0
-    DATE:    2026-06-18
+    VERSION: 1.7.1
+    DATE:    2026-06-25
 
     DESCRIPTION:
       System-Dashboard — landing page after successful system login + 2FA.
@@ -29,6 +29,9 @@
 
     CHANGES: 1.7.0 (2026-06-18) Kachel "Policy-Versionen verwalten" ergänzt
              (route('system.policy.index')).
+    CHANGES: 1.7.1 (2026-06-25) Android-Touch-Targets vergroessert: Logout-
+             Button auf min-h-11 angehoben. Navigations-Kacheln (p-6) waren
+             bereits weit über 44px Taphöhe, keine Aenderung nötig.
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -72,7 +75,7 @@
                 <form method="POST" action="{{ route('system.logout') }}">
                     @csrf
                     <button type="submit"
-                            class="text-xs text-gray-400 hover:text-red-500
+                            class="min-h-11 py-2 px-3 text-sm text-gray-400 hover:text-red-500
                                    transition-colors duration-150 tracking-wide">
                         Abmelden
                     </button>

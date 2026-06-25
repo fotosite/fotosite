@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/mandant/passkey/index.blade.php
-    VERSION: 1.8.0
-    DATE:    2026-06-19
+    VERSION: 1.8.1
+    DATE:    2026-06-25
 
     DESCRIPTION:
       Passkey-Verwaltung für Mandanten — Liste aller registrierten Passkeys,
@@ -24,6 +24,10 @@
       DELETE /mandant/passkeys/{id}           — Löschen (route('mandant.passkeys.destroy'))
       GET  /mandant/dashboard                 — Zurück (route('mandant.dashboard'))
 
+    CHANGES: 1.8.1 (2026-06-25) Android-Touch-Targets vergroessert: Logout-
+             Button, Zurueck-Link, Registrieren-Button, Modal-Buttons
+             (Abbrechen/Weiter) und Tabellen-Aktionen (Umbenennen/Speichern/
+             Löschen) auf min-h-11 angehoben; betroffene text-xs auf text-sm.
     CHANGES: 1.8.0 (2026-06-19) partials.unsaved-changes-guard eingebunden;
              Gerätename-Umbenennen markiert dirty solange ungespeichert
              (Eingabefeld @input), clearDirty nach erfolgreichem Speichern
@@ -71,7 +75,7 @@
                 <form method="POST" action="{{ route('mandant.logout') }}">
                     @csrf
                     <button type="submit"
-                            class="text-xs text-gray-400 hover:text-red-500
+                            class="min-h-11 py-2 px-3 text-sm text-gray-400 hover:text-red-500
                                    transition-colors duration-150 tracking-wide">
                         Abmelden
                     </button>
@@ -89,7 +93,7 @@
         {{-- Zurück-Link --}}
         <div class="mt-6 mb-8">
             <a href="{{ route('mandant.dashboard') }}"
-               class="inline-flex items-center gap-1.5 text-xs text-indigo-500
+               class="inline-flex items-center gap-1.5 min-h-11 py-2 text-sm text-indigo-500
                       hover:text-indigo-700 transition-colors">
                 <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg"
                      fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -194,7 +198,7 @@
                     class="inline-flex items-center justify-center gap-2 rounded-lg
                            bg-indigo-600 text-sm font-medium text-white
                            hover:bg-indigo-700 active:bg-indigo-800
-                           transition-colors duration-150 shadow-sm
+                           transition-colors duration-150 shadow-sm min-h-11
                            w-full py-3 md:w-auto md:py-2 md:px-5">
                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg"
                      fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -228,11 +232,11 @@
                        class="w-full border rounded-lg px-3 py-2 text-sm mb-4">
                 <div class="flex gap-3 justify-end">
                     <button @click="showNameModal = false"
-                            class="text-sm text-gray-500">
+                            class="min-h-11 py-2 px-3 text-sm text-gray-500">
                         Abbrechen
                     </button>
                     <button @click="showNameModal = false; registerPasskey(deviceName)"
-                            class="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg">
+                            class="px-4 py-2 min-h-11 bg-indigo-600 text-white text-sm rounded-lg">
                         Weiter
                     </button>
                 </div>
@@ -311,13 +315,13 @@
                                     {{-- Umbenennen / Speichern --}}
                                     <button x-show="!editing"
                                             @click="editing = true; $nextTick(() => $refs.nameInput.focus())"
-                                            class="text-xs text-indigo-500 hover:text-indigo-700
+                                            class="inline-flex items-center min-h-11 py-2 px-2 text-sm text-indigo-500 hover:text-indigo-700
                                                    font-medium transition-colors">
                                         Umbenennen
                                     </button>
                                     <button x-show="editing"
                                             @click="saveRename({{ $passkey->pk_id }}, name); editing = false; $store.unsavedGuard.clearDirty()"
-                                            class="text-xs text-green-600 hover:text-green-800
+                                            class="inline-flex items-center min-h-11 py-2 px-2 text-sm text-green-600 hover:text-green-800
                                                    font-medium transition-colors">
                                         Speichern
                                     </button>
@@ -332,7 +336,7 @@
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"
-                                                class="text-xs text-red-400 hover:text-red-600
+                                                class="inline-flex items-center min-h-11 py-2 px-2 text-sm text-red-400 hover:text-red-600
                                                        font-medium transition-colors">
                                             Löschen
                                         </button>

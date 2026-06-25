@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/mandant/pwlist.blade.php
-    VERSION: 1.19.0
-    DATE:    2026-06-19
+    VERSION: 1.19.1
+    DATE:    2026-06-25
 
     DESCRIPTION:
       Mandant Passwortliste — pw1–pw6 und Gültigkeitszeitraum bearbeiten.
@@ -19,6 +19,10 @@
       POST  mandant.pwlist.check   — Passwort systemweit prüfen (JSON)
       POST  mandant.logout         — Abmelden
 
+    CHANGES: 1.19.1 (2026-06-25) Android-Touch-Targets vergroessert: Logout-
+             Button, Zurueck-Link und Speichern-Button auf min-h-11
+             angehoben. Eye/Copy-Icon-Buttons in pw1-pw6 bleiben unveraendert
+             (inline Icon-Affordanzen innerhalb fixhoher Eingabefelder).
     CHANGES: 1.19.0 (2026-06-19) partials.unsaved-changes-guard eingebunden;
              Eingaben in pw1–pw6 sowie Gültigkeitszeitraum markieren dirty,
              Speichern-Submit löscht dirty.
@@ -67,7 +71,7 @@
                 <form method="POST" action="{{ route('mandant.logout') }}">
                     @csrf
                     <button type="submit"
-                            class="text-xs text-gray-400 hover:text-red-500
+                            class="min-h-11 py-2 px-3 text-sm text-gray-400 hover:text-red-500
                                    transition-colors duration-150 tracking-wide">
                         Abmelden
                     </button>
@@ -85,7 +89,7 @@
         {{-- Zurück-Link --}}
         <div class="mt-4 mb-6">
             <a href="{{ route('mandant.dashboard') }}"
-               class="inline-flex items-center gap-1.5 text-xs text-indigo-500
+               class="inline-flex items-center gap-1.5 min-h-11 py-2 text-sm text-indigo-500
                       hover:text-indigo-700 transition-colors">
                 <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg"
                      fill="none" viewBox="0 0 24 24" stroke-width="2"
@@ -679,7 +683,7 @@
 
                 <div class="mt-6">
                     <button type="submit"
-                            class="w-full rounded-lg bg-indigo-600 px-4 py-2.5
+                            class="w-full rounded-lg bg-indigo-600 px-4 py-2.5 min-h-11
                                    text-sm font-semibold text-white
                                    hover:bg-indigo-700 focus:outline-none
                                    focus:ring-2 focus:ring-indigo-500

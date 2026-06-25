@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/system/mandanten/edit.blade.php
-    VERSION: 1.1.0
-    DATE:    2026-06-08
+    VERSION: 1.1.1
+    DATE:    2026-06-25
 
     DESCRIPTION:
       Mandant settings edit — read-only profile card + editable settings card.
@@ -15,6 +15,9 @@
       PATCH  system.mandanten.update  — save settings
       GET    system.mandanten.show    — back link
       POST   logout                   — Breeze logout
+
+    CHANGES: 1.1.1 (2026-06-25) Android-Touch-Targets vergroessert: Logout-
+             Button, Zurueck-Link und Speichern-Button auf min-h-11 angehoben.
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -50,7 +53,7 @@
                 <form method="POST" action="{{ route('system.logout') }}">
                     @csrf
                     <button type="submit"
-                            class="text-xs text-gray-400 hover:text-red-500
+                            class="min-h-11 py-2 px-3 text-sm text-gray-400 hover:text-red-500
                                    transition-colors duration-150 tracking-wide">
                         Abmelden
                     </button>
@@ -63,7 +66,7 @@
 
         <div class="mb-6">
             <a href="{{ route('system.mandanten.show', $mandant->mand_id) }}"
-               class="text-xs text-gray-400 hover:text-gray-600
+               class="inline-flex items-center min-h-11 py-2 text-sm text-gray-400 hover:text-gray-600
                       transition-colors duration-150 tracking-wide">
                 ← Galerist:in ansehen
             </a>
@@ -210,7 +213,7 @@
 
                     <div class="mt-6">
                         <button type="submit"
-                                class="w-full flex justify-center py-2 px-4 rounded-md
+                                class="w-full flex justify-center py-2 px-4 min-h-11 rounded-md
                                        text-sm font-medium text-white bg-gray-800
                                        hover:bg-gray-700 transition-colors
                                        focus:outline-none focus:ring-2

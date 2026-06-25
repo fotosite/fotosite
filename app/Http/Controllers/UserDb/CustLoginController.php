@@ -1,13 +1,21 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustLoginController.php
- * VERSION:     1.15.0
+ * VERSION:     1.15.1
  * AUTOR:       Martin Wagner
- * DATUM:       2026-06-23
+ * DATUM:       2026-06-25
  *
  * ZWECK:       Cust-Login — registrierter Login mit optionaler 2FA,
  *              anonymer Login per Passwort-Sequenz, Passkey-Login, Logout.
  *
+ * CHANGES:     1.15.1 (2026-06-25) handleAnonLogin() — eingegebenes Passwort
+ *              wird vor dem decrypt()-Vergleich gegen pw1-pw6 mit trim()
+ *              versehen, da das Feld 'password' per Laravel TrimStrings-
+ *              Middleware von automatischem Trimming ausgenommen ist; die
+ *              gespeicherten pw1-pw6 werden hingegen beim Anlegen getrimmt
+ *              (MandantPwListController), wodurch ein mitkopiertes Leer-
+ *              zeichen den Login sonst faelschlich blockieren wuerde.
+ *              registrierter handleLogin() (Hash::check) bleibt unveraendert.
  * CHANGES:     1.15.0 (2026-06-23) handleLogin() — verwaister Account (kein
  *              cust_pcode-Eintrag mehr vorhanden) wird bei Login-Versuch
  *              still geloescht (cust_user + passkey + passkey_dismissed),
@@ -294,7 +302,7 @@ class CustLoginController extends UserDbController
             'password' => ['required', 'string', 'min:8'],
         ]);
 
-        $password = $request->input('password');
+        $password = trim($request->input('password'));
 
         $pwLists = PwList::where('valid_from', '<=', now())
             ->where('valid_until', '>=', now())

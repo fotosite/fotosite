@@ -1,12 +1,16 @@
 {{--
     FILE:    resources/views/mandant/cust/einladen.blade.php
-    VERSION: 1.5.0
+    VERSION: 1.5.1
     AUTHOR:  Martin Wagner
-    DATE:    2026-06-22
+    DATE:    2026-06-25
 
     DESCRIPTION:
       Einladungsformular für neue Mitglieder.
       POST zu route('mandant.kunden.store').
+
+    CHANGES: 1.5.1 (2026-06-25) Android-Touch-Targets vergroessert: Logout-
+             Button, Submit-Button und Zurueck-Link auf min-h-11 py-2
+             angehoben; betroffene text-xs auf text-sm.
 
     ROUTES USED:
       POST /mandant/kunden/einladen — Einladung senden (route('mandant.kunden.store'))
@@ -54,7 +58,7 @@
                 <form method="POST" action="{{ route('mandant.logout') }}">
                     @csrf
                     <button type="submit"
-                            class="text-xs text-gray-400 hover:text-red-500
+                            class="min-h-11 py-2 px-3 text-sm text-gray-400 hover:text-red-500
                                    transition-colors duration-150 tracking-wide">
                         Abmelden
                     </button>
@@ -192,7 +196,7 @@
             {{-- Submit --}}
             <div class="pt-2">
                 <button type="submit"
-                        class="inline-flex items-center rounded-lg
+                        class="inline-flex items-center rounded-lg min-h-11
                                bg-indigo-600 px-5 py-2 text-sm font-medium
                                text-white hover:bg-indigo-700
                                transition-colors duration-150">
@@ -205,7 +209,7 @@
         {{-- Zurück --}}
         <div class="mt-8">
             <a href="{{ route('mandant.kunden.index') }}"
-               class="text-xs text-gray-400 hover:text-indigo-600
+               class="inline-flex items-center min-h-11 py-2 text-sm text-gray-400 hover:text-indigo-600
                       transition-colors duration-150 tracking-wide">
                 ← Zurück zur Mitgliederliste
             </a>

@@ -1,8 +1,8 @@
 {{--
     FILE:    resources/views/mandant/cust/index.blade.php
-    VERSION: 3.7.5
+    VERSION: 3.7.6
     AUTHOR:  Martin Wagner
-    DATE:    2026-06-23
+    DATE:    2026-06-25
 
     DESCRIPTION:
       Mitgliederliste des eingeloggten Mandanten.
@@ -32,6 +32,10 @@
       DELETE /mandant/kunden/{id}                 — Entfernen (route('mandant.kunden.destroy'))
       GET    /mandant/dashboard                   — Dashboard (route('mandant.dashboard'))
 
+    CHANGES: 3.7.6 (2026-06-25) Android-Touch-Targets vergroessert: Logout-,
+             Zurueck- und Einladen-Link, Sortier-Buttons, Desktop-
+             sec_level-Trigger sowie Speichern/Entfernen-Buttons (Desktop)
+             auf min-h-11 py-2 angehoben; betroffene text-xs auf text-sm.
     CHANGES: 3.7.5 (2026-06-23) Desktop-Dropdown-Trigger sec_level: w-9 -> w-14,
              da die schmale Breite fuer Ziffer + Chevron-Icon (3.7.4) zu eng war.
     CHANGES: 3.7.4 (2026-06-23) sec_level-Dropdown-Trigger (Mobile + Desktop)
@@ -141,7 +145,7 @@
                 <form method="POST" action="{{ route('mandant.logout') }}">
                     @csrf
                     <button type="submit"
-                            class="text-xs text-gray-400 hover:text-red-500
+                            class="min-h-11 py-2 px-3 text-sm text-gray-400 hover:text-red-500
                                    transition-colors duration-150 tracking-wide">
                         Abmelden
                     </button>
@@ -159,7 +163,7 @@
         {{-- Zurück-Link --}}
         <div class="mt-4 mb-6">
             <a href="{{ route('mandant.dashboard') }}"
-               class="inline-flex items-center gap-1.5 text-xs text-indigo-500
+               class="inline-flex items-center gap-1.5 min-h-11 py-2 text-sm text-indigo-500
                       hover:text-indigo-700 transition-colors">
                 <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg"
                      fill="none" viewBox="0 0 24 24" stroke-width="2"
@@ -182,7 +186,7 @@
                 </p>
             </div>
             <a href="{{ route('mandant.kunden.invite') }}"
-               class="inline-flex items-center gap-2 rounded-lg
+               class="inline-flex items-center gap-2 rounded-lg min-h-11
                       border border-indigo-300 bg-indigo-50 px-4 py-2
                       text-sm font-medium text-indigo-700
                       hover:bg-indigo-100 hover:border-indigo-400
@@ -224,7 +228,7 @@
                         <span class="text-sm text-gray-500 shrink-0">Sortieren:</span>
                         <button type="button"
                                 @click="setSort('email')"
-                                class="inline-flex items-center gap-1 rounded-lg border px-3 h-8 text-xs font-medium
+                                class="inline-flex items-center gap-1 rounded-lg border px-3 min-h-11 py-2 text-sm font-medium
                                        transition-colors duration-150"
                                 :class="sortField === 'email'
                                     ? 'border-indigo-300 bg-indigo-50 text-indigo-700'
@@ -234,7 +238,7 @@
                         </button>
                         <button type="button"
                                 @click="setSort('alias')"
-                                class="inline-flex items-center gap-1 rounded-lg border px-3 h-8 text-xs font-medium
+                                class="inline-flex items-center gap-1 rounded-lg border px-3 min-h-11 py-2 text-sm font-medium
                                        transition-colors duration-150"
                                 :class="sortField === 'alias'
                                     ? 'border-indigo-300 bg-indigo-50 text-indigo-700'
@@ -244,7 +248,7 @@
                         </button>
                         <button type="button"
                                 @click="setSort('sec_level')"
-                                class="inline-flex items-center gap-1 rounded-lg border px-3 h-8 text-xs font-medium
+                                class="inline-flex items-center gap-1 rounded-lg border px-3 min-h-11 py-2 text-sm font-medium
                                        transition-colors duration-150"
                                 :class="sortField === 'sec_level'
                                     ? 'border-indigo-300 bg-indigo-50 text-indigo-700'
@@ -447,9 +451,9 @@
                                                     @click="open = !open"
                                                     :aria-expanded="open"
                                                     aria-haspopup="listbox"
-                                                    class="w-14 h-8 inline-flex items-center justify-between gap-1
-                                                           rounded-lg border border-gray-300 bg-white px-2 py-1
-                                                           text-xs font-medium text-gray-800 shadow-sm
+                                                    class="w-14 min-h-11 inline-flex items-center justify-between gap-1
+                                                           rounded-lg border border-gray-300 bg-white px-2 py-2
+                                                           text-sm font-medium text-gray-800 shadow-sm
                                                            hover:border-indigo-400 focus:outline-none
                                                            focus:ring-2 focus:ring-indigo-400">
                                                 <span x-text="val"></span>
@@ -485,7 +489,7 @@
 
                                         <button type="submit"
                                                 class="rounded-lg border border-indigo-200
-                                                       bg-indigo-50 px-2.5 h-10 md:h-8 text-xs
+                                                       bg-indigo-50 px-2.5 min-h-11 py-2 text-sm
                                                        font-medium text-indigo-700
                                                        hover:bg-indigo-100
                                                        transition-colors duration-150">
@@ -507,7 +511,7 @@
                                         @method('DELETE')
                                         <button type="submit"
                                                 class="rounded-lg border border-red-200
-                                                       bg-red-50 px-2.5 h-10 md:h-8 text-xs
+                                                       bg-red-50 px-2.5 min-h-11 py-2 text-sm
                                                        font-medium text-red-600
                                                        hover:bg-red-100
                                                        transition-colors duration-150">
