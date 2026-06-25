@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/system/users/index.blade.php
-    VERSION: 1.3.1
+    VERSION: 1.4.0
     DATE:    2026-06-25
 
     DESCRIPTION:
@@ -140,44 +140,51 @@
             </h2>
 
             <form method="POST"
-                  action="{{ route('system.users.invite') }}"
-                  class="flex items-end gap-3">
+                  action="{{ route('system.users.invite') }}">
                 @csrf
 
-                <div class="flex-1">
-                    <label for="email"
-                           class="block text-sm font-medium text-gray-700 mb-1">
-                        E-Mail
-                    </label>
-                    <input id="email" name="email" type="email"
-                           value="{{ old('email') }}"
-                           placeholder="ihre@email.de"
-                           required
-                           class="block w-full rounded-md border-gray-300 shadow-sm
-                                  text-sm focus:border-gray-500 focus:ring-gray-500">
-                </div>
-
-                @if(session('_is_primary'))
-                    <div class="flex items-center pb-2">
-                        <input type="hidden" name="is_primary" value="0">
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox"
-                                   id="is_primary" name="is_primary"
-                                   value="1"
-                                   class="h-4 w-4 rounded border-gray-300 text-gray-800
-                                          focus:ring-gray-500">
-                            <span class="text-sm text-gray-700">Primärer System-User</span>
+                <div class="space-y-3">
+                    {{-- Zeile 1: E-Mail --}}
+                    <div>
+                        <label for="email"
+                               class="block text-sm font-medium text-gray-700 mb-1">
+                            E-Mail
                         </label>
+                        <input id="email" name="email" type="email"
+                               value="{{ old('email') }}"
+                               placeholder="ihre@email.de"
+                               required
+                               class="block w-full rounded-md border-gray-300 shadow-sm
+                                      text-sm focus:border-gray-500 focus:ring-gray-500">
                     </div>
-                @endif
 
-                <button type="submit"
-                        class="flex-shrink-0 py-2 px-4 min-h-11 rounded-md text-sm font-medium
-                               text-white bg-gray-800 hover:bg-gray-700 transition-colors
-                               focus:outline-none focus:ring-2 focus:ring-gray-500
-                               focus:ring-offset-2">
-                    Einladung senden
-                </button>
+                    {{-- Zeile 2: Checkbox links + Button rechts --}}
+                    <div class="flex items-center justify-between gap-3">
+                        @if(session('_is_primary'))
+                            <div class="flex items-center">
+                                <input type="hidden" name="is_primary" value="0">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox"
+                                           id="is_primary" name="is_primary"
+                                           value="1"
+                                           class="h-4 w-4 rounded border-gray-300 text-gray-800
+                                                  focus:ring-gray-500">
+                                    <span class="text-sm text-gray-700">Primärer System-User</span>
+                                </label>
+                            </div>
+                        @else
+                            <div></div>
+                        @endif
+
+                        <button type="submit"
+                                class="flex-shrink-0 py-2 px-4 min-h-11 rounded-md text-sm font-medium
+                                       text-white bg-gray-800 hover:bg-gray-700 transition-colors
+                                       focus:outline-none focus:ring-2 focus:ring-gray-500
+                                       focus:ring-offset-2">
+                            Einladung senden
+                        </button>
+                    </div>
+                </div>
             </form>
         </div>
 
