@@ -287,7 +287,7 @@
                     <div class="mt-5 flex gap-3">
                         <button type="button" @click="pwModalOpen = false"
                                 class="w-full px-4 py-2 min-h-11 text-sm text-gray-500
-                                       border border-gray-300 rounded-lg hover:bg-gray-50">
+                                       border border-gray-300 rounded-lg hover:bg-gray-50 active:opacity-75 active:scale-95 transition-all duration-75 select-none">
                             Abbrechen
                         </button>
                         <button type="submit"
@@ -340,7 +340,7 @@
                     <div class="mt-5 flex gap-3">
                         <button type="button" @click="emailModalOpen = false"
                                 class="w-full px-4 py-2 min-h-11 text-sm text-gray-500
-                                       border border-gray-300 rounded-lg hover:bg-gray-50">
+                                       border border-gray-300 rounded-lg hover:bg-gray-50 active:opacity-75 active:scale-95 transition-all duration-75 select-none">
                             Abbrechen
                         </button>
                         <button type="submit"
