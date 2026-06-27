@@ -391,11 +391,11 @@
                 </p>
                 @endif
                 <div class="flex flex-col gap-2 md:flex-row md:gap-3">
-                    <a href="{{ route('mandant.passkeys') }}"
-                       class="w-full text-center px-4 py-3 md:py-2 min-h-11 bg-indigo-600
-                              text-white text-sm rounded-lg hover:bg-indigo-700">
+                    <button type="button" @click="window.location='{{ route('mandant.passkeys') }}'"
+                            class="w-full text-center px-4 py-3 md:py-2 min-h-11 bg-indigo-600
+                                   text-white text-sm rounded-lg hover:bg-indigo-700 active:opacity-75 active:scale-95 transition-all duration-75 select-none">
                         Passkey einrichten
-                    </a>
+                    </button>
                     <button @click="
                         open = false;
                         fetch('{{ route('mandant.passkeys.dismiss') }}', {
@@ -406,12 +406,12 @@
                             }
                         })"
                         class="w-full px-4 py-3 md:py-2 min-h-11 text-sm text-gray-500
-                               border border-gray-300 rounded-lg hover:bg-gray-50">
+                               border border-gray-300 rounded-lg hover:bg-gray-50 active:opacity-75 active:scale-95 transition-all duration-75 select-none">
                         Nie wieder fragen
                     </button>
                     <button @click="open = false"
                             class="w-full px-4 py-3 md:py-2 min-h-11 text-sm text-gray-400
-                                   hover:text-gray-600">
+                                   hover:text-gray-600 active:opacity-75 active:scale-95 transition-all duration-75 select-none">
                         Später
                     </button>
                 </div>
