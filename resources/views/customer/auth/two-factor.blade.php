@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/customer/auth/two-factor.blade.php
-    VERSION: 1.0.1
+    VERSION: 1.1.2
     AUTHOR:  Martin Wagner
     DATE:    2026-06-08
 
@@ -25,7 +25,7 @@
 <body class="min-h-screen bg-gray-100 font-sans antialiased">
 
 <div class="min-h-screen flex items-center justify-center px-4">
-    <div class="w-full max-w-sm bg-white rounded-lg shadow-md px-8 py-8">
+    <div x-data="{}" class="w-full max-w-sm bg-white rounded-lg shadow-md px-8 py-8">
 
         <p class="text-[11px] font-mono tracking-widest uppercase text-gray-400 mb-1">
             Fotogalerie
@@ -69,11 +69,10 @@
 
             <div class="mt-6">
                 <button type="submit"
-                        class="w-full flex justify-center py-2 px-4 rounded-md
-                               text-sm font-medium text-white bg-indigo-600
-                               hover:bg-indigo-700 transition-colors
-                               focus:outline-none focus:ring-2
-                               focus:ring-indigo-500 focus:ring-offset-2">
+                        class="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold
+                               text-white hover:bg-indigo-700 focus:outline-none focus:ring-2
+                               focus:ring-indigo-500 focus:ring-offset-2 transition-colors
+                               active:opacity-75 active:scale-95 transition-all duration-75">
                     Bestätigen
                 </button>
             </div>
@@ -81,7 +80,8 @@
 
         <div class="mt-5 text-center">
             <a href="{{ route('customer.login') }}"
-               class="text-sm text-gray-500 hover:text-indigo-600 transition-colors">
+               class="text-sm text-gray-500 hover:text-indigo-600 transition-colors
+                      active:opacity-75 active:scale-95 transition-all duration-75">
                 ← Zurück zum Login
             </a>
         </div>

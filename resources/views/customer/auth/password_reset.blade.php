@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/customer/auth/password_reset.blade.php
-    VERSION: 1.1.0
+    VERSION: 1.1.1
     DATE:    2026-06-12
 
     DESCRIPTION:
@@ -130,7 +130,7 @@
 
                 <div class="mt-6">
                     <button type="submit"
-                            class="w-full flex justify-center rounded-lg bg-indigo-600 px-4 py-3 md:py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                            class="w-full flex justify-center rounded-lg bg-indigo-600 px-4 py-3 md:py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 active:opacity-75 active:scale-95 transition-all duration-75">
                         Passwort setzen
                     </button>
                 </div>

@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/auth/login-modal.blade.php
-    VERSION: 1.6.0
+    VERSION: 1.7.0
     DATE:    2026-06-22
 
     DESCRIPTION:
@@ -139,7 +139,8 @@
                                 class="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm
                                        font-semibold text-white hover:bg-indigo-700
                                        focus:outline-none focus:ring-2 focus:ring-indigo-500
-                                       focus:ring-offset-2 transition-colors">
+                                       focus:ring-offset-2 transition-colors
+                                       active:opacity-75 active:scale-95 transition-all duration-75">
                             Anmelden
                         </button>
                     </div>
@@ -158,6 +159,7 @@
                                px-4 py-2.5 text-sm font-semibold text-indigo-700
                                hover:bg-indigo-100 focus:outline-none focus:ring-2
                                focus:ring-indigo-500 focus:ring-offset-2 transition-colors
+                               active:opacity-75 active:scale-95 transition-all duration-75
                                flex items-center justify-center gap-2">
                     <svg class="w-4 h-4 shrink-0" xmlns="http://www.w3.org/2000/svg"
                          fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -255,7 +257,8 @@
                                 class="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm
                                        font-semibold text-white hover:bg-indigo-700
                                        focus:outline-none focus:ring-2 focus:ring-indigo-500
-                                       focus:ring-offset-2 transition-colors">
+                                       focus:ring-offset-2 transition-colors
+                                       active:opacity-75 active:scale-95 transition-all duration-75">
                             Anmelden
                         </button>
                     </div>
@@ -267,7 +270,8 @@
             <div class="mt-7 text-center">
                 <button type="button"
                         @click="page = 'mand'"
-                        class="text-xs text-gray-400 hover:text-gray-500 transition-colors">
+                        class="text-xs text-gray-400 hover:text-gray-500 transition-colors
+                               active:opacity-75 active:scale-95 transition-all duration-75">
                     Galeristen-Login
                 </button>
             </div>
@@ -290,6 +294,7 @@
                            px-4 py-2.5 text-sm font-semibold text-indigo-700
                            hover:bg-indigo-100 focus:outline-none focus:ring-2
                            focus:ring-indigo-500 focus:ring-offset-2 transition-colors
+                           active:opacity-75 active:scale-95 transition-all duration-75
                            flex items-center justify-center gap-2">
                 <svg class="w-4 h-4 shrink-0" xmlns="http://www.w3.org/2000/svg"
                      fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -391,7 +396,8 @@
                             class="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm
                                    font-semibold text-white hover:bg-indigo-700
                                    focus:outline-none focus:ring-2 focus:ring-indigo-500
-                                   focus:ring-offset-2 transition-colors">
+                                   focus:ring-offset-2 transition-colors
+                                   active:opacity-75 active:scale-95 transition-all duration-75">
                         Anmelden
                     </button>
                 </div>

@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/customer/dashboard.blade.php
-    VERSION: 2.9.0
+    VERSION: 2.9.2
     DATE:    2026-06-25
 
     DESCRIPTION:
@@ -380,11 +380,13 @@
                 </p>
             </div>
             <div class="flex flex-col gap-2 md:flex-row md:gap-3 w-full md:w-auto">
-                <a href="{{ route('customer.passkeys') }}"
-                   class="w-full md:w-auto text-center px-4 py-3 md:py-2 min-h-11
-                          bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700">
+                <button type="button"
+                        @click="window.location='{{ route('customer.passkeys') }}'"
+                        class="w-full md:w-auto text-center px-4 py-3 md:py-2 min-h-11
+                               bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700
+                               active:opacity-75 active:scale-95 transition-all duration-75">
                     Einrichten
-                </a>
+                </button>
                 <button @click="
                     open = false;
                     fetch('{{ route('customer.passkeys.dismiss') }}', {
@@ -395,12 +397,14 @@
                         }
                     })"
                     class="w-full md:w-auto px-4 py-3 md:py-2 min-h-11 text-sm text-gray-500
-                           border border-gray-300 rounded-lg hover:bg-gray-50">
+                           border border-gray-300 rounded-lg hover:bg-gray-50
+                           active:opacity-75 active:scale-95 transition-all duration-75">
                     Nie wieder
                 </button>
                 <button @click="open = false"
                         class="w-full md:w-auto px-4 py-3 md:py-2 min-h-11 text-sm text-gray-400
-                               hover:text-gray-600">
+                               hover:text-gray-600
+                               active:opacity-75 active:scale-95 transition-all duration-75">
                     Später
                 </button>
             </div>
