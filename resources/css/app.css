@@ -5,3 +5,8 @@
 [x-cloak] {
     display: none;
 }
+
+button {
+    user-select: none;
+    -webkit-user-select: none;
+}
