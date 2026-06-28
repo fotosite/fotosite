@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/system/mandanten/index.blade.php
-    VERSION: 1.2.1
+    VERSION: 1.2.2
     DATE:    2026-06-25
 
     DESCRIPTION:
@@ -136,7 +136,7 @@
                 </div>
                 <button type="submit"
                         class="flex-shrink-0 py-2 px-4 min-h-11 rounded-md text-sm font-medium
-                               text-white bg-gray-800 hover:bg-gray-700 transition-colors
+                               text-white bg-gray-800 hover:bg-gray-700 transition-colors active:opacity-75 active:scale-95 transition-all duration-75 select-none
                                focus:outline-none focus:ring-2 focus:ring-gray-500
                                focus:ring-offset-2">
                     Einladung senden
@@ -188,16 +188,18 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center gap-3">
-                                        <a href="{{ route('system.mandanten.show', $m->mand_id) }}"
-                                           class="inline-flex items-center min-h-11 py-2 text-sm text-gray-500 hover:text-gray-800
-                                                  transition-colors tracking-wide">
+                                        <button type="button"
+                                                @click="window.location='{{ route('system.mandanten.show', $m->mand_id) }}'"
+                                                class="inline-flex items-center min-h-11 py-2 text-sm text-gray-500 hover:text-gray-800
+                                                       transition-colors tracking-wide select-none">
                                             Ansehen
-                                        </a>
-                                        <a href="{{ route('system.mandanten.edit', $m->mand_id) }}"
-                                           class="inline-flex items-center min-h-11 py-2 text-sm text-gray-500 hover:text-amber-600
-                                                  transition-colors tracking-wide">
+                                        </button>
+                                        <button type="button"
+                                                @click="window.location='{{ route('system.mandanten.edit', $m->mand_id) }}'"
+                                                class="inline-flex items-center min-h-11 py-2 text-sm text-gray-500 hover:text-amber-600
+                                                       transition-colors tracking-wide select-none">
                                             Bearbeiten
-                                        </a>
+                                        </button>
                                         <form method="POST"
                                               action="{{ route('system.mandanten.destroy', $m->mand_id) }}">
                                             @csrf

@@ -6,7 +6,7 @@
     display: none;
 }
 
-button {
+button, a, [role="button"] {
     user-select: none;
     -webkit-user-select: none;
 }
