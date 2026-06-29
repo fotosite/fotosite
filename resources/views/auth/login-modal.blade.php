@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/auth/login-modal.blade.php
-    VERSION: 1.8.0
+    VERSION: 2.0.0
     DATE:    2026-06-22
 
     DESCRIPTION:
@@ -90,7 +90,7 @@
 
             {{-- Tab: Kurzzeit-Passwort --}}
             <div x-show="custTab === 'anon'" x-cloak>
-                <form method="POST" action="{{ route('customer.login.anon') }}">
+                <form method="POST" action="{{ route('customer.login.anon') }}" x-data="{ submitted: false }">
                     @csrf
 
                     @error('password')
@@ -135,7 +135,9 @@
                     </div>
 
                     <div class="mt-5">
-                        <button type="submit"
+                        <button type="button"
+                                @click="$el.closest('form').submit(); submitted = true"
+                                :disabled="submitted"
                                 class="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm
                                        font-semibold text-white hover:bg-indigo-700
                                        focus:outline-none focus:ring-2 focus:ring-indigo-500
@@ -179,7 +181,7 @@
                     </div>
                 </div>
 
-                <form method="POST" action="{{ route('customer.login.handle') }}" x-data="{ dirty: false, show: false }">
+                <form method="POST" action="{{ route('customer.login.handle') }}" x-data="{ dirty: false, show: false, submitted: false }">
                     @csrf
 
                     @error('credentials')
@@ -251,7 +253,9 @@
                     </div>
 
                     <div class="mt-5">
-                        <button type="submit"
+                        <button type="button"
+                                @click="$el.closest('form').submit(); submitted = true"
+                                :disabled="submitted"
                                 class="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm
                                        font-semibold text-white hover:bg-indigo-700
                                        focus:outline-none focus:ring-2 focus:ring-indigo-500
@@ -311,7 +315,7 @@
                 </div>
             </div>
 
-            <form method="POST" action="/mandant/login" x-data="{ dirty: false, show: false }">
+            <form method="POST" action="/mandant/login" x-data="{ dirty: false, show: false, submitted: false }">
                 @csrf
                 <input type="hidden" name="_form" value="mand">
 
@@ -387,7 +391,9 @@
                 </div>
 
                 <div class="mt-5">
-                    <button type="submit"
+                    <button type="button"
+                            @click="$el.closest('form').submit(); submitted = true"
+                            :disabled="submitted"
                             class="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm
                                    font-semibold text-white hover:bg-indigo-700
                                    focus:outline-none focus:ring-2 focus:ring-indigo-500

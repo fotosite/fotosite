@@ -27,7 +27,8 @@
         {{-- Zustand 1: E-Mail + Passwort --}}
         <form x-show="!show2fa"
               method="POST" action="{{ route('system.backstage.handle') }}"
-              autocomplete="off">
+              autocomplete="off"
+              x-data="{ submitted: false }">
             @csrf
 
             <div>
@@ -51,7 +52,8 @@
 
             <div class="mt-6">
                 <button type="button"
-                        @click="$el.closest('form').submit()"
+                        @click="submitted = true; $el.closest('form').submit()"
+                        :disabled="submitted"
                         class="w-full flex justify-center py-2 px-4 rounded-md text-sm font-medium
                                text-white bg-gray-800 hover:bg-gray-700 transition-colors
                                focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
