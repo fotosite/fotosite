@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/system/users/index.blade.php
-    VERSION: 1.4.0
+    VERSION: 1.5.1
     DATE:    2026-06-25
 
     DESCRIPTION:
@@ -246,8 +246,8 @@
                                             </button>
                                         </form>
 
-                                        {{-- Delete (not self, not primary) --}}
-                                        @if(! $user->is_primary && $user->syst_id !== $currentSystId)
+                                        {{-- Delete (nur für eingeloggten primary-User, nicht eigener Account) --}}
+                                        @if(session('_is_primary') && ! $user->is_primary && $user->syst_id !== session('_syst_id'))
                                             <form method="POST"
                                                   action="{{ route('system.users.destroy', $user->syst_id) }}">
                                                 @csrf

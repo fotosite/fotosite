@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/SystemMandantController.php
- * VERSION:     1.8.0
+ * VERSION:     1.9.0
  *
  * FUNCTIONS:   index()          — Lists all MandUser records ordered by mand_lastname.
  *                                 Reads: userdb.mand_user.*
@@ -55,6 +55,7 @@
  *              App\Models\SessionDb\CustInvite::where()->delete()
  *              App\Mail\InviteMail
  *              App\Mail\CustAccountDeletedMail
+ *              App\Mail\MandAccountDeletedMail
  *              Illuminate\Support\Facades\Hash::make()
  *              Illuminate\Support\Facades\Mail::to()->send()
  *              Illuminate\Support\Str::random()
@@ -72,7 +73,9 @@
  *              userdb.passkey_dismissed.pd_id, user_type, user_id (DELETE)
  *              sessiondb.cust_invite.invite_id, mand_id (DELETE)
  *
- * CHANGES:     1.8.0 (2026-06-22) destroy() — Cust-Kaskade ergänzt (analog
+ * CHANGES:     1.9.0 (2026-06-29) destroy() — MandAccountDeletedMail an Mandant
+ *              vor der Löschung ergänzt.
+ *              1.8.0 (2026-06-22) destroy() — Cust-Kaskade ergänzt (analog
  *              MandantCustController@destroy): verwaiste cust_user werden vor der
  *              mand-Löschung per CustAccountDeletedMail benachrichtigt und gelöscht
  *              (inkl. passkey/passkey_dismissed); cust_pcode- und
@@ -94,6 +97,7 @@
 namespace App\Http\Controllers\UserDb;
 
 use App\Mail\CustAccountDeletedMail;
+use App\Mail\MandAccountDeletedMail;
 use App\Mail\InviteMail;
 use App\Models\SessionDb\CustInvite;
 use App\Models\UserDb\CustPcode;
@@ -239,6 +243,9 @@ class SystemMandantController extends UserDbController
         }
 
         CustInvite::where('mand_id', $id)->delete();
+
+        Mail::to($mandant->mand_email)
+            ->send(new MandAccountDeletedMail($mandant->mand_firstname));
 
         $mandant->delete();
 
