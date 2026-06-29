@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/system/users/password_reset.blade.php
-    VERSION: 1.2.0
-    DATE:    2026-06-08
+    VERSION: 1.3.0
+    DATE:    2026-06-29
 
     DESCRIPTION:
       Standalone password-reset page for system users.
@@ -13,6 +13,9 @@
 
     ROUTES USED:
       POST system.password.reset.handle — submit new password form
+
+    CHANGES: 1.3.0 (2026-06-29) PW-Hinweistext auf Controller-Anforderung
+             korrigiert: "14 Zeichen + Regeln" → "Mindestens 12 Zeichen."
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -98,7 +101,7 @@
                                 </svg>
                             </button>
                         </div>
-                        <p class="text-sm text-gray-500 mt-1">Mindestanforderungen: 14 Zeichen, Groß- und Kleinbuchstaben, Ziffern, Sonderzeichen.</p>
+                        <p class="text-sm text-gray-500 mt-1">Mindestens 12 Zeichen.</p>
                     </div>
 
                     <div>

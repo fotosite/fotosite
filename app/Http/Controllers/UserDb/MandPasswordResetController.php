@@ -1,8 +1,8 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/MandPasswordResetController.php
- * VERSION:     1.0.0
- * DATE:        2026-06-12
+ * VERSION:     1.1.0
+ * DATE:        2026-06-29
  *
  * FUNCTIONS:   showResetRequest()  — Shows email-input form for password-reset request.
  *                                    Reads: (none)
@@ -27,6 +27,10 @@
  *
  * DB ACCESS:   userdb.mand_user.mand_id, mand_email, mand_pw_hash
  *              userdb.invite.*
+ *
+ * CHANGES:     1.1.0 (2026-06-29) handleReset() — deutschsprachige Fehlermeldungen
+ *              für password.confirmed, password.min, password.mixed_case,
+ *              password.numbers, password.symbols, password.uncompromised ergänzt.
  */
 
 namespace App\Http\Controllers\UserDb;
@@ -114,6 +118,13 @@ class MandPasswordResetController extends UserDbController
                 'confirmed',
                 Password::min(12)->mixedCase()->numbers()->symbols()->uncompromised(),
             ],
+        ], [
+            'password.confirmed'     => 'Die eingegebenen Passwörter stimmen nicht überein.',
+            'password.min'           => 'Das Passwort erfüllt nicht die Mindestanforderungen.',
+            'password.mixed_case'    => 'Das Passwort erfüllt nicht die Mindestanforderungen.',
+            'password.numbers'       => 'Das Passwort erfüllt nicht die Mindestanforderungen.',
+            'password.symbols'       => 'Das Passwort erfüllt nicht die Mindestanforderungen.',
+            'password.uncompromised' => 'Das Passwort erfüllt nicht die Mindestanforderungen.',
         ]);
 
         $user = MandUser::findOrFail($invite->inv_user_id);

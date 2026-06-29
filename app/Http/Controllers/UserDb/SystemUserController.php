@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/SystemUserController.php
- * VERSION:     1.2.0
+ * VERSION:     1.3.0
  *
  * FUNCTIONS:   index()               — Lists all SystUser records ordered by syst_lastname.
  *                                      Reads: userdb.syst_user.*
@@ -48,7 +48,10 @@
  *              syst_pcode+city, syst_company, is_primary
  *              userdb.invite.* (inkl. is_primary)
  *
- * CHANGES:     1.2.0 (2026-06-22) is_primary-Feature ergänzt: invite() übernimmt
+ * CHANGES:     1.3.0 (2026-06-29) handleRegister()/handlePasswordReset() —
+ *              deutschsprachige Fehlermeldungen für password.confirmed und
+ *              password.min ergänzt.
+ *              1.2.0 (2026-06-22) is_primary-Feature ergänzt: invite() übernimmt
  *              is_primary nur bei primärem Einlader, handleRegister() überträgt
  *              is_primary auf den neuen SystUser und in die Session (_is_primary),
  *              destroy() schützt primäre System-User vor Löschung und erlaubt das
@@ -199,6 +202,9 @@ class SystemUserController extends UserDbController
             'syst_lastname'  => ['required', 'string'],
             'syst_tel'       => ['required', 'string'],
             'password'       => ['required', 'min:12', 'confirmed'],
+        ], [
+            'password.confirmed' => 'Die eingegebenen Passwörter stimmen nicht überein.',
+            'password.min'       => 'Das Passwort erfüllt nicht die Mindestanforderungen.',
         ]);
 
         SystUser::create([
@@ -251,6 +257,9 @@ class SystemUserController extends UserDbController
 
         $request->validate([
             'password' => ['required', 'min:12', 'confirmed'],
+        ], [
+            'password.confirmed' => 'Die eingegebenen Passwörter stimmen nicht überein.',
+            'password.min'       => 'Das Passwort erfüllt nicht die Mindestanforderungen.',
         ]);
 
         $user = SystUser::findOrFail($invite->inv_user_id);

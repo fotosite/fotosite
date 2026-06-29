@@ -1,9 +1,9 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/MandantSelfController.php
- * VERSION:     1.6.0
+ * VERSION:     1.7.0
  * AUTOR:       Martin Wagner
- * DATUM:       2026-06-18
+ * DATUM:       2026-06-29
  *
  * ZWECK:       Mandant Eigenverwaltung — Kontodaten, Passwort und E-Mail-Adresse
  *              bearbeiten.
@@ -61,7 +61,11 @@
  *              userdb.invite.inv_id, inv_email, inv_token_hash, inv_type,
  *              inv_user_type, inv_user_id, expires_at (email_change-Einträge)
  *
- * CHANGES:     1.6.0 (2026-06-18) requestEmailChange()/confirmEmailChange() ergänzt —
+ * CHANGES:     1.7.0 (2026-06-29) updatePassword() — deutschsprachige Fehlermeldungen
+ *              für password.confirmed, password.min, password.mixed_case,
+ *              password.numbers, password.symbols, password.uncompromised,
+ *              current_password ergänzt.
+ *              1.6.0 (2026-06-18) requestEmailChange()/confirmEmailChange() ergänzt —
  *              E-Mail-Aenderung per Bestaetigungsmail (invite-Tabelle,
  *              inv_type='email_change'); alte Adresse bleibt bis Bestaetigung aktiv.
  *              1.5.0 (2026-06-18) update() — mand_email aus Validierung/Speicherung
@@ -151,6 +155,14 @@ class MandantSelfController extends UserDbController
                 'confirmed',
                 Password::min(12)->mixedCase()->numbers()->symbols()->uncompromised(),
             ],
+        ], [
+            'password.confirmed'     => 'Die eingegebenen Passwörter stimmen nicht überein.',
+            'password.min'           => 'Das Passwort erfüllt nicht die Mindestanforderungen.',
+            'password.mixed_case'    => 'Das Passwort erfüllt nicht die Mindestanforderungen.',
+            'password.numbers'       => 'Das Passwort erfüllt nicht die Mindestanforderungen.',
+            'password.symbols'       => 'Das Passwort erfüllt nicht die Mindestanforderungen.',
+            'password.uncompromised' => 'Das Passwort erfüllt nicht die Mindestanforderungen.',
+            'current_password'       => 'Das eingegebene Passwort ist nicht korrekt.',
         ]);
 
         if ($mand->mand_uname && str_contains($request->password, $mand->mand_uname)) {

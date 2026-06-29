@@ -1,9 +1,9 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustSelfController.php
- * VERSION:     1.5.0
+ * VERSION:     1.6.0
  * AUTOR:       Martin Wagner
- * DATUM:       2026-06-19
+ * DATUM:       2026-06-29
  *
  * ZWECK:       Customer Eigenverwaltung — Kontaktdaten, Passwort, E-Mail-Adresse,
  *              Galerien verwalten, Konto löschen.
@@ -92,7 +92,9 @@
  *              userdb.invite.inv_id, inv_email, inv_token_hash, inv_type,
  *              inv_user_type, inv_user_id, expires_at (email_change-Einträge)
  *
- * CHANGES:     1.5.0 (2026-06-19) saveSettings() von Multi-Checkbox-Form-Submit
+ * CHANGES:     1.6.0 (2026-06-29) updatePassword() — deutschsprachige Fehlermeldungen
+ *              für password.confirmed, password.min, current_password ergänzt.
+ *              1.5.0 (2026-06-19) saveSettings() von Multi-Checkbox-Form-Submit
  *              (Redirect+Flash) auf AJAX-Einzelspeicherung pro Checkbox umgestellt
  *              (JSON-Request/-Response, kein "Einstellungen speichern"-Button mehr
  *              auf customer/galerien.blade.php); reorderGalerie() gibt bei
@@ -191,6 +193,10 @@ class CustSelfController extends UserDbController
                 'confirmed',
                 Password::min(10),
             ],
+        ], [
+            'password.confirmed' => 'Die eingegebenen Passwörter stimmen nicht überein.',
+            'password.min'       => 'Das Passwort erfüllt nicht die Mindestanforderungen.',
+            'current_password'   => 'Das eingegebene Passwort ist nicht korrekt.',
         ]);
 
         if ($cust->cust_uname && str_contains($request->password, $cust->cust_uname)) {

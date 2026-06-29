@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/system/mandanten/register.blade.php
-    VERSION: 1.9.0
+    VERSION: 1.9.1
     DATE:    2026-06-22
 
     DESCRIPTION:
@@ -22,6 +22,8 @@
              auf 2FA-Codes und Passwort-Erneuerung).
              1.8.0 (2026-06-22) Begleittext zur E-Mail-Adresse durch Hinweis auf
              Voreinstellung ersetzt (Feld ist read-only).
+             1.9.1 (2026-06-29) PW-Hinweistext auf Controller-Anforderung
+             korrigiert: "12Z + Regeln" → "Mindestens 12 Zeichen."
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -242,7 +244,7 @@
                                 </svg>
                             </button>
                         </div>
-                        <p class="text-sm text-gray-500 mt-1">Mindestanforderungen: 12 Zeichen, Groß- und Kleinbuchstaben, Ziffern, Sonderzeichen.</p>
+                        <p class="text-sm text-gray-500 mt-1">Mindestens 12 Zeichen.</p>
                     </div>
 
                     <div>

@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/system/profile.blade.php
-    VERSION: 1.3.1
-    DATE:    2026-06-25
+    VERSION: 1.3.2
+    DATE:    2026-06-29
 
     DESCRIPTION:
       System-Eigenverwaltung — profile and password management for the
@@ -28,6 +28,8 @@
              ergänzt ($user->is_primary, text-gray-600, kein Eingabefeld).
              1.2.0 (2026-06-22) Begleittext zur E-Mail-Adresse ergänzt (Hinweis
              auf 2FA-Codes und Passwort-Erneuerung; Feld ist aktiv/editierbar).
+    CHANGES: 1.3.2 (2026-06-29) PW-Hinweistext auf Controller-Anforderung
+             korrigiert: "14 Zeichen + Regeln" → "Mindestens 12 Zeichen."
     CHANGES: 1.3.1 (2026-06-25) Android-Touch-Targets vergroessert: Logout-
              Button, Zurueck-Link und beide Submit-Buttons (Speichern/
              Passwort ändern) auf min-h-11 angehoben.
@@ -269,7 +271,7 @@
                                    class="mt-1 block w-full rounded-md border-gray-300
                                           shadow-sm text-sm
                                           focus:border-gray-500 focus:ring-gray-500">
-                            <p class="text-sm text-gray-500 mt-1">Mindestanforderungen: 14 Zeichen, Groß- und Kleinbuchstaben, Ziffern, Sonderzeichen.</p>
+                            <p class="text-sm text-gray-500 mt-1">Mindestens 12 Zeichen.</p>
                         </div>
 
                         <div>

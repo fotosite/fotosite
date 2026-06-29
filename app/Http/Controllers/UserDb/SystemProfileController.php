@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/SystemProfileController.php
- * VERSION:     1.0.0
+ * VERSION:     1.1.0
  *
  * FUNCTIONS:   edit()            — Loads SystUser by _syst_id from session;
  *                                  returns system.profile with $user.
@@ -24,6 +24,9 @@
  *
  * DB ACCESS:   userdb.syst_user.syst_id, syst_uname, syst_email, syst_tel,
  *              syst_firstname, syst_lastname, syst_pw_hash
+ *
+ * CHANGES:     1.1.0 (2026-06-29) updatePassword() — deutschsprachige Fehlermeldungen
+ *              für password.confirmed, password.min, current_password ergänzt.
  */
 
 namespace App\Http\Controllers\UserDb;
@@ -73,6 +76,10 @@ class SystemProfileController extends UserDbController
         $request->validate([
             'current_password' => ['required'],
             'password'         => ['required', 'min:12', 'confirmed'],
+        ], [
+            'password.confirmed' => 'Die eingegebenen Passwörter stimmen nicht überein.',
+            'password.min'       => 'Das Passwort erfüllt nicht die Mindestanforderungen.',
+            'current_password'   => 'Das eingegebene Passwort ist nicht korrekt.',
         ]);
 
         $systId = $request->session()->get('_syst_id');

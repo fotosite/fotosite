@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/SystemMandantController.php
- * VERSION:     1.9.0
+ * VERSION:     1.10.0
  *
  * FUNCTIONS:   index()          — Lists all MandUser records ordered by mand_lastname.
  *                                 Reads: userdb.mand_user.*
@@ -73,7 +73,10 @@
  *              userdb.passkey_dismissed.pd_id, user_type, user_id (DELETE)
  *              sessiondb.cust_invite.invite_id, mand_id (DELETE)
  *
- * CHANGES:     1.9.0 (2026-06-29) destroy() — MandAccountDeletedMail an Mandant
+ * CHANGES:     1.10.0 (2026-06-29) handleRegister() — deutschsprachige Fehlermeldungen
+ *              für password.confirmed und password.min in bestehendem messages-Array
+ *              ergänzt.
+ *              1.9.0 (2026-06-29) destroy() — MandAccountDeletedMail an Mandant
  *              vor der Löschung ergänzt.
  *              1.8.0 (2026-06-22) destroy() — Cust-Kaskade ergänzt (analog
  *              MandantCustController@destroy): verwaiste cust_user werden vor der
@@ -292,6 +295,8 @@ class SystemMandantController extends UserDbController
             'ds_accepted'            => ['accepted'],
             'upload_terms_accepted'  => ['accepted'],
         ], [
+            'password.confirmed'             => 'Die eingegebenen Passwörter stimmen nicht überein.',
+            'password.min'                   => 'Das Passwort erfüllt nicht die Mindestanforderungen.',
             'ds_accepted.accepted'           => 'Um ein Galerist:innen-Konto zu erstellen, musst du der Datenschutzerklärung sowie den Bedingungen für den Upload von Inhalten zustimmen.',
             'upload_terms_accepted.accepted' => 'Um ein Galerist:innen-Konto zu erstellen, musst du der Datenschutzerklärung sowie den Bedingungen für den Upload von Inhalten zustimmen.',
         ]);

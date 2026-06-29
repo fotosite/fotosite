@@ -1,8 +1,8 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustPasswordResetController.php
- * VERSION:     1.2.0
- * DATE:        2026-06-12
+ * VERSION:     1.3.0
+ * DATE:        2026-06-29
  *
  * FUNCTIONS:   showResetRequest()  — Shows email-input form for password-reset request.
  *                                    Reads: (none)
@@ -26,6 +26,9 @@
  *
  * DB ACCESS:   userdb.cust_user.cust_id, cust_email, cust_pw_hash
  *              userdb.invite.*
+ *
+ * CHANGES:     1.3.0 (2026-06-29) handleReset() — deutschsprachige Fehlermeldungen
+ *              für password.confirmed und password.min ergänzt.
  */
 
 namespace App\Http\Controllers\UserDb;
@@ -108,6 +111,9 @@ class CustPasswordResetController extends UserDbController
 
         $request->validate([
             'password' => ['required', 'min:10', 'confirmed'],
+        ], [
+            'password.confirmed' => 'Die eingegebenen Passwörter stimmen nicht überein.',
+            'password.min'       => 'Das Passwort erfüllt nicht die Mindestanforderungen.',
         ]);
 
         $user = CustUser::findOrFail($invite->inv_user_id);
