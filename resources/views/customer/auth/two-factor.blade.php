@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/customer/auth/two-factor.blade.php
-    VERSION: 1.1.2
+    VERSION: 1.1.3
     AUTHOR:  Martin Wagner
     DATE:    2026-06-08
 
@@ -71,8 +71,7 @@
                 <button type="submit"
                         class="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold
                                text-white hover:bg-indigo-700 focus:outline-none focus:ring-2
-                               focus:ring-indigo-500 focus:ring-offset-2 transition-colors
-                               active:opacity-75 active:scale-95 transition-all duration-75">
+                               focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
                     Bestätigen
                 </button>
             </div>
@@ -80,8 +79,7 @@
 
         <div class="mt-5 text-center">
             <a href="{{ route('customer.login') }}"
-               class="text-sm text-gray-500 hover:text-indigo-600 transition-colors
-                      active:opacity-75 active:scale-95 transition-all duration-75">
+               class="text-sm text-gray-500 hover:text-indigo-600 transition-colors">
                 ← Zurück zum Login
             </a>
         </div>

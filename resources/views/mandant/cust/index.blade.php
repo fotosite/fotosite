@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/cust/index.blade.php
-    VERSION: 3.7.6
+    VERSION: 3.7.7
     AUTHOR:  Martin Wagner
     DATE:    2026-06-25
 
@@ -32,6 +32,8 @@
       DELETE /mandant/kunden/{id}                 — Entfernen (route('mandant.kunden.destroy'))
       GET    /mandant/dashboard                   — Dashboard (route('mandant.dashboard'))
 
+    CHANGES: 3.7.7 (2026-06-28) iOS Feedback: Mitglieder-einladen-Link zu Button
+             umgebaut.
     CHANGES: 3.7.6 (2026-06-25) Android-Touch-Targets vergroessert: Logout-,
              Zurueck- und Einladen-Link, Sortier-Buttons, Desktop-
              sec_level-Trigger sowie Speichern/Entfernen-Buttons (Desktop)
@@ -185,14 +187,15 @@
                     Ihre eingeladenen Mitglieder — Alias und Sicherheitsstufe editierbar.
                 </p>
             </div>
-            <a href="{{ route('mandant.kunden.invite') }}"
-               class="inline-flex items-center gap-2 rounded-lg min-h-11
-                      border border-indigo-300 bg-indigo-50 px-4 py-2
-                      text-sm font-medium text-indigo-700
-                      hover:bg-indigo-100 hover:border-indigo-400
-                      transition-colors duration-150">
+            <button type="button"
+                    @click="window.location='{{ route('mandant.kunden.invite') }}'"
+                    class="inline-flex items-center gap-2 rounded-lg min-h-11
+                           border border-indigo-300 bg-indigo-50 px-4 py-2
+                           text-sm font-medium text-indigo-700
+                           hover:bg-indigo-100 hover:border-indigo-400
+                           transition-colors duration-150">
                 Mitglieder einladen
-            </a>
+            </button>
         </div>
 
         {{-- Flash-Meldung --}}

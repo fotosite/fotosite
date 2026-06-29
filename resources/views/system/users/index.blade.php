@@ -178,7 +178,7 @@
 
                         <button type="submit"
                                 class="flex-shrink-0 py-2 px-4 min-h-11 rounded-md text-sm font-medium
-                                       text-white bg-gray-800 hover:bg-gray-700 transition-colors active:opacity-75 active:scale-95 transition-all duration-75 select-none
+                                       text-white bg-gray-800 hover:bg-gray-700 transition-colors
                                        focus:outline-none focus:ring-2 focus:ring-gray-500
                                        focus:ring-offset-2">
                             Einladung senden

@@ -6,7 +6,20 @@
     display: none;
 }
 
-button, a, [role="button"] {
+* {
     user-select: none;
     -webkit-user-select: none;
+}
+input, textarea {
+    user-select: text;
+    -webkit-user-select: text;
+}
+button, input[type="submit"] {
+    transition: opacity 75ms ease, transform 75ms ease;
+    -webkit-transition: opacity 75ms ease, transform 75ms ease;
+}
+button:active, input[type="submit"]:active {
+    opacity: 0.75;
+    transform: scale(0.95);
+    -webkit-transform: scale(0.95);
 }

@@ -47,7 +47,7 @@
                 </a>
             @endif
 
-            <x-primary-button class="ms-3 active:opacity-75 active:scale-95 transition-all duration-75">
+            <x-primary-button class="ms-3">
                 {{ __('Log in') }}
             </x-primary-button>
         </div>

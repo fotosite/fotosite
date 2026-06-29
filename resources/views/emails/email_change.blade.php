@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/emails/email_change.blade.php
-    VERSION: 1.0.0
+    VERSION: 1.1.0
     DATE:    2026-06-18
 
     DESCRIPTION:
@@ -65,6 +65,8 @@
             font-size: 14px;
             font-weight: bold;
             letter-spacing: 0.3px;
+            user-select: none;
+            -webkit-user-select: none;
         }
         .note {
             font-size: 12px;
@@ -94,7 +96,7 @@
 
             <p>Bestätigungslink (24 Stunden gültig):</p>
 
-            <a href="{{ $confirmUrl }}" class="btn">E-Mail-Adresse bestätigen</a>
+            <a href="{{ $confirmUrl }}" class="btn" style="-webkit-user-select: none; user-select: none;">E-Mail-Adresse bestätigen</a>
 
             <p style="word-break:break-all; font-size:12px; color:#666666;">
                 Oder verwende die URL: {{ $confirmUrl }}

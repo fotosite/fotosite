@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/customer/passkey/index.blade.php
-    VERSION: 1.8.3
+    VERSION: 1.8.4
     DATE:    2026-06-25
 
     DESCRIPTION:
@@ -75,8 +75,7 @@
                     @csrf
                     <button type="submit"
                             class="min-h-11 py-2 px-3 text-sm text-gray-400 hover:text-red-500
-                                   transition-colors duration-150 tracking-wide
-                                   active:opacity-75 active:scale-95 transition-all duration-75">
+                                   transition-colors duration-150 tracking-wide">
                         Abmelden
                     </button>
                 </form>
@@ -94,8 +93,7 @@
         <div class="mt-6 mb-8">
             <a href="{{ route('customer.dashboard') }}"
                class="inline-flex items-center gap-1.5 min-h-11 py-2 text-sm text-indigo-500
-                      hover:text-indigo-700 transition-colors
-                      active:opacity-75 active:scale-95 transition-all duration-75">
+                      hover:text-indigo-700 transition-colors">
                 <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg"
                      fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -200,8 +198,7 @@
                            bg-indigo-600 text-sm font-medium text-white
                            hover:bg-indigo-700 active:bg-indigo-800
                            transition-colors duration-150 shadow-sm min-h-11
-                           w-full py-3 md:w-auto md:py-2 md:px-5
-                           active:opacity-75 active:scale-95 transition-all duration-75">
+                           w-full py-3 md:w-auto md:py-2 md:px-5">
                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg"
                      fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -234,13 +231,11 @@
                        class="w-full border rounded-lg px-3 py-2 text-sm mb-4">
                 <div class="flex gap-3 justify-end">
                     <button @click="showNameModal = false"
-                            class="min-h-11 py-2 px-3 text-sm text-gray-500
-                                   active:opacity-75 active:scale-95 transition-all duration-75">
+                            class="min-h-11 py-2 px-3 text-sm text-gray-500">
                         Abbrechen
                     </button>
                     <button @click="showNameModal = false; registerPasskey(deviceName)"
-                            class="px-4 py-2 min-h-11 bg-indigo-600 text-white text-sm rounded-lg
-                                   active:opacity-75 active:scale-95 transition-all duration-75">
+                            class="px-4 py-2 min-h-11 bg-indigo-600 text-white text-sm rounded-lg">
                         Weiter
                     </button>
                 </div>
@@ -320,15 +315,13 @@
                                     <button x-show="!editing"
                                             @click="editing = true; $nextTick(() => $refs.nameInput.focus())"
                                             class="inline-flex items-center min-h-11 py-2 px-2 text-sm text-indigo-500 hover:text-indigo-700
-                                                   font-medium transition-colors
-                                                   active:opacity-75 active:scale-95 transition-all duration-75">
+                                                   font-medium transition-colors">
                                         Umbenennen
                                     </button>
                                     <button x-show="editing"
                                             @click="saveRename({{ $passkey->pk_id }}, name); editing = false; $store.unsavedGuard.clearDirty()"
                                             class="inline-flex items-center min-h-11 py-2 px-2 text-sm text-green-600 hover:text-green-800
-                                                   font-medium transition-colors
-                                                   active:opacity-75 active:scale-95 transition-all duration-75">
+                                                   font-medium transition-colors">
                                         Speichern
                                     </button>
 
@@ -343,8 +336,7 @@
                                         @method('DELETE')
                                         <button type="submit"
                                                 class="inline-flex items-center min-h-11 py-2 px-2 text-sm text-red-400 hover:text-red-600
-                                                       font-medium transition-colors
-                                                       active:opacity-75 active:scale-95 transition-all duration-75">
+                                                       font-medium transition-colors">
                                             Löschen
                                         </button>
                                     </form>

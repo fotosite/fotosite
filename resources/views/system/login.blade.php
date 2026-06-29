@@ -50,7 +50,8 @@
             </div>
 
             <div class="mt-6">
-                <button type="submit"
+                <button type="button"
+                        @click="$el.closest('form').submit()"
                         class="w-full flex justify-center py-2 px-4 rounded-md text-sm font-medium
                                text-white bg-gray-800 hover:bg-gray-700 transition-colors
                                focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
@@ -82,7 +83,8 @@
                 </div>
 
                 <div class="mt-5">
-                    <button type="submit"
+                    <button type="button"
+                            @click="$el.closest('form').submit()"
                             class="w-full flex justify-center py-2 px-4 rounded-md text-sm font-medium
                                    text-white bg-gray-800 hover:bg-gray-700 transition-colors
                                    focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">

@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/system/mandanten/show.blade.php
-    VERSION: 1.1.1
+    VERSION: 1.1.2
     DATE:    2026-06-25
 
     DESCRIPTION:
@@ -16,6 +16,8 @@
       GET    system.mandanten.index  — back link
       POST   logout                  — Breeze logout
 
+    CHANGES: 1.1.2 (2026-06-28) iOS Feedback: Bearbeiten-Link zu Button umgebaut;
+             x-data auf body ergaenzt.
     CHANGES: 1.1.1 (2026-06-25) Android-Touch-Targets vergroessert: Logout-
              Button, Zurueck-Link und Bearbeiten-Link auf min-h-11 angehoben.
 --}}
@@ -29,7 +31,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="min-h-screen bg-gray-50 text-gray-900 antialiased">
+<body class="min-h-screen bg-gray-50 text-gray-900 antialiased" x-data>
 
     <header class="sticky top-0 z-20 border-b border-gray-200 bg-white shadow-sm">
         <div class="mx-auto max-w-4xl px-6 h-14
@@ -76,11 +78,12 @@
             <h1 class="text-xl font-semibold tracking-tight text-gray-800">
                 {{ $mandant->mand_firstname }} {{ $mandant->mand_lastname }}
             </h1>
-            <a href="{{ route('system.mandanten.edit', $mandant->mand_id) }}"
-               class="inline-flex items-center py-2 px-4 min-h-11 rounded-md text-sm font-medium text-white
-                      bg-gray-800 hover:bg-gray-700 transition-colors">
+            <button type="button"
+                    @click="window.location='{{ route('system.mandanten.edit', $mandant->mand_id) }}'"
+                    class="inline-flex items-center py-2 px-4 min-h-11 rounded-md text-sm font-medium text-white
+                           bg-gray-800 hover:bg-gray-700 transition-colors">
                 Bearbeiten
-            </a>
+            </button>
         </div>
 
         @if(session('status'))

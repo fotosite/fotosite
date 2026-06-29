@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/customer/dashboard.blade.php
-    VERSION: 2.9.2
+    VERSION: 2.9.4
     DATE:    2026-06-25
 
     DESCRIPTION:
@@ -26,6 +26,8 @@
       GET  customer.datenschutz.upload-bedingungen-pdf — Upload-Bedingungen (neuer Tab)
       GET  customer.faq.index                   — FAQ und Infos
 
+    CHANGES: 2.9.4 (2026-06-28) iOS Feedback: Rechtliches-Links (Datenschutz/
+             Upload/FAQ) zu Buttons umgebaut (window.open fuer _blank).
     CHANGES: 2.8.0 (2026-06-25) Android-Touch-Targets vergroessert: Logout-
              Button, Passwort/E-Mail-aendern-Buttons, Rechtliches-Links,
              Modal-Buttons (Abbrechen/Speichern/Senden) und Passkey-Banner-
@@ -132,24 +134,27 @@
                 Rechtliches
             </h2>
             <div class="flex flex-wrap gap-3">
-                <a href="{{ route('customer.datenschutz.erlaeuterung') }}" target="_blank"
-                   class="px-4 py-2 min-h-11 text-sm font-medium text-gray-600
-                          bg-white border border-gray-300 rounded-lg
-                          hover:bg-gray-50 transition-colors">
+                <button type="button"
+                        @click="window.open('{{ route('customer.datenschutz.erlaeuterung') }}', '_blank')"
+                        class="px-4 py-2 min-h-11 text-sm font-medium text-gray-600
+                               bg-white border border-gray-300 rounded-lg
+                               hover:bg-gray-50 transition-colors">
                     Datenschutz-Erläuterung
-                </a>
-                <a href="{{ route('customer.datenschutz.upload-bedingungen-pdf') }}" target="_blank"
-                   class="px-4 py-2 min-h-11 text-sm font-medium text-gray-600
-                          bg-white border border-gray-300 rounded-lg
-                          hover:bg-gray-50 transition-colors">
+                </button>
+                <button type="button"
+                        @click="window.open('{{ route('customer.datenschutz.upload-bedingungen-pdf') }}', '_blank')"
+                        class="px-4 py-2 min-h-11 text-sm font-medium text-gray-600
+                               bg-white border border-gray-300 rounded-lg
+                               hover:bg-gray-50 transition-colors">
                     Upload-Bedingungen
-                </a>
-                <a href="{{ route('customer.faq.index') }}"
-                   class="px-4 py-2 min-h-11 text-sm font-medium text-gray-600
-                          bg-white border border-gray-300 rounded-lg
-                          hover:bg-gray-50 transition-colors">
+                </button>
+                <button type="button"
+                        @click="window.location='{{ route('customer.faq.index') }}'"
+                        class="px-4 py-2 min-h-11 text-sm font-medium text-gray-600
+                               bg-white border border-gray-300 rounded-lg
+                               hover:bg-gray-50 transition-colors">
                     FAQ und Infos
-                </a>
+                </button>
             </div>
         </div>
 
@@ -282,7 +287,7 @@
                     <div class="mt-5 flex gap-3">
                         <button type="button" @click="pwModalOpen = false"
                                 class="w-full px-4 py-2 min-h-11 text-sm text-gray-500
-                                       border border-gray-300 rounded-lg hover:bg-gray-50 active:opacity-75 active:scale-95 transition-all duration-75 select-none">
+                                       border border-gray-300 rounded-lg hover:bg-gray-50">
                             Abbrechen
                         </button>
                         <button type="submit"
@@ -335,7 +340,7 @@
                     <div class="mt-5 flex gap-3">
                         <button type="button" @click="emailModalOpen = false"
                                 class="w-full px-4 py-2 min-h-11 text-sm text-gray-500
-                                       border border-gray-300 rounded-lg hover:bg-gray-50 active:opacity-75 active:scale-95 transition-all duration-75 select-none">
+                                       border border-gray-300 rounded-lg hover:bg-gray-50">
                             Abbrechen
                         </button>
                         <button type="submit"
@@ -383,8 +388,7 @@
                 <button type="button"
                         @click="window.location='{{ route('customer.passkeys') }}'"
                         class="w-full md:w-auto text-center px-4 py-3 md:py-2 min-h-11
-                               bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700
-                               active:opacity-75 active:scale-95 transition-all duration-75">
+                               bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700">
                     Einrichten
                 </button>
                 <button @click="
@@ -397,14 +401,12 @@
                         }
                     })"
                     class="w-full md:w-auto px-4 py-3 md:py-2 min-h-11 text-sm text-gray-500
-                           border border-gray-300 rounded-lg hover:bg-gray-50
-                           active:opacity-75 active:scale-95 transition-all duration-75">
+                           border border-gray-300 rounded-lg hover:bg-gray-50">
                     Nie wieder
                 </button>
                 <button @click="open = false"
                         class="w-full md:w-auto px-4 py-3 md:py-2 min-h-11 text-sm text-gray-400
-                               hover:text-gray-600
-                               active:opacity-75 active:scale-95 transition-all duration-75">
+                               hover:text-gray-600">
                     Später
                 </button>
             </div>

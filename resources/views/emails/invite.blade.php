@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/emails/invite.blade.php
-    VERSION: 1.6.0
+    VERSION: 1.7.0
     DATE:    2026-06-18
 
     DESCRIPTION:
@@ -68,6 +68,8 @@
             font-size: 14px;
             font-weight: bold;
             letter-spacing: 0.3px;
+            user-select: none;
+            -webkit-user-select: none;
         }
         .note {
             font-size: 12px;
@@ -105,7 +107,7 @@
                        gültig:</p>
                 @endif
 
-                <a href="{{ $inviteUrl }}" class="btn">Link zum Account erstellen</a>
+                <a href="{{ $inviteUrl }}" class="btn" style="-webkit-user-select: none; user-select: none;">Link zum Account erstellen</a>
 
                 @if($userType === 'mand')
                 <p style="word-break:break-all; font-size:12px; color:#666666;">
@@ -138,7 +140,7 @@
                 <p>Sie haben Ihr Passwort vergessen? Kein Problem: mit
                 diesem Link können Sie ein neues Passwort festlegen:</p>
 
-                <a href="{{ $inviteUrl }}" class="btn">Passwort ändern</a>
+                <a href="{{ $inviteUrl }}" class="btn" style="-webkit-user-select: none; user-select: none;">Passwort ändern</a>
 
                 <p style="word-break:break-all; font-size:12px; color:#666666;">
                     Oder verwende die URL: {{ $inviteUrl }}

@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/emails/cust-invite.blade.php
-    VERSION: 1.7.0
+    VERSION: 1.8.0
     DATE:    2026-06-22
 
     DESCRIPTION:
@@ -66,6 +66,8 @@
             font-size: 14px;
             font-weight: bold;
             letter-spacing: 0.3px;
+            user-select: none;
+            -webkit-user-select: none;
         }
         .validity {
             font-size: 13px;
@@ -105,7 +107,7 @@
 
             <p>Benutze diesen Button, um ein Konto anzulegen:</p>
 
-            <a href="{{ $registerUrl }}" class="btn">Konto anlegen</a>
+            <a href="{{ $registerUrl }}" class="btn" style="-webkit-user-select: none; user-select: none;">Konto anlegen</a>
 
             <p style="word-break:break-all; font-size:12px; color:#666666;">
                 Oder verwende die URL: {{ $registerUrl }}

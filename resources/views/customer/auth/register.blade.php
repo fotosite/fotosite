@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/customer/auth/register.blade.php
-    VERSION: 1.9.1
+    VERSION: 1.9.2
     AUTHOR:  Martin Wagner
     DATE:    2026-06-22
 
@@ -99,8 +99,7 @@
                            bg-indigo-600 px-4 py-2.5 text-sm font-medium
                            text-white hover:bg-indigo-700
                            transition-colors duration-150
-                           focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2
-                           active:opacity-75 active:scale-95 transition-all duration-75">
+                           focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                 Einladung annehmen
             </button>
         </form>
@@ -391,8 +390,7 @@
                                bg-indigo-600 px-4 py-2.5 text-sm font-medium
                                text-white hover:bg-indigo-700
                                transition-colors duration-150
-                               focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2
-                               active:opacity-75 active:scale-95 transition-all duration-75">
+                               focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                     Mitglieder-Konto erstellen
                 </button>
             </div>
