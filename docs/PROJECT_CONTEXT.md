@@ -90,7 +90,7 @@ Der sec_level eines cust pro mand steht in `userdb.cust_pcode.cust_passcode`. Be
 
 Vier separate MariaDB-Datenbanken, jede mit eigener Laravel-Connection und eigenem DB-User (`DB_<CONNNAME>_*` in `.env`). **Keine Cross-DB-Joins** — Verknüpfung ausschließlich über `mand_id` / `cust_id` / `fo_id` in PHP.
 
-> **Einziger echter Foreign Key im gesamten Schema:** `fotodb.activity_subgroup.ag_id → fotodb.activity_group.ag_id`. Alle anderen Verknüpfungen sind logisch, ohne FK-Constraint.
+> **Echte Foreign Keys:** `fotodb.activity_subgroup.ag_id → fotodb.activity_group.ag_id` sowie `userdb.cust_pcode.mand_id → userdb.mand_user.mand_id`. Alle anderen Verknüpfungen sind logisch, ohne FK-Constraint.
 
 ### 4.1 `userdb` — User Management
 Connection: `userdb`
@@ -98,9 +98,9 @@ Connection: `userdb`
 | Table | PK | Purpose |
 |---|---|---|
 | `syst_user` | `syst_id` | System-Admin-Accounts (inkl. `is_primary` TINYINT(1) Default 0 — primäre Admins können nicht gelöscht werden) |
-| `mand_user` | `mand_id` | Galerist:in-Accounts (inkl. `mand_pw_hash`, `mand_cust_2fa`, `mand_2fa_opt_in`, `has_public_content`, `active`, `ds_accepted_at`, `ds_version`, `upload_terms_accepted_at`, `upload_terms_version`, `show_welcome` TINYINT(1) Default 1) |
-| `cust_user` | `cust_id` | Mitglieder-Accounts (inkl. `ds_accepted_at`, `ds_version`, `upload_terms_accepted_at`, `upload_terms_version`, `show_welcome` TINYINT(1) Default 1) |
-| `cust_pcode` | `pcode_id` | Sicherheitsstufe je Mitglied+Mandant. Spalten: `cust_passcode` varchar(255) (= sec_level des cust bei diesem mand, „enthält die Ziffer des Securitylevel"), `cust_alias`, `pcode_prefstat`, `mand_id`, `cust_id`, `cust_mailrequest` |
+| `mand_user` | `mand_id` | Galerist:in-Accounts (inkl. `mand_pw_hash`, `mand_cust_2fa`, `mand_2fa_opt_in`, `has_public_content`, `active`, `valid_to` DATE NULL (Option bei Zahlungsausfall — Nutzung noch offen), `ds_accepted_at`, `ds_version`, `upload_terms_accepted_at`, `upload_terms_version`, `show_welcome` TINYINT(1) Default 1) |
+| `cust_user` | `cust_id` | Mitglieder-Accounts (inkl. `cust_2fa_opt_in` TINYINT(1) Default 0 — Funktion noch zu klären, `ds_accepted_at`, `ds_version`, `upload_terms_accepted_at`, `upload_terms_version` — Felder strukturell vorhanden, Upload-Bedingungen derzeit für cust nicht relevant, `show_welcome` TINYINT(1) Default 1) |
+| `cust_pcode` | `pcode_id` | Sicherheitsstufe je Mitglied+Mandant. Spalten: `cust_passcode` varchar(255) (= sec_level des cust bei diesem mand, „enthält die Ziffer des Securitylevel"), `cust_alias`, `pcode_prefstat`, `mand_id`, `cust_id`, `cust_mailrequest`, `mand_sort_date` DATE (Funktion noch zu klären) |
 | `invite` | `inv_id` | Einladungen/Reset-Tokens für syst/mand/cust (`inv_type`: register\|pw_reset\|email_change; `inv_user_type`: syst\|mand\|cust; `inv_email` dient bei email_change als Speicher für neue Adresse; `is_primary` TINYINT(1) Default 0 — nur für syst-Einladungen relevant) |
 | `passkey` | `pk_id` | WebAuthn-Credentials (`user_type`, `user_id`, `credential_id`, `public_key`, `sign_count`, `device_name`, `last_used_at`) |
 | `passkey_dismissed` | `pd_id` | „Nie wieder fragen"-Einträge je User+OS+Gerät (`user_type`, `user_id`, `os`: win\|andr\|ios, `ua_hash`) |
@@ -363,7 +363,7 @@ Analog zum bestehenden `syst`-Reset, über `userdb.invite` (`inv_type='pw_reset'
 - `POST /customer/ds/hinweis-ok` (anon-Popup-Bestätigung, Session-Flag)
 
 **Einwilligung:**
-- cust: Pflicht-Checkbox bei Registrierung → `cust_user.ds_accepted_at` + `ds_version`
+- cust: Pflicht-Checkbox bei Registrierung → `cust_user.ds_accepted_at` + `ds_version`. Zusätzlich `upload_terms_accepted_at`/`upload_terms_version` in `cust_user` strukturell vorhanden (Policy-Versionierungssystem) — der Inhalt der Upload-Bedingungen ist für cust derzeit nicht relevant, die Felder müssen aber existieren.
 - mand: zwei Pflicht-Checkboxen → `mand_user.ds_accepted_at`/`ds_version` + `upload_terms_accepted_at`/`upload_terms_version`
 - anon: Popup nach korrektem Passcode (Hinweis + Link), Kenntnisnahme via Session-Flag `_ds_hinweis_gezeigt`, KEINE DB-Speicherung
 - DS-Versionswert: Config `config/datenschutz.php` → `['version' => '1.0']`
@@ -403,7 +403,7 @@ In `customer/dashboard` + `mandant/dashboard` unterhalb des E-Mail-Begleittexts 
 - **iOS-Button-Feedback** (ungetaggt): Safari unterdrückt `:active` → an allen Buttons `active:opacity-75 active:scale-95 transition-transform`; in `resources/css/app.css` global `-webkit-tap-highlight-color: transparent` + `cursor: pointer`. **Erfordert `npm run build`** (gebaute Datei `public/build/assets/app-Jw6eDKDd.css`).
 
 ### Passwort-Auge-Toggle (23.06., Tag `pw_eye_ok`)
-Alle Passwort-Felder (Login-Modal, Registrierungen, PW-Reset, PW-Ändern-Modals, pw1–pw6) erhalten ein Auge-Icon (Alpine `x-data="{ show:false }"`, `:type="show ? 'text' : 'password'"`, inline SVG offen/geschlossen, `pr-10` am Input). Jedes Feld eigener Scope; bei Feldern mit bestehendem `x-data` (dirty-State) wird `show` dort ergänzt. `pw1–pw6` hatten bereits einen Toggle. `system/login.blade.php` ausgenommen (tote Datei).
+Alle Passwort-Felder (Login-Modal, Registrierungen, PW-Reset, PW-Ändern-Modals, pw1–pw6) erhalten ein Auge-Icon (Alpine `x-data="{ show:false }"`, `:type="show ? 'text' : 'password'"`, inline SVG offen/geschlossen, `pr-10` am Input). Jedes Feld eigener Scope; bei Feldern mit bestehendem `x-data` (dirty-State) wird `show` dort ergänzt. `pw1–pw6` hatten bereits einen Toggle. `system/login.blade.php` wurde bewusst ausgenommen (aktive syst-Login-View — Passwort-Auge dort sachlich nicht relevant).
 
 ### Erfolgsmeldungen bei Kontoerstellung
 Nach cust-Registrierung: „Konto erfolgreich angelegt. Bitte melde dich jetzt als Mitglied an." Nach mand-Registrierung: „... als Galerist:in an." + `login_page=mand` für korrektes Modal-Tab.
