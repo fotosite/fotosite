@@ -439,8 +439,9 @@
                         bg-amber-50 border border-amber-300 text-amber-800">
                 ⚠️ Der Gültigkeitszeitraum für Ihre Kurzzeit-Kennwortliste ist abgelaufen.
                 Bitte aktualisieren Sie die
-                <a href="{{ route('mandant.pwlist') }}"
-                   class="font-semibold underline hover:no-underline">Kurzzeit-Kennwortliste</a>.
+                <button type="button"
+                        @click="window.location='{{ route('mandant.pwlist') }}'"
+                        class="font-semibold underline hover:no-underline inline select-none">Kurzzeit-Kennwortliste</button>.
             </div>
         @endif
 
@@ -448,8 +449,9 @@
             <div class="p-4 rounded-lg mb-4 text-sm
                         bg-blue-50 border border-blue-300 text-blue-800">
                 ℹ️ Sie haben noch keine Kurzzeit-Kennwortliste angelegt.
-                <a href="{{ route('mandant.pwlist') }}"
-                   class="font-semibold underline hover:no-underline">Jetzt anlegen</a>.
+                <button type="button"
+                        @click="window.location='{{ route('mandant.pwlist') }}'"
+                        class="font-semibold underline hover:no-underline inline select-none">Jetzt anlegen</button>.
             </div>
         @endif
 
@@ -529,11 +531,12 @@
             </div>
 
             {{-- 3. Mitglieder --}}
-            <a href="{{ route('mandant.kunden.index') }}"
-               class="relative flex flex-col gap-5 rounded-xl
-                      border border-indigo-100 bg-white p-6
-                      hover:border-indigo-300 hover:shadow-sm
-                      transition-all duration-150">
+            <button type="button"
+                    @click="window.location='{{ route('mandant.kunden.index') }}'"
+                    class="relative flex flex-col gap-5 rounded-xl
+                           border border-indigo-100 bg-white p-6
+                           hover:border-indigo-300 hover:shadow-sm
+                           transition-all duration-150 select-none">
 
                 <div class="w-9 h-9 rounded-lg border border-indigo-200
                             bg-indigo-50 flex items-center justify-center">
@@ -561,15 +564,16 @@
                     </p>
                 </div>
 
-            </a>
+            </button>
 
 
             {{-- 4. Konto --}}
-            <a href="{{ route('mandant.konto') }}"
-               class="relative flex flex-col gap-5 rounded-xl
-                      border border-indigo-100 bg-white p-6
-                      hover:border-indigo-300 hover:shadow-sm
-                      transition-all duration-150">
+            <button type="button"
+                    @click="window.location='{{ route('mandant.konto') }}'"
+                    class="relative flex flex-col gap-5 rounded-xl
+                           border border-indigo-100 bg-white p-6
+                           hover:border-indigo-300 hover:shadow-sm
+                           transition-all duration-150 select-none">
 
                 <div class="w-9 h-9 rounded-lg border border-indigo-200
                             bg-indigo-50 flex items-center justify-center">
@@ -593,14 +597,15 @@
                     </p>
                 </div>
 
-            </a>
+            </button>
 
             {{-- 5. Passkeys --}}
-            <a href="{{ route('mandant.passkeys') }}"
-               class="relative flex flex-col gap-5 rounded-xl
-                      border border-indigo-100 bg-white p-6
-                      hover:border-indigo-300 hover:shadow-sm
-                      transition-all duration-150">
+            <button type="button"
+                    @click="window.location='{{ route('mandant.passkeys') }}'"
+                    class="relative flex flex-col gap-5 rounded-xl
+                           border border-indigo-100 bg-white p-6
+                           hover:border-indigo-300 hover:shadow-sm
+                           transition-all duration-150 select-none">
 
                 <div class="w-9 h-9 rounded-lg border border-indigo-200
                             bg-indigo-50 flex items-center justify-center">
@@ -624,14 +629,15 @@
                     </p>
                 </div>
 
-            </a>
+            </button>
 
             {{-- 6. Passwortliste --}}
-            <a href="{{ route('mandant.pwlist') }}"
-               class="relative flex flex-col gap-5 rounded-xl
-                      border border-indigo-100 bg-white p-6
-                      hover:border-indigo-300 hover:shadow-sm
-                      transition-all duration-150">
+            <button type="button"
+                    @click="window.location='{{ route('mandant.pwlist') }}'"
+                    class="relative flex flex-col gap-5 rounded-xl
+                           border border-indigo-100 bg-white p-6
+                           hover:border-indigo-300 hover:shadow-sm
+                           transition-all duration-150 select-none">
 
                 <div class="w-9 h-9 rounded-lg border border-indigo-200
                             bg-indigo-50 flex items-center justify-center">

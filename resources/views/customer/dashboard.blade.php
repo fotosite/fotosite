@@ -417,11 +417,12 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
             {{-- 1. Mein Konto --}}
-            <a href="{{ route('customer.konto') }}"
-               class="relative flex flex-col gap-5 rounded-xl
-                      border border-indigo-100 bg-white p-6
-                      hover:border-indigo-300 hover:shadow-sm
-                      transition-all duration-150">
+            <button type="button"
+                    @click="window.location='{{ route('customer.konto') }}'"
+                    class="relative flex flex-col gap-5 rounded-xl
+                           border border-indigo-100 bg-white p-6
+                           hover:border-indigo-300 hover:shadow-sm
+                           transition-all duration-150 select-none">
 
                 <div class="w-9 h-9 rounded-lg border border-indigo-200
                             bg-indigo-50 flex items-center justify-center">
@@ -445,14 +446,15 @@
                     </p>
                 </div>
 
-            </a>
+            </button>
 
             {{-- 2. Meine Galerien --}}
-            <a href="{{ route('customer.galerien') }}"
-               class="relative flex flex-col gap-5 rounded-xl
-                      border border-indigo-100 bg-white p-6
-                      hover:border-indigo-300 hover:shadow-sm
-                      transition-all duration-150">
+            <button type="button"
+                    @click="window.location='{{ route('customer.galerien') }}'"
+                    class="relative flex flex-col gap-5 rounded-xl
+                           border border-indigo-100 bg-white p-6
+                           hover:border-indigo-300 hover:shadow-sm
+                           transition-all duration-150 select-none">
 
                 <div class="w-9 h-9 rounded-lg border border-indigo-200
                             bg-indigo-50 flex items-center justify-center">
@@ -479,14 +481,15 @@
                     </p>
                 </div>
 
-            </a>
+            </button>
 
             {{-- 3. Passkeys verwalten --}}
-            <a href="{{ route('customer.passkeys') }}"
-               class="relative flex flex-col gap-5 rounded-xl
-                      border border-indigo-100 bg-white p-6
-                      hover:border-indigo-300 hover:shadow-sm
-                      transition-all duration-150">
+            <button type="button"
+                    @click="window.location='{{ route('customer.passkeys') }}'"
+                    class="relative flex flex-col gap-5 rounded-xl
+                           border border-indigo-100 bg-white p-6
+                           hover:border-indigo-300 hover:shadow-sm
+                           transition-all duration-150 select-none">
 
                 <div class="w-9 h-9 rounded-lg border border-indigo-200
                             bg-indigo-50 flex items-center justify-center">
@@ -510,7 +513,7 @@
                     </p>
                 </div>
 
-            </a>
+            </button>
 
         </div>{{-- /grid --}}
 

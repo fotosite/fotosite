@@ -117,10 +117,11 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
             {{-- ── 1. Eigenverwaltung ── --}}
-            <a href="{{ route('system.profile') }}"
-               class="group relative flex flex-col gap-5 rounded-xl
-                      border border-gray-200 bg-white p-6 shadow-sm
-                      hover:border-amber-400 hover:shadow-md transition-all duration-200">
+            <button type="button"
+                    @click="window.location='{{ route('system.profile') }}'"
+                    class="group relative flex flex-col gap-5 rounded-xl
+                           border border-gray-200 bg-white p-6 shadow-sm
+                           hover:border-amber-400 hover:shadow-md transition-all duration-200 select-none">
 
                 <div class="w-9 h-9 rounded-lg border border-gray-200
                             bg-gray-100 flex items-center justify-center">
@@ -144,13 +145,14 @@
                     </p>
                 </div>
 
-            </a>
+            </button>
 
             {{-- ── 2. System-User ── --}}
-            <a href="{{ route('system.users.index') }}"
-               class="group relative flex flex-col gap-5 rounded-xl
-                      border border-gray-200 bg-white p-6 shadow-sm
-                      hover:border-amber-400 hover:shadow-md transition-all duration-200">
+            <button type="button"
+                    @click="window.location='{{ route('system.users.index') }}'"
+                    class="group relative flex flex-col gap-5 rounded-xl
+                           border border-gray-200 bg-white p-6 shadow-sm
+                           hover:border-amber-400 hover:shadow-md transition-all duration-200 select-none">
 
                 <div class="w-9 h-9 rounded-lg border border-gray-200
                             bg-gray-100 flex items-center justify-center">
@@ -179,13 +181,14 @@
                     </p>
                 </div>
 
-            </a>
+            </button>
 
             {{-- ── 3. Mandantenverwaltung ── --}}
-            <a href="{{ route('system.mandanten.index') }}"
-               class="group relative flex flex-col gap-5 rounded-xl
-                      border border-gray-200 bg-white p-6 shadow-sm
-                      hover:border-amber-400 hover:shadow-md transition-all duration-200">
+            <button type="button"
+                    @click="window.location='{{ route('system.mandanten.index') }}'"
+                    class="group relative flex flex-col gap-5 rounded-xl
+                           border border-gray-200 bg-white p-6 shadow-sm
+                           hover:border-amber-400 hover:shadow-md transition-all duration-200 select-none">
 
                 <div class="w-9 h-9 rounded-lg border border-gray-200
                             bg-gray-100 flex items-center justify-center">
@@ -211,13 +214,14 @@
                     </p>
                 </div>
 
-            </a>
+            </button>
 
             {{-- ── 4. Policy-Versionen ── --}}
-            <a href="{{ route('system.policy.index') }}"
-               class="group relative flex flex-col gap-5 rounded-xl
-                      border border-gray-200 bg-white p-6 shadow-sm
-                      hover:border-amber-400 hover:shadow-md transition-all duration-200">
+            <button type="button"
+                    @click="window.location='{{ route('system.policy.index') }}'"
+                    class="group relative flex flex-col gap-5 rounded-xl
+                           border border-gray-200 bg-white p-6 shadow-sm
+                           hover:border-amber-400 hover:shadow-md transition-all duration-200 select-none">
 
                 <div class="w-9 h-9 rounded-lg border border-gray-200
                             bg-gray-100 flex items-center justify-center">
@@ -245,7 +249,7 @@
                     </p>
                 </div>
 
-            </a>
+            </button>
 
             {{-- ── 5. Content-Verwaltung (Platzhalter) ── --}}
             <div class="relative flex flex-col gap-5 rounded-xl
