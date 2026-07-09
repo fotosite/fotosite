@@ -51,10 +51,11 @@
         </form>
 
         <div class="mt-5 text-center">
-            <a href="{{ route('mandant.login') }}"
-               class="text-sm text-gray-500 hover:text-gray-700 transition-colors">
+            <button type="button"
+                    @click="window.location='{{ route('mandant.login') }}'"
+                    class="text-sm text-gray-500 hover:text-gray-700 transition-colors select-none">
                 ← Zurück zum Login
-            </a>
+            </button>
         </div>
 
     </div>

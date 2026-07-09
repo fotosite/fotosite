@@ -17,9 +17,9 @@
     <meta name="robots" content="noindex, nofollow">
     <title>Fotogalerie</title>
 </head>
-<body style="font-family: sans-serif; text-align: center; padding: 4rem;">
+<body style="font-family: sans-serif; text-align: center; padding: 4rem;" x-data="{}">
     <h1>Seite nicht verfügbar</h1>
     <p>Diese Seite wird nicht mehr verwendet.</p>
-    <p><a href="{{ route('home') }}">Zurück zur Startseite</a></p>
+    <p><button type="button" @click="window.location='{{ route('home') }}'" class="select-none">Zurück zur Startseite</button></p>
 </body>
 </html>

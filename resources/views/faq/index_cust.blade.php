@@ -56,9 +56,10 @@
                 </span>
             </div>
 
-            <a href="{{ route('customer.dashboard') }}"
-               class="inline-flex items-center gap-1.5 text-xs text-indigo-500
-                      hover:text-indigo-700 transition-colors mb-4">
+            <button type="button"
+                    @click="window.location='{{ route('customer.dashboard') }}'"
+                    class="inline-flex items-center gap-1.5 text-xs text-indigo-500
+                           hover:text-indigo-700 transition-colors mb-4 select-none">
                 <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg"
                      fill="none" viewBox="0 0 24 24" stroke-width="2"
                      stroke="currentColor">
@@ -66,7 +67,7 @@
                           d="M15.75 19.5 8.25 12l7.5-7.5"/>
                 </svg>
                 Zurück zu den Einstellungen
-            </a>
+            </button>
 
             <h1 class="text-xl font-semibold tracking-tight text-gray-800 mb-4">
                 FAQ und Infos

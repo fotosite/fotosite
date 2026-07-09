@@ -64,12 +64,13 @@
 
     <main class="mx-auto max-w-4xl px-6 pt-14 pb-24">
 
-        <div class="mb-6">
-            <a href="{{ route('system.mandanten.show', $mandant->mand_id) }}"
-               class="inline-flex items-center min-h-11 py-2 text-sm text-gray-400 hover:text-gray-600
-                      transition-colors duration-150 tracking-wide">
+        <div class="mb-6" x-data="{}">
+            <button type="button"
+                    @click="window.location='{{ route('system.mandanten.show', $mandant->mand_id) }}'"
+                    class="inline-flex items-center min-h-11 py-2 text-sm text-gray-400 hover:text-gray-600
+                           transition-colors duration-150 tracking-wide select-none">
                 ← Galerist:in ansehen
-            </a>
+            </button>
         </div>
 
         <div class="mb-8">

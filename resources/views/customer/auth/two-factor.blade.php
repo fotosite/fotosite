@@ -78,10 +78,11 @@
         </form>
 
         <div class="mt-5 text-center">
-            <a href="{{ route('customer.login') }}"
-               class="text-sm text-gray-500 hover:text-indigo-600 transition-colors">
+            <button type="button"
+                    @click="window.location='{{ route('customer.login') }}'"
+                    class="text-sm text-gray-500 hover:text-indigo-600 transition-colors select-none">
                 ← Zurück zum Login
-            </a>
+            </button>
         </div>
 
     </div>

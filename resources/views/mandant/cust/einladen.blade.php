@@ -208,11 +208,12 @@
 
         {{-- Zurück --}}
         <div class="mt-8">
-            <a href="{{ route('mandant.kunden.index') }}"
-               class="inline-flex items-center min-h-11 py-2 text-sm text-gray-400 hover:text-indigo-600
-                      transition-colors duration-150 tracking-wide">
+            <button type="button"
+                    @click="window.location='{{ route('mandant.kunden.index') }}'"
+                    class="inline-flex items-center min-h-11 py-2 text-sm text-gray-400 hover:text-indigo-600
+                           transition-colors duration-150 tracking-wide select-none">
                 ← Zurück zur Mitgliederliste
-            </a>
+            </button>
         </div>
 
     </main>

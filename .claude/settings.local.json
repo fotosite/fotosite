@@ -16,7 +16,8 @@
       "Bash(composer dump-autoload *)",
       "Bash(grep -E \"GET\\\\s+/\\\\s\")",
       "Bash(cat tailwind.config.js)",
-      "Bash(cat tailwind.config.ts)"
+      "Bash(cat tailwind.config.ts)",
+      "Bash(npm run *)"
     ]
   }
 }

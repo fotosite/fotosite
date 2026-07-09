@@ -400,12 +400,13 @@
         @endif
 
         {{-- Zurück --}}
-        <div class="mt-6 text-center">
-            <a href="{{ route('home') }}"
-               class="text-sm text-gray-400 hover:text-indigo-600
-                      transition-colors duration-150">
+        <div class="mt-6 text-center" x-data="{}">
+            <button type="button"
+                    @click="window.location='{{ route('home') }}'"
+                    class="text-sm text-gray-400 hover:text-indigo-600
+                           transition-colors duration-150 select-none">
                 ← Zurück zur Startseite
-            </a>
+            </button>
         </div>
 
     </div>

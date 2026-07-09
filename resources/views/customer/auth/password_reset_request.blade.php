@@ -91,11 +91,12 @@
                 </div>
             </form>
 
-            <div class="mt-6 text-center">
-                <a href="{{ route('home') }}"
-                   class="text-sm text-indigo-600 hover:underline">
+            <div class="mt-6 text-center" x-data="{}">
+                <button type="button"
+                        @click="window.location='{{ route('home') }}'"
+                        class="text-sm text-indigo-600 hover:underline select-none">
                     Zurück zur Anmeldung
-                </a>
+                </button>
             </div>
 
         </div>

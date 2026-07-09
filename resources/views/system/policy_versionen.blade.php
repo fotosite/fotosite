@@ -52,10 +52,11 @@
     <main class="mx-auto max-w-3xl px-6 pt-10 pb-24">
 
         {{-- Zurück-Link --}}
-        <div class="mt-4 mb-6">
-            <a href="{{ route('system.dashboard') }}"
-               class="inline-flex items-center gap-1.5 text-xs text-amber-600
-                      hover:text-amber-700 transition-colors">
+        <div class="mt-4 mb-6" x-data="{}">
+            <button type="button"
+                    @click="window.location='{{ route('system.dashboard') }}'"
+                    class="inline-flex items-center gap-1.5 text-xs text-amber-600
+                           hover:text-amber-700 transition-colors select-none">
                 <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg"
                      fill="none" viewBox="0 0 24 24" stroke-width="2"
                      stroke="currentColor">

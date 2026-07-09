@@ -98,12 +98,13 @@
 
         @if($userType === 'cust')
             {{-- Dashboard-Link für registrierte Mitglieder --}}
-            <div class="mt-6 text-center">
-                <a href="{{ route('customer.dashboard') }}"
-                   class="text-sm text-indigo-600 hover:text-indigo-800
-                          transition-colors">
+            <div class="mt-6 text-center" x-data="{}">
+                <button type="button"
+                        @click="window.location='{{ route('customer.dashboard') }}'"
+                        class="text-sm text-indigo-600 hover:text-indigo-800
+                               transition-colors select-none">
                     ← Zu meinen Einstellungen
-                </a>
+                </button>
             </div>
         @else
             {{-- Hinweis für anonyme Besucher --}}
