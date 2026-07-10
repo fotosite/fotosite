@@ -104,7 +104,7 @@
         {{-- Zurück-Link --}}
         <div class="mt-4 mb-6" x-data="{}">
             <button type="button"
-                    @click="$store.unsavedGuard.requestNav('{{ route('customer.dashboard') }}')"
+                    @click="window.location='{{ route('customer.dashboard') }}'"
                     class="inline-flex items-center gap-1.5 text-xs text-indigo-500
                            hover:text-indigo-700 transition-colors select-none">
                 <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg"
@@ -114,7 +114,7 @@
                           d="M15.75 19.5 8.25 12l7.5-7.5"/>
                 </svg>
                 Einstellungen
-            </a>
+            </button>
         </div>
 
         {{-- Seitenüberschrift --}}
