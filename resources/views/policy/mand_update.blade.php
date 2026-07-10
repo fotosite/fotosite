@@ -44,10 +44,12 @@
                     Wir haben unsere Datenschutzerklärung aktualisiert. Informiere dich
                     in deinem Einstellungsbereich.
                 </p>
-                <a href="{{ route('customer.datenschutz.erlaeuterung') }}" target="_blank"
-                   class="block text-sm text-indigo-600 hover:underline mb-6">
+                <button type="button"
+                        x-data="{}"
+                        @click="window.open('{{ route('customer.datenschutz.erlaeuterung') }}', '_blank')"
+                        class="block text-sm text-indigo-600 hover:underline mb-6 select-none">
                     Datenschutzerklärung ansehen →
-                </a>
+                </button>
             @else
                 <h1 class="text-xl font-semibold tracking-tight text-gray-800 mb-2">
                     Upload-Bedingungen aktualisiert
@@ -56,10 +58,12 @@
                     Wir haben unsere Upload-Bedingungen aktualisiert. Informiere dich
                     in deinem Einstellungsbereich.
                 </p>
-                <a href="{{ route('customer.datenschutz.upload-bedingungen-pdf') }}" target="_blank"
-                   class="block text-sm text-indigo-600 hover:underline mb-6">
+                <button type="button"
+                        x-data="{}"
+                        @click="window.open('{{ route('customer.datenschutz.upload-bedingungen-pdf') }}', '_blank')"
+                        class="block text-sm text-indigo-600 hover:underline mb-6 select-none">
                     Upload-Bedingungen ansehen →
-                </a>
+                </button>
             @endif
 
             <form method="POST" action="{{ route('mandant.policy.confirm') }}">

@@ -246,10 +246,11 @@
                     </div>
 
                     <div class="mt-1 text-right">
-                        <a href="{{ route('customer.password.reset.request') }}"
-                           class="text-xs text-indigo-600 hover:underline">
+                        <button type="button"
+                                @click="window.location='{{ route('customer.password.reset.request') }}'"
+                                class="text-xs text-indigo-600 hover:underline select-none">
                             Passwort vergessen?
-                        </a>
+                        </button>
                     </div>
 
                     <div class="mt-5">
@@ -384,10 +385,11 @@
                 </div>
 
                 <div class="mt-1 text-right">
-                    <a href="{{ route('mandant.password.reset.request') }}"
-                       class="text-xs text-indigo-600 hover:underline">
+                    <button type="button"
+                            @click="window.location='{{ route('mandant.password.reset.request') }}'"
+                            class="text-xs text-indigo-600 hover:underline select-none">
                         Passwort vergessen?
-                    </a>
+                    </button>
                 </div>
 
                 <div class="mt-5">
