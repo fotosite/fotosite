@@ -1,18 +1,27 @@
 <?php
 /**
  * FILE:        app/helpers.php
- * VERSION:     1.2.0
+ * VERSION:     1.3.0
  * AUTHOR:      Martin Wagner
- * DATE:        2026-06-08
+ * DATE:        2026-07-10
  * PURPOSE:     Globale Helper-Funktionen
  *
- * FUNCTIONS:   genitivName()      — Bildet den Genitiv eines Eigennamens (deutsch)
- *              detectOsPlatform() — Erkennt die Client-Plattform anhand des User-Agent-Strings
- *              detectBrowser()    — Erkennt den Client-Browser anhand des User-Agent-Strings
+ * FUNCTIONS:   genitivName()             — Bildet den Genitiv eines Eigennamens (deutsch)
+ *              detectOsPlatform()        — Erkennt die Client-Plattform anhand des User-Agent-Strings
+ *              detectBrowser()           — Erkennt den Client-Browser anhand des User-Agent-Strings
+ *              trustedDeviceCookieName() — Cookie-Name für Trusted-Device-Feature (cust/mand-Login)
+ *              checkTrustedDevice()      — Prüft Trusted-Device-Cookie gegen sessiondb.trusted_device
+ *              issueTrustedDeviceCookie()— Legt trusted_device-Eintrag an, gibt Cookie zurück
+ *              guessDeviceLabel()        — Kosmetische Geräte-Bezeichnung aus User-Agent
+ *              revokeTrustedDevices()    — Löscht alle trusted_device-Einträge eines Nutzers
  *
- * CALLS:       (none)
+ * CALLS:       App\Models\SessionDb\TrustedDevice::where()/create()
  *
- * DB ACCESS:   (none)
+ * DB ACCESS:   sessiondb.trusted_device (td_id, user_type, user_id, token_hash,
+ *              ua_hash, device_label, last_used_at, expires_at, created_at)
+ *
+ * CHANGES:     1.3.0 (2026-07-10) Trusted-Device-Helper ergänzt (cust/mand-Login,
+ *              betrifft NICHT anon/pw_list) — siehe FUNCTIONS oben.
  */
 
 if (! function_exists('genitivName')) {
@@ -60,5 +69,129 @@ if (! function_exists('detectBrowser')) {
         if (stripos($userAgent, 'Firefox')       !== false) return 'firefox';
         if (stripos($userAgent, 'Safari')        !== false) return 'safari';
         return 'unknown';
+    }
+}
+
+if (! function_exists('trustedDeviceCookieName')) {
+    function trustedDeviceCookieName(string $userType): string
+    {
+        return $userType === 'mand' ? 'trusted_device_mand' : 'trusted_device_cust';
+    }
+}
+
+if (! function_exists('checkTrustedDevice')) {
+    /**
+     * Prüft, ob für den aktuellen Request ein gültiges Trusted-Device-Cookie
+     * vorliegt (cust/mand-Login, NICHT anon). Bei Erfolg wird last_used_at
+     * aktualisiert.
+     */
+    function checkTrustedDevice(string $userType, int $userId, \Illuminate\Http\Request $request): bool
+    {
+        $cookieValue = $request->cookie(trustedDeviceCookieName($userType));
+        if (! $cookieValue || ! str_contains($cookieValue, '.')) {
+            return false;
+        }
+
+        [$tdId, $plainToken] = explode('.', $cookieValue, 2);
+
+        $device = \App\Models\SessionDb\TrustedDevice::where('td_id', $tdId)
+            ->where('user_type', $userType)
+            ->where('user_id', $userId)
+            ->where('expires_at', '>', now())
+            ->first();
+
+        if (! $device) {
+            return false;
+        }
+
+        if (! hash_equals($device->token_hash, hash('sha256', $plainToken))) {
+            return false;
+        }
+
+        $currentUaHash = hash('sha256', $request->userAgent() ?? '');
+        if (! hash_equals($device->ua_hash, $currentUaHash)) {
+            return false;
+        }
+
+        $device->update(['last_used_at' => now()]);
+
+        return true;
+    }
+}
+
+if (! function_exists('issueTrustedDeviceCookie')) {
+    /**
+     * Legt einen neuen TrustedDevice-DB-Eintrag an (cust/mand-Login) und
+     * gibt das zugehörige Cookie zurück (30 Tage gültig, httpOnly, secure).
+     */
+    function issueTrustedDeviceCookie(string $userType, int $userId, \Illuminate\Http\Request $request): \Symfony\Component\HttpFoundation\Cookie
+    {
+        $plainToken = bin2hex(random_bytes(32));
+        $tokenHash  = hash('sha256', $plainToken);
+        $uaHash     = hash('sha256', $request->userAgent() ?? '');
+
+        $device = \App\Models\SessionDb\TrustedDevice::create([
+            'user_type'    => $userType,
+            'user_id'      => $userId,
+            'token_hash'   => $tokenHash,
+            'ua_hash'      => $uaHash,
+            'device_label' => guessDeviceLabel($request->userAgent() ?? ''),
+            'expires_at'   => now()->addDays(30),
+            'created_at'   => now(),
+        ]);
+
+        $cookieValue = $device->td_id . '.' . $plainToken;
+
+        return cookie(
+            trustedDeviceCookieName($userType),
+            $cookieValue,
+            60 * 24 * 30,
+            null, null,
+            true,
+            true,
+            false,
+            'lax'
+        );
+    }
+}
+
+if (! function_exists('guessDeviceLabel')) {
+    /**
+     * Grobe, rein kosmetische Geräte-Bezeichnung aus dem User-Agent für die
+     * Anzeige in der "Vertrauenswürdige Geräte"-Liste. Keine sicherheits-
+     * relevante Funktion.
+     */
+    function guessDeviceLabel(string $userAgent): string
+    {
+        $browser = match (true) {
+            str_contains($userAgent, 'Edg/')     => 'Edge',
+            str_contains($userAgent, 'Chrome/')  => 'Chrome',
+            str_contains($userAgent, 'Firefox/') => 'Firefox',
+            str_contains($userAgent, 'Safari/') && ! str_contains($userAgent, 'Chrome/') => 'Safari',
+            default => 'Unbekannter Browser',
+        };
+
+        $os = match (true) {
+            str_contains($userAgent, 'iPhone'), str_contains($userAgent, 'iPad') => 'iOS',
+            str_contains($userAgent, 'Android') => 'Android',
+            str_contains($userAgent, 'Windows')  => 'Windows',
+            str_contains($userAgent, 'Macintosh') => 'macOS',
+            default => '',
+        };
+
+        return trim($browser . ($os ? " auf $os" : ''));
+    }
+}
+
+if (! function_exists('revokeTrustedDevices')) {
+    /**
+     * Widerruft alle Trusted-Device-Einträge eines Nutzers (cust/mand),
+     * z.B. bei Passwort-Änderung. Betrifft NICHT anon/pw_list.
+     */
+    function revokeTrustedDevices(string $userType, int $userId): int
+    {
+        return \App\Models\SessionDb\TrustedDevice::where('user_type', $userType)
+            ->where('user_id', $userId)
+            ->delete();
     }
 }
