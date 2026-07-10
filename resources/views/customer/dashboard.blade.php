@@ -156,6 +156,10 @@
                     FAQ und Infos
                 </button>
             </div>
+            <p class="mt-3 text-xs text-gray-400 leading-relaxed">
+                Die Bedingungen für den Upload von Fotos durch eine:n Galerist:in
+                findest du in deinem Einstellungen-Fenster und unter „FAQ und Infos".
+            </p>
         </div>
 
         {{-- Modal: Passwort ändern --}}

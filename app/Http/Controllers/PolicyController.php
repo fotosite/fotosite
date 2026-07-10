@@ -116,15 +116,6 @@ class PolicyController extends Controller
             ]);
         }
 
-        if ($type === 'upload') {
-            $cust = CustUser::find($request->session()->get('_cust_id'));
-
-            $cust?->update([
-                'upload_terms_version'     => PolicyVersion::get('upload_version'),
-                'upload_terms_accepted_at' => now(),
-            ]);
-        }
-
         $request->session()->forget('_policy_update');
 
         return redirect()->route('customer.content');

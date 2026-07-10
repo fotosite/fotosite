@@ -95,11 +95,9 @@ class CheckPolicyVersion
                     $request->session()->put('_policy_update', 'ds');
                     return redirect()->route('customer.policy.update');
                 }
-
-                if (PolicyVersion::get('upload_version') !== $cust->upload_terms_version) {
-                    $request->session()->put('_policy_update', 'upload');
-                    return redirect()->route('customer.policy.update');
-                }
+                // Upload-Bedingungen-Popup für cust entfernt (2026-07) — Inhalt für
+                // cust nicht relevant, siehe PROJECT_CONTEXT.md. Hinweis stattdessen
+                // statisch im Dashboard + FAQ.
             }
         }
 
