@@ -241,6 +241,12 @@ class CustLoginController extends UserDbController
             }
         }
 
+        $checkboxChecked = $request->boolean('remember_device');
+
+        if ($require2fa && checkTrustedDevice('cust', $cust->cust_id, $request)) {
+            $require2fa = false;
+        }
+
         if ($require2fa) {
             $code = $this->twofaService->generateCode('cust', $cust->cust_id, 0);
 
@@ -250,6 +256,7 @@ class CustLoginController extends UserDbController
             $request->session()->put('pending_cust_id',   $cust->cust_id);
             $request->session()->put('pending_mand_id',   $pcode->mand_id);
             $request->session()->put('pending_sec_level', $pcode->cust_passcode);
+            $request->session()->put('pending_remember_device', $checkboxChecked);
 
             return redirect()->route('customer.login.2fa');
         }
@@ -413,7 +420,22 @@ class CustLoginController extends UserDbController
         \App\Models\SessionDb\Session::where('expires_at', '<', now())
             ->delete();
 
-        return redirect()->route('customer.content');
+        $response = redirect()->route('customer.content');
+
+        if ($request->session()->pull('pending_remember_device', false)) {
+            $cust = CustUser::find($custId);
+
+            if ($cust) {
+                $response->cookie(issueTrustedDeviceCookie('cust', (int) $custId, $request));
+
+                Mail::to($cust->cust_email)->send(new \App\Mail\TrustedDeviceAddedMail(
+                    guessDeviceLabel($request->userAgent() ?? ''),
+                    $cust->cust_firstname ?? ''
+                ));
+            }
+        }
+
+        return $response;
     }
 
     /**
