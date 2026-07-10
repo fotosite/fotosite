@@ -181,7 +181,7 @@
                     </div>
                 </div>
 
-                <form method="POST" action="{{ route('customer.login.handle') }}" x-data="{ dirty: false, show: false, submitted: false }">
+                <form method="POST" action="{{ route('customer.login.handle') }}" x-data="{ dirty: false, show: false, submitted: false, rememberDevice: false }">
                     @csrf
 
                     @error('credentials')
@@ -253,6 +253,15 @@
                         </button>
                     </div>
 
+                    <div class="mt-4 flex items-center gap-2">
+                        <input type="checkbox" name="remember_device" id="remember_device_cust"
+                               value="1" x-model="rememberDevice"
+                               class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                        <label for="remember_device_cust" class="text-xs text-gray-500 select-none">
+                            Dieses Gerät als sicher merken (30 Tage, kein Code nötig)
+                        </label>
+                    </div>
+
                     <div class="mt-5">
                         <button type="button"
                                 @click="$el.closest('form').submit(); submitted = true"
@@ -316,7 +325,7 @@
                 </div>
             </div>
 
-            <form method="POST" action="/mandant/login" x-data="{ dirty: false, show: false, submitted: false }">
+            <form method="POST" action="/mandant/login" x-data="{ dirty: false, show: false, submitted: false, rememberDevice: false }">
                 @csrf
                 <input type="hidden" name="_form" value="mand">
 
@@ -390,6 +399,15 @@
                             class="text-xs text-indigo-600 hover:underline select-none">
                         Passwort vergessen?
                     </button>
+                </div>
+
+                <div class="mt-4 flex items-center gap-2">
+                    <input type="checkbox" name="remember_device" id="remember_device_mand"
+                           value="1" x-model="rememberDevice"
+                           class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                    <label for="remember_device_mand" class="text-xs text-gray-500 select-none">
+                        Dieses Gerät als sicher merken (30 Tage, kein Code nötig)
+                    </label>
                 </div>
 
                 <div class="mt-5">
