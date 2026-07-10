@@ -147,12 +147,19 @@ class MandantLoginController extends UserDbController
                 ->with('login_page', 'mand');
         }
 
+        $checkboxChecked = $request->boolean('remember_device');
+
+        if (checkTrustedDevice('mand', $mand->mand_id, $request)) {
+            return $this->buildMandSession($request, $mand);
+        }
+
         $code = $this->twofaService->generate('mand', $mand->mand_id, 'login');
 
         Mail::to($mand->mand_email)
             ->send(new TwoFactorCodeMail($code, $mand->mand_firstname ?? ''));
 
         $request->session()->put('pending_mand_id', $mand->mand_id);
+        $request->session()->put('pending_remember_device', $checkboxChecked);
 
         return redirect()->route('mandant.login.2fa');
     }
@@ -189,7 +196,34 @@ class MandantLoginController extends UserDbController
             return back()->withErrors(['tfa_code' => 'Ungültiger oder abgelaufener Code.']);
         }
 
-        $sessionData = $this->sessionIntegrityService->buildSessionData('mand', (int) $mandId);
+        $mand = MandUser::find($mandId);
+
+        if (! $mand) {
+            return redirect()->route('mandant.login');
+        }
+
+        $response = $this->buildMandSession($request, $mand);
+
+        if ($request->session()->pull('pending_remember_device', false)) {
+            $response->cookie(issueTrustedDeviceCookie('mand', $mand->mand_id, $request));
+
+            Mail::to($mand->mand_email)->send(new \App\Mail\TrustedDeviceAddedMail(
+                guessDeviceLabel($request->userAgent() ?? ''),
+                $mand->mand_firstname ?? ''
+            ));
+        }
+
+        return $response;
+    }
+
+    /**
+     * Baut die Mand-Session auf (nach 2FA-Verifikation oder direktem
+     * Trusted-Device-Login) — OS-Erkennung, Passkey-Prompt-Logik,
+     * Session-Bereinigung, Redirect zu mandant.dashboard.
+     */
+    private function buildMandSession(Request $request, MandUser $mand): RedirectResponse
+    {
+        $sessionData = $this->sessionIntegrityService->buildSessionData('mand', $mand->mand_id);
 
         $request->session()->regenerate();
         $request->session()->put('_user_type', $sessionData['user_type']);
@@ -201,7 +235,7 @@ class MandantLoginController extends UserDbController
 
         // Passkey für dieses OS und diesen User bereits vorhanden?
         $hasPasskey = Passkey::where('user_type', 'mand')
-            ->where('user_id', $mandId)
+            ->where('user_id', $mand->mand_id)
             ->exists();
 
         // ua_hash berechnen (analog SessionHijackProtection)
@@ -209,7 +243,7 @@ class MandantLoginController extends UserDbController
 
         // "Nie wieder fragen" für dieses Gerät + OS gesetzt?
         $neverAsk = \App\Models\UserDb\PasskeyDismissed::where('user_type', 'mand')
-            ->where('user_id', $mandId)
+            ->where('user_id', $mand->mand_id)
             ->where('os', $os)
             ->where('ua_hash', $uaHash)
             ->exists();
