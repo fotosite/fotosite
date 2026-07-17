@@ -1,4 +1,4 @@
-@props(['userType'])
+@props(['userType', 'size' => 'default'])
 
 @php
     $userId = $userType === 'mand' ? session('_mand_id') : session('_cust_id');
@@ -11,6 +11,10 @@
         : false;
 
     $logoutRoute = $userType === 'mand' ? route('mandant.logout') : route('customer.logout');
+
+    $buttonClass = $size === 'small'
+        ? 'text-xs text-gray-400 hover:text-red-500 transition-colors duration-150 tracking-wide select-none'
+        : 'min-h-11 py-2 px-3 text-sm text-gray-400 hover:text-red-500 transition-colors duration-150 tracking-wide select-none';
 @endphp
 
 <div class="flex items-center" x-data="{ showConfirm: false }">
@@ -18,8 +22,7 @@
           @submit.prevent="{{ $hasTrustedDevice ? 'showConfirm = true' : '$el.submit()' }}">
         @csrf
         <button type="submit"
-                class="min-h-11 py-2 px-3 text-sm text-gray-400 hover:text-red-500
-                       transition-colors duration-150 tracking-wide select-none">
+                class="{{ $buttonClass }}">
             Abmelden
         </button>
     </form>

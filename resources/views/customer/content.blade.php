@@ -54,16 +54,7 @@
 
             {{-- Logout — nur für registrierte Mitglieder --}}
             @if($userType === 'cust')
-            <div class="flex items-center">
-                <form method="POST" action="{{ route('customer.logout') }}">
-                    @csrf
-                    <button type="submit"
-                            class="text-xs text-gray-400 hover:text-red-500
-                                   transition-colors duration-150 tracking-wide">
-                        Abmelden
-                    </button>
-                </form>
-            </div>
+            <x-logout-button user-type="cust" size="small" />
             @endif
 
         </div>

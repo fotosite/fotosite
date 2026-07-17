@@ -70,16 +70,7 @@
             </div>
 
             {{-- Logout --}}
-            <div class="flex items-center">
-                <form method="POST" action="{{ route('customer.logout') }}">
-                    @csrf
-                    <button type="submit"
-                            class="min-h-11 py-2 px-3 text-sm text-gray-400 hover:text-red-500
-                                   transition-colors duration-150 tracking-wide">
-                        Abmelden
-                    </button>
-                </form>
-            </div>
+            <x-logout-button user-type="cust" />
 
         </div>
     </header>
