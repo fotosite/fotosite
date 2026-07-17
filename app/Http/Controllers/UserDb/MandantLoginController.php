@@ -93,6 +93,7 @@ use App\Services\Passkey\PasskeyRepository;
 use App\Services\Passkey\PasskeySessionStorage;
 use App\Services\SessionDb\SessionIntegrityService;
 use App\Services\SessionDb\TwofaService;
+use App\Services\UserDb\LoginSessionBuilder;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -120,6 +121,7 @@ class MandantLoginController extends UserDbController
         private readonly SessionIntegrityService   $sessionIntegrityService,
         private readonly PasskeyRepository         $passkeyRepository,
         private readonly PasskeySessionStorage     $passkeySessionStorage,
+        private readonly LoginSessionBuilder       $loginSessionBuilder,
     ) {
         $this->serializer = (new WebauthnSerializerFactory(
             AttestationStatementSupportManager::create()
@@ -223,44 +225,7 @@ class MandantLoginController extends UserDbController
      */
     private function buildMandSession(Request $request, MandUser $mand): RedirectResponse
     {
-        $sessionData = $this->sessionIntegrityService->buildSessionData('mand', $mand->mand_id);
-
-        $request->session()->regenerate();
-        $request->session()->put('_user_type', $sessionData['user_type']);
-        $request->session()->put('_mand_id',   $sessionData['mand_id']);
-        $request->session()->forget('pending_mand_id');
-
-        // OS erkennen
-        $os = detectOsPlatform($request->userAgent());
-
-        // Passkey für dieses OS und diesen User bereits vorhanden?
-        $hasPasskey = Passkey::where('user_type', 'mand')
-            ->where('user_id', $mand->mand_id)
-            ->exists();
-
-        // ua_hash berechnen (analog SessionHijackProtection)
-        $uaHash = hash('sha256', $request->userAgent() ?? '');
-
-        // "Nie wieder fragen" für dieses Gerät + OS gesetzt?
-        $neverAsk = \App\Models\UserDb\PasskeyDismissed::where('user_type', 'mand')
-            ->where('user_id', $mand->mand_id)
-            ->where('os', $os)
-            ->where('ua_hash', $uaHash)
-            ->exists();
-
-        // Prompt setzen
-        session([
-            '_prompt_passkey'  => !$hasPasskey && !$neverAsk && $os !== 'unknown',
-            '_passkey_os'      => $os,
-            '_passkey_browser' => detectBrowser($request->userAgent()),
-            '_passkey_uahash'  => $uaHash,
-        ]);
-
-        // Abgelaufene Sessions bereinigen
-        \App\Models\SessionDb\Session::where('expires_at', '<', now())
-            ->delete();
-
-        return redirect()->route('mandant.dashboard');
+        return $this->loginSessionBuilder->buildForMand($request, $mand);
     }
 
     /**

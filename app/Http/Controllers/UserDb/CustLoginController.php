@@ -133,6 +133,7 @@ use App\Services\Passkey\PasskeyRepository;
 use App\Services\Passkey\PasskeySessionStorage;
 use App\Services\SessionDb\SessionIntegrityService;
 use App\Services\SessionDb\TwofaService;
+use App\Services\UserDb\LoginSessionBuilder;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -161,6 +162,7 @@ class CustLoginController extends UserDbController
         private readonly SessionIntegrityService $sessionIntegrityService,
         private readonly PasskeyRepository       $passkeyRepository,
         private readonly PasskeySessionStorage   $passkeySessionStorage,
+        private readonly LoginSessionBuilder     $loginSessionBuilder,
     ) {
         $this->serializer = (new WebauthnSerializerFactory(
             AttestationStatementSupportManager::create()
@@ -261,46 +263,7 @@ class CustLoginController extends UserDbController
             return redirect()->route('customer.login.2fa');
         }
 
-        $sessionData = $this->sessionIntegrityService->buildSessionData('cust', $cust->cust_id);
-
-        $request->session()->regenerate();
-        $request->session()->put('_user_type',     $sessionData['user_type']);
-        $request->session()->put('_cust_id',       $cust->cust_id);
-        $request->session()->put('_mand_id',       $pcode->mand_id);
-        $request->session()->put('_sec_level',     $pcode->cust_passcode);
-        $request->session()->put('_last_activity', time());
-
-        // OS erkennen
-        $os = detectOsPlatform($request->userAgent());
-
-        // Passkey für dieses OS und diesen User bereits vorhanden?
-        $hasPasskey = Passkey::where('user_type', 'cust')
-            ->where('user_id', $cust->cust_id)
-            ->exists();
-
-        // ua_hash berechnen (analog SessionHijackProtection)
-        $uaHash = hash('sha256', $request->userAgent() ?? '');
-
-        // "Nie wieder fragen" für dieses Gerät + OS gesetzt?
-        $neverAsk = \App\Models\UserDb\PasskeyDismissed::where('user_type', 'cust')
-            ->where('user_id', $cust->cust_id)
-            ->where('os', $os)
-            ->where('ua_hash', $uaHash)
-            ->exists();
-
-        // Prompt setzen
-        session([
-            '_prompt_passkey'  => !$hasPasskey && !$neverAsk && $os !== 'unknown',
-            '_passkey_os'      => $os,
-            '_passkey_browser' => detectBrowser($request->userAgent()),
-            '_passkey_uahash'  => $uaHash,
-        ]);
-
-        // Abgelaufene Sessions bereinigen
-        \App\Models\SessionDb\Session::where('expires_at', '<', now())
-            ->delete();
-
-        return redirect()->route('customer.content');
+        return $this->loginSessionBuilder->buildForCust($request, $cust, $pcode);
     }
 
     public function handleAnonLogin(Request $request): RedirectResponse
