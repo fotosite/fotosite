@@ -576,6 +576,17 @@ class CustLoginController extends UserDbController
 
     public function logout(Request $request): RedirectResponse
     {
+        $custId = $request->session()->get('_cust_id');
+        $deleteTrustedDevice = $custId && $request->boolean('delete_trusted_device');
+
+        if ($deleteTrustedDevice) {
+            revokeTrustedDevices('cust', (int) $custId);
+        }
+
+        // Globales Aufräumen abgelaufener Einträge (alle Nutzer, unabhängig
+        // von diesem Logout)
+        \App\Models\SessionDb\TrustedDevice::where('expires_at', '<', now())->delete();
+
         // Eigene Session aus DB löschen
         $sessToken = session()->getId();
         \App\Models\SessionDb\Session::where('sess_token', $sessToken)
@@ -589,7 +600,13 @@ class CustLoginController extends UserDbController
             ->where('expires_at', '<', now())
             ->delete();
 
-        return redirect()->route('home')
+        $response = redirect()->route('home')
             ->with('status', 'Sie wurden erfolgreich abgemeldet.');
+
+        if ($deleteTrustedDevice) {
+            $response->withoutCookie(trustedDeviceCookieName('cust'));
+        }
+
+        return $response;
     }
 }

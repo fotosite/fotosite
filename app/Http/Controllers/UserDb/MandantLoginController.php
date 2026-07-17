@@ -402,6 +402,17 @@ class MandantLoginController extends UserDbController
 
     public function logout(Request $request): RedirectResponse
     {
+        $mandId = $request->session()->get('_mand_id');
+        $deleteTrustedDevice = $mandId && $request->boolean('delete_trusted_device');
+
+        if ($deleteTrustedDevice) {
+            revokeTrustedDevices('mand', (int) $mandId);
+        }
+
+        // Globales Aufräumen abgelaufener Einträge (alle Nutzer, unabhängig
+        // von diesem Logout)
+        \App\Models\SessionDb\TrustedDevice::where('expires_at', '<', now())->delete();
+
         // Eigene Session aus DB löschen
         $sessToken = session()->getId();
         \App\Models\SessionDb\Session::where('sess_token', $sessToken)
@@ -410,7 +421,13 @@ class MandantLoginController extends UserDbController
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('home')
+        $response = redirect()->route('home')
             ->with('status', 'Sie wurden erfolgreich abgemeldet.');
+
+        if ($deleteTrustedDevice) {
+            $response->withoutCookie(trustedDeviceCookieName('mand'));
+        }
+
+        return $response;
     }
 }
