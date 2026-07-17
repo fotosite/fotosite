@@ -122,7 +122,7 @@ if (! function_exists('checkTrustedDevice')) {
 if (! function_exists('issueTrustedDeviceCookie')) {
     /**
      * Legt einen neuen TrustedDevice-DB-Eintrag an (cust/mand-Login) und
-     * gibt das zugehörige Cookie zurück (30 Tage gültig, httpOnly, secure).
+     * gibt das zugehörige Cookie zurück (Gültigkeit config('trusted_device.days'), httpOnly, secure).
      */
     function issueTrustedDeviceCookie(string $userType, int $userId, \Illuminate\Http\Request $request): \Symfony\Component\HttpFoundation\Cookie
     {
@@ -136,7 +136,7 @@ if (! function_exists('issueTrustedDeviceCookie')) {
             'token_hash'   => $tokenHash,
             'ua_hash'      => $uaHash,
             'device_label' => guessDeviceLabel($request->userAgent() ?? ''),
-            'expires_at'   => now()->addDays(30),
+            'expires_at'   => now()->addDays(config('trusted_device.days')),
             'created_at'   => now(),
         ]);
 
@@ -145,7 +145,7 @@ if (! function_exists('issueTrustedDeviceCookie')) {
         return cookie(
             trustedDeviceCookieName($userType),
             $cookieValue,
-            60 * 24 * 30,
+            60 * 24 * config('trusted_device.days'),
             null, null,
             true,
             true,

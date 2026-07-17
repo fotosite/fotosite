@@ -258,7 +258,7 @@
                                value="1" x-model="rememberDevice"
                                class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                         <label for="remember_device_cust" class="text-xs text-gray-500 select-none">
-                            Dieses Gerät merken (30 Tage)
+                            Dieses Gerät als sicher merken
                         </label>
                     </div>
 
@@ -406,7 +406,7 @@
                            value="1" x-model="rememberDevice"
                            class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                     <label for="remember_device_mand" class="text-xs text-gray-500 select-none">
-                        Dieses Gerät merken (30 Tage)
+                        Dieses Gerät als sicher merken
                     </label>
                 </div>
 
