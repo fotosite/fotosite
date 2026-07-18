@@ -5,7 +5,10 @@ use App\Http\Controllers\UserDb\SystemLoginController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('auth.login-modal');
+    return response()
+        ->view('auth.login-modal')
+        ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        ->header('Pragma', 'no-cache');
 })->name('home');
 
 Route::get('/dashboard', function () {

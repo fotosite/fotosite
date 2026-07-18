@@ -598,5 +598,17 @@
             }
         }
     </script>
+
+    {{-- Erzwingt einen echten Server-Reload, falls die Seite aus dem
+         Back-Forward-Cache (bfcache) wiederhergestellt wird, statt eine
+         veraltete Ansicht zu zeigen (z.B. bei iOS Safari nach App-Wechsel).
+         Ergänzt die bereits gesetzten Cache-Control: no-store-Header. --}}
+    <script>
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
+    </script>
 </body>
 </html>

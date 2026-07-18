@@ -54,8 +54,19 @@ class AutoLoginTrustedDevice
 
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $request->routeIs('home') || $request->session()->has('_user_type')) {
+        if (! $request->routeIs('home')) {
             return $next($request);
+        }
+
+        if ($request->session()->has('_user_type')) {
+            $userType = $request->session()->get('_user_type');
+
+            return match ($userType) {
+                'cust' => redirect()->route('customer.content'),
+                'mand' => redirect()->route('mandant.dashboard'),
+                'syst' => redirect()->route('system.dashboard'),
+                default => $next($request),
+            };
         }
 
         $custId = $this->resolveTrustedUserId('cust', $request);
@@ -102,6 +113,7 @@ class AutoLoginTrustedDevice
     private function resolveTrustedUserId(string $userType, Request $request): ?int
     {
         $cookieValue = $request->cookie(trustedDeviceCookieName($userType));
+
         if (! $cookieValue || ! str_contains($cookieValue, '.')) {
             return null;
         }
