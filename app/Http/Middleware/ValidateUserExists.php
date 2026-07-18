@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Middleware/ValidateUserExists.php
- * VERSION:     1.1.0
+ * VERSION:     1.1.1
  * AUTOR:       Martin Wagner
  * DATUM:       2026-05-26
  *
@@ -34,6 +34,11 @@
  * DB ACCESS:   userdb.mand_user.mand_id, active
  *              userdb.cust_user.cust_id
  *              userdb.syst_user.syst_id
+ *
+ * CHANGES:     1.1.1 (2026-07-18) REDIRECT_TARGETS['syst'] von
+ *              '/system/login' (existierte nicht, führte zu 404) auf
+ *              '/backstage' korrigiert (tatsächliche Route:
+ *              system.backstage.login).
  */
 
 namespace App\Http\Middleware;
@@ -52,7 +57,7 @@ class ValidateUserExists
         'anon' => '/',
         'cust' => '/customer/login',
         'mand' => '/mandant/login',
-        'syst' => '/system/login',
+        'syst' => '/backstage',
     ];
 
     private const NOT_FOUND_MESSAGES = [

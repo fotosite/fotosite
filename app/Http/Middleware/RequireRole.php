@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Middleware/RequireRole.php
- * VERSION:     1.0
+ * VERSION:     1.1
  * AUTOR:       Martin Wagner
  * DATUM:       2026-05-26
  *
@@ -23,6 +23,11 @@
  *              Illuminate\Http\Request::session()::regenerateToken()
  *
  * DB ACCESS:   none
+ *
+ * CHANGES:     1.1 (2026-07-18) REDIRECT_TARGETS['syst'] von
+ *              '/system/login' (existierte nicht, führte zu 404) auf
+ *              '/backstage' korrigiert (tatsächliche Route:
+ *              system.backstage.login).
  */
 
 namespace App\Http\Middleware;
@@ -37,7 +42,7 @@ class RequireRole
         'anon' => '/',
         'cust' => '/customer/login',
         'mand' => '/mandant/login',
-        'syst' => '/system/login',
+        'syst' => '/backstage',
     ];
 
     private const ACCESS_MESSAGES = [

@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Middleware/SessionIdleTimeout.php
- * VERSION:     1.0.5
+ * VERSION:     1.1.0
  * AUTOR:       Martin Wagner
  * DATUM:       2026-05-26
  *
@@ -13,7 +13,7 @@
  *                  Lädt den passenden Timeout aus config('session_timeout').
  *                  Vergleicht time() mit _last_activity. Bei Überschreitung:
  *                  Session invalidieren, Token regenerieren, Redirect zum
- *                  typgerechten Login mit deutscher Fehlermeldung.
+ *                  typgerechten Login (kommentarlos, ohne Flash-Meldung).
  *                  Bei gültiger Session: _last_activity aktualisieren.
  *                  Kein Eingriff, wenn die Session noch nicht gestartet wurde.
  *
@@ -27,6 +27,13 @@
  *              Illuminate\Support\Facades\DB::connection('sessiondb')->table()->delete()
  *
  * DB ACCESS:   sessiondb.session.expires_at (DELETE, probabilistisch 5 %)
+ *
+ * CHANGES:     1.1.0 (2026-07-18) TIMEOUT_MESSAGES entfernt — Session-Timeout
+ *              zeigt keine Flash-Meldung mehr (Nutzerentscheidung, betraf
+ *              alle Rollen gleichermaßen). REDIRECT_TARGETS['syst'] von
+ *              '/system/login' (existierte nicht, führte zu 404) auf
+ *              '/backstage' korrigiert (tatsächliche Route:
+ *              system.backstage.login).
  */
 
 namespace App\Http\Middleware;
@@ -42,14 +49,7 @@ class SessionIdleTimeout
         'anon' => '/',
         'cust' => '/customer/login',
         'mand' => '/mandant/login',
-        'syst' => '/system/login',
-    ];
-
-    private const TIMEOUT_MESSAGES = [
-        'anon' => 'Ihre Sitzung ist abgelaufen.',
-        'cust' => 'Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.',
-        'mand' => 'Ihre Mandanten-Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.',
-        'syst' => 'Ihre System-Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.',
+        'syst' => '/backstage',
     ];
 
     public function handle(Request $request, Closure $next): Response
@@ -74,8 +74,7 @@ class SessionIdleTimeout
                     ->delete();
             }
 
-            return redirect(self::REDIRECT_TARGETS[$userType])
-                ->with('error', self::TIMEOUT_MESSAGES[$userType]);
+            return redirect(self::REDIRECT_TARGETS[$userType]);
         }
 
         $request->session()->put('_last_activity', time());

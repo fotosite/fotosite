@@ -1,5 +1,5 @@
 git add .
-git commit -m "Auto-Login vollstaendig: LoginSessionBuilder, AutoLoginTrustedDevice Middleware, Session-Redirect, No-Cache-Header, bfcache-Fix. Getestet auf iOS/Windows/Android."
-git tag autologin_complete_ok
+git commit -m "Sitzung-abgelaufen-Meldungen entfernt (cust/mand/syst/anon); kaputtes /system/login-Redirect-Ziel auf /backstage korrigiert (SessionIdleTimeout, ValidateUserExists, RequireRole)"
+git tag session_messages_removed_ok
 git push
-git push origin autologin_complete_ok
+git push origin session_messages_removed_ok

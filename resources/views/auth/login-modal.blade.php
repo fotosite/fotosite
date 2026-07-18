@@ -45,13 +45,6 @@
             </div>
         @endif
 
-        {{-- Flash: allgemeine Fehlermeldung (Middleware, Redirect->with('error')) --}}
-        @if (session('error'))
-            <div class="mb-5 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-                {{ session('error') }}
-            </div>
-        @endif
-
         {{-- Flash: Status (nach Logout, Registrierung etc.) --}}
         @if (session('status'))
             <div class="mb-5 rounded-lg bg-indigo-50 border border-indigo-200 px-4 py-3 text-sm text-indigo-700">
