@@ -1,5 +1,5 @@
 git add .
-git commit -m "Sitzung-abgelaufen-Meldungen entfernt (cust/mand/syst/anon); kaputtes /system/login-Redirect-Ziel auf /backstage korrigiert (SessionIdleTimeout, ValidateUserExists, RequireRole)"
-git tag session_messages_removed_ok
+git commit -m "sessiondb.session: user_type/cust_id/mand_id/syst_id korrekt befuellt (App::terminating), verwaiste Sessions durch regenerate(true) behoben, destroy() ID-Kuerzung korrigiert"
+git tag session_usertype_fix_ok
 git push
-git push origin session_messages_removed_ok
+git push origin session_usertype_fix_ok
