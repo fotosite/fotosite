@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Erstellungszeit: 29. Jun 2026 um 19:22
+-- Erstellungszeit: 19. Jul 2026 um 11:19
 -- Server-Version: 10.11.10-MariaDB-cll-lve
 -- PHP-Version: 8.3.11
 
@@ -47,8 +47,8 @@ CREATE TABLE `cust_invite` (
 
 CREATE TABLE `cust_pcode` (
   `pcode_id` bigint(20) UNSIGNED NOT NULL,
-  `mand_id` bigint(20) NOT NULL,
-  `cust_id` bigint(20) NOT NULL,
+  `mand_id` bigint(20) UNSIGNED NOT NULL,
+  `cust_id` bigint(20) UNSIGNED NOT NULL,
   `cust_passcode` varchar(255) NOT NULL COMMENT '= sec_level (num)',
   `cust_alias` varchar(255) DEFAULT NULL COMMENT 'Interner Name des Mandanten für diesen Kunden',
   `pcode_prefstat` bigint(20) NOT NULL,
@@ -61,11 +61,11 @@ CREATE TABLE `cust_pcode` (
 --
 
 INSERT INTO `cust_pcode` (`pcode_id`, `mand_id`, `cust_id`, `cust_passcode`, `cust_alias`, `pcode_prefstat`, `mand_sort_date`, `cust_mailrequest`) VALUES
-(26, 16, 15, '5', 'huhnter', 0, '2026-06-15', 1),
 (32, 6, 26, '3', 'Nachtbar', 1, '2026-06-21', 0),
 (45, 30, 33, '3', 'Nk', 1, '2026-06-25', 0),
-(48, 28, 34, '5', 'Wdd', 1, '2026-06-27', 0),
-(49, 28, 35, '5', 'Hint', 1, '2026-06-27', 0);
+(48, 28, 34, '1', 'Wdd', 1, '2026-06-27', 0),
+(49, 28, 35, '5', 'Hint', 1, '2026-06-27', 0),
+(51, 16, 37, '4', 'New', 1, '2026-07-09', 0);
 
 -- --------------------------------------------------------
 
@@ -97,10 +97,9 @@ CREATE TABLE `cust_user` (
 --
 
 INSERT INTO `cust_user` (`cust_id`, `cust_uname`, `cust_email`, `cust_tel`, `cust_firstname`, `cust_lastname`, `cust_street+nr`, `cust_postcode_city`, `cust_company`, `cust_pw_hash`, `cust_2fa_opt_in`, `ds_accepted_at`, `ds_version`, `upload_terms_accepted_at`, `upload_terms_version`, `show_welcome`) VALUES
-(15, 'Hazwo', 'subumaster@web.de', 'xy', 'Hazwode', 'Gehzwo', 'x', 'dfbxbfgnbx', 'x', '$2y$12$PT.fn7P6JGj48Gvz8IoageZ1ROnKwy6QNuuXHHJiNzlM7qDQUgccG', 0, '2026-06-21 15:17:37', '2.9', '2026-06-21 15:17:45', '2.2', 0),
-(33, 'Nk', 'newkid9@web.de', 'nicht vorhanden', 'Ml', 'Mk', 'Jhjk', 'LG hbl', 'nicht vorhanden', '$2y$12$LUYhoh3ZWOZMeC8WWAx.2exWaXHXRprwhhGNhFKwH0neYYdz6aLOi', 0, '2026-06-29 15:26:29', '3.1', '2026-06-29 15:26:32', '2.5', 0),
-(34, 'Wdf', 'ich-bin-wieder-da@bin-wieder-da.de', 'nicht vorhanden', 'H', 'H', 'J', 'J', 'nicht vorhanden', '$2y$12$siV7I1mBn02XkBKa0RziHe4KG5LA2qXWtUW6cQCIFE6fFBtY8ZaXm', 0, '2026-06-29 16:23:34', '3.1', '2026-06-29 16:23:36', '2.5', 0),
-(35, 'Hint', 'hntr2@mail.de', 'nicht vorhanden', 'Haber', 'H', 'Vh', 'Hh', 'nicht vorhanden', '$2y$12$S5Mk25wKSysK/h6guJ5Zs.UPo00a42wuGlZsi5arufv77RXcCYT1K', 0, '2026-06-29 15:59:22', '3.1', '2026-06-29 15:59:23', '2.5', 0);
+(34, 'Wdf', 'ich-bin-wieder-da@bin-wieder-da.de', 'nicht vorhanden', 'H', 'H', 'J', 'J', 'nicht vorhanden', '$2y$12$siV7I1mBn02XkBKa0RziHe4KG5LA2qXWtUW6cQCIFE6fFBtY8ZaXm', 0, '2026-07-17 09:46:26', '3.9', '2026-06-29 16:23:36', '2.5', 0),
+(35, 'Hint', 'hntr2@mail.de', 'nicht vorhanden', 'Haber', 'H', 'Vh', 'Hh', 'nicht vorhanden', '$2y$12$S5Mk25wKSysK/h6guJ5Zs.UPo00a42wuGlZsi5arufv77RXcCYT1K', 0, '2026-07-17 07:42:46', '3.9', '2026-06-29 15:59:23', '2.5', 0),
+(37, 'Nm', 'newkid9@web.de', 'nicht vorhanden', 'Mm', 'Mm', 'Mm', 'Nk', 'nicht vorhanden', '$2y$12$11e/.CCmmyqgzHZYZ1iePuKlX8j9oex4gxU8/UwdKqXwedkxR41Qu', 0, '2026-07-10 12:30:30', '3.9', '2026-07-10 11:57:40', '2.8', 0);
 
 -- --------------------------------------------------------
 
@@ -186,9 +185,9 @@ CREATE TABLE `mand_user` (
 --
 
 INSERT INTO `mand_user` (`mand_id`, `mand_uname`, `mand_email`, `mand_tel`, `mand_firstname`, `mand_lastname`, `mand_street+nr`, `mand_postcode+city`, `mand_company`, `mand_pw_hash`, `mand_prefstat`, `has_public_content`, `active`, `valid_to`, `mand_cust_2fa`, `mand_2fa_opt_in`, `ds_accepted_at`, `ds_version`, `upload_terms_accepted_at`, `upload_terms_version`, `show_welcome`) VALUES
-(16, 'Pinz', 'donkey-shot@web.de', 'kk', 'Peterx', 'Hinz', 'asdSD', 'sada', 'klköl', '$2y$12$s9yau/Rb6zqlZx3UuwDbdOLPZx8Tcj304G2jNP.AzibrYdourDoQe', 0, 0, 1, NULL, 1, 1, '2026-06-21 15:17:00', '2.9', '2026-06-21 15:17:10', '2.2', 0),
+(16, 'Pinz', 'donkey-shot@web.de', 'kk', 'Peterx', 'Hinz', 'asdSD', 'sada', 'klköl', '$2y$12$4.7X13no4bE7uUlLnZ5Y2e065yt9pG/kaRMP59FH9zn.wfLtpfZfG', 0, 0, 1, NULL, 1, 1, '2026-07-17 08:02:08', '3.9', '2026-07-17 08:02:14', '3.1', 0),
 (17, 'moonshine', 'moonshine_gf@web.de', 'adsfghjkjghsf', 'moon', 'shine', '', '', 'sfhdgjkf', '$2y$12$tDd9gIE0Y/dZOAIz1FkYn.L4yMBWU9XZ9BIC5S4hOhyNoegIm7z4K', 0, 0, 1, NULL, 0, 1, '2026-06-17 09:54:56', '1.0', '2026-06-17 09:54:56', '1.0', 1),
-(28, 'Newb', 'newkid9@web.de', 'nicht vorhanden', 'Newb', 'Newb', 'Newb', 'Newb', 'nicht vorhanden', '$2y$12$zJT/hlyNRFwn5Jpm0Qg2Uu2pSpFH5WBNGXQ9fexhGlf/QWt7R1Zh6', 0, 0, 1, NULL, 4, 1, '2026-06-29 16:01:42', '3.1', '2026-06-29 16:01:44', '2.5', 0),
+(28, 'Newb', 'newkid9@web.de', 'nicht vorhanden', 'Newb', 'Newb', 'Newb', 'Newb', 'nicht vorhanden', '$2y$12$GbanfntfyWMsGkXmD1odPO894atLm5x1Cj7sTaE1XgRpdnoOb1W6q', 0, 0, 1, NULL, 4, 0, '2026-07-10 12:31:18', '3.9', '2026-07-10 12:19:18', '3.1', 0),
 (30, 'Ade', 'anderelbe@unterderbruecke.de', 'nicht vorhanden', 'Ade', 'Ade', 'Ade', 'Ade', 'nicht vorhanden', '$2y$12$2X2QNrLGmZvj0EmxTRXJ0.jX3EnlPMuLezloKqQGzIA5DU6lJd.2G', 0, 0, 1, NULL, 0, 1, '2026-06-25 16:51:16', '2.9', '2026-06-25 16:51:30', '2.2', 0),
 (31, 'Hnt', 'hntr4@mail.de', 'nicht vorhanden', 'Hnt', 'Hnt', 'Hnt', 'Hnt', 'nicht vorhanden', '$2y$12$e3kQF0wB1cP8VEpzzfGa8.sFlYri.EM0MYzyOOtTfZbWixkX3uuLm', 0, 0, 1, NULL, 0, 1, '2026-06-29 15:24:20', '3.1', '2026-06-29 15:24:25', '2.5', 0);
 
@@ -249,8 +248,8 @@ CREATE TABLE `policy_versions` (
 --
 
 INSERT INTO `policy_versions` (`pv_key`, `pv_value`, `updated_at`) VALUES
-('ds_version', '3.1', '2026-06-29 17:22:01'),
-('upload_version', '2.5', '2026-06-29 17:22:04');
+('ds_version', '3.9', '2026-07-10 14:30:21'),
+('upload_version', '3.1', '2026-07-10 14:18:19');
 
 -- --------------------------------------------------------
 
@@ -372,19 +371,19 @@ ALTER TABLE `cust_invite`
 -- AUTO_INCREMENT für Tabelle `cust_pcode`
 --
 ALTER TABLE `cust_pcode`
-  MODIFY `pcode_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
+  MODIFY `pcode_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
 
 --
 -- AUTO_INCREMENT für Tabelle `cust_user`
 --
 ALTER TABLE `cust_user`
-  MODIFY `cust_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+  MODIFY `cust_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
 --
 -- AUTO_INCREMENT für Tabelle `invite`
 --
 ALTER TABLE `invite`
-  MODIFY `inv_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=117;
+  MODIFY `inv_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=120;
 
 --
 -- AUTO_INCREMENT für Tabelle `mand_user`

@@ -1,10 +1,12 @@
 # PROJECT_CONTEXT.md — Fotosite V08
 
-> Stand: 29.06.2026 — Tag: `ios_button_feedback_ok` (+ nachfolgende Bugfixes 29.06.). Seit 26.06.: globale iOS/Android-Button-Animation via `app.css` (CSS `:active` + globales `user-select:none`), zahlreiche `<a>`→`<button>`-Umbauten (Zurück-/Aktions-Links), Doppel-Submit-Schutz auf allen Login-Buttons (cust/mand/syst), syst-Löschlogik korrigiert (primary löscht non-primaries), `MandAccountDeletedMail` bei syst-seitiger mand-Löschung, deutsche Passwort-Fehlermeldungen in 7 Controllern, PW-Hinweistexte syst auf min:12 korrigiert. Phase 7 (Foto-Content) ist der nächste Schritt. Abnahmetest cust-Bereich weiterhin offen.
+> Stand: 19.07.2026 — Tag: `session_usertype_fix_ok`. Seit 29.06.: iOS-Long-Tap-Fix vollständig abgeschlossen (Tag `ios_longtap_complete_ok` + Zwischen-Tags), Upload-Bedingungen-Popup für cust entfernt (`cust_ds_hinweis_ok`), Trusted-Device-Feature vollständig neu implementiert und zu vollständigem Auto-Login ohne Passwort erweitert (`autologin_complete_ok`), „Sitzung abgelaufen"-Meldungen entfernt + `/backstage`-Redirect-Bug behoben (`session_messages_removed_ok`), zwei unabhängige `sessiondb.session`-Bugs behoben — verwaiste Sessions und dauerhaft falscher `user_type` (`session_usertype_fix_ok`). Phase 7 (Foto-Content) ist weiterhin der nächste Schritt. Abnahmetest cust-Bereich weiterhin offen.
 >
-> **Offen (Stand 29.06.):** (a) `dirty`-Ausblendung bei `system/mandanten/index.blade.php` + `customer/auth/register.blade.php` nachziehen, (b) Abnahmetest cust-Bereich (Tag: `cust_complete_ok`), (c) iOS-Passkey-Test (Gerät bestellt). Details siehe Abschnitt 16.
+> **Offen (Stand 19.07.):** **(0) NÄCHSTER SCHRITT für den neuen Chat: gründlicher Gesamttest der Passkey-Funktionalität (Phase 6) — technisch implementiert, aber noch nicht umfassend getestet, siehe Abschnitt 9.** (a) `dirty`-Ausblendung bei `system/mandanten/index.blade.php` + `customer/auth/register.blade.php` nachziehen, (b) Abnahmetest cust-Bereich (Tag: `cust_complete_ok`), (c) Regressionstest Android/Windows der globalen Button-Animation, (d) SPF/DKIM-Setup Mailserver. Details siehe Abschnitt 16.
 >
-> **KORREKTUR 29.06. (wichtig):** `resources/views/system/login.blade.php` ist **NICHT** tot — sie ist die **aktive** syst-Login-View. `SystemLoginController@login` rendert `view('system.login')`; Login UND 2FA laufen über diese Datei (2FA-Block via `show_2fa`-Flash-Variable konditionell eingeblendet). Die frühere Einstufung als „tote Datei" (Altlasten 2b, Lerneffekt 17) war falsch und ist hiermit aufgehoben.
+> **KORREKTUR 29.06. (weiterhin gültig):** `resources/views/system/login.blade.php` ist **NICHT** tot — sie ist die **aktive** syst-Login-View. `SystemLoginController@login` rendert `view('system.login')`; Login UND 2FA laufen über diese Datei (2FA-Block via `show_2fa`-Flash-Variable konditionell eingeblendet). Die frühere Einstufung als „tote Datei" (Altlasten 2b, Lerneffekt 17) war falsch und ist hiermit aufgehoben.
+>
+> **KORREKTUR 19.07. (wichtig):** Der anon-Kurzzeit-Kennwort-Login verwendet entgegen einer früheren Chat-Zusammenfassung **kein** `regenerate()` ohne `destroy` — der Commit `8b4a875`/`7b52b05` hat `handleAnonLogin()` in `CustLoginController.php` explizit auf `regenerate(true)` umgestellt (Zeile 305), identisch zu allen anderen Login-Stellen. Es gibt also **keine** Ausnahme für anon — alle 7 Session-Übergänge (cust: Passwort, 2FA, Passkey, anon; mand: Passwort, Passkey; syst: 2FA) nutzen einheitlich `regenerate(true)`. Details siehe Abschnitt 10d.
 
 ## 1. Project Overview
 
@@ -112,10 +114,11 @@ Connection: `sessiondb`
 
 | Table | PK | Purpose |
 |---|---|---|
-| `session` | `sess_id` | Eine Zeile pro aktiver Session (anon + authentifiziert), `sess_token` für Lookups, `payload` (JSON) |
+| `session` | `sess_id` | Eine Zeile pro aktiver Session (anon + authentifiziert), `sess_token` für Lookups, `payload` (JSON). Zusätzlich Spalten `user_type`, `cust_id`, `mand_id`, `syst_id` — werden erst NACH dem finalen `write()` per `App::terminating()`-Callback nachträglich befüllt (siehe Abschnitt 10d) |
 | `pw_list` | `pwlist_id` | Bis zu 6 zeitlich begrenzte Kurzzeit-Kennwörter je Mandant (`pw1`–`pw6`, AES-verschlüsselt, `valid_from`/`valid_until`) |
 | `twofa_code` | `tfa_id` | 2FA-Codes (6-stellig, `tfa_purpose`: login\|pw_change\|critical, `tfa_expires_at`, `tfa_used`) |
 | `cust_invite` | `invite_id` | **Führende Tabelle** für Mitglieder-Einladungen (`mand_id`, `cust_email`, `cust_alias`, `sec_level`, `token`, `expires_at`, `used`) |
+| `trusted_device` | `td_id` | **NEU 10.–17.07.** „Gerät als sicher merken" für vollständigen Auto-Login (mand+cust). Spalten: `user_type` (enum mand\|cust), `user_id`, `token_hash` (SHA-256, UNIQUE), `ua_hash`, `device_label`, `last_used_at`, `expires_at`, `created_at`. Bewusst in `sessiondb` statt `userdb` (Sicherheitstrennung) |
 
 ### 4.3 `fotodb` — Foto-Content
 Connection: `fotodb`
@@ -141,10 +144,11 @@ Connection: `fotoblobdb`
 
 ---
 
-## 5. MVC-Struktur (vollständig, Stand 29.06.2026)
+## 5. MVC-Struktur (vollständig, Stand 19.07.2026)
 
-> Diese Übersicht ist gegen die Dateiliste vom 29.06. verifiziert. Maßgeblich
-> bleibt der implementierte Code; bei Abweichung gilt der Code.
+> Diese Übersicht ist gegen die Dateiliste vom 19.07. und den tatsächlichen
+> Code-Stand verifiziert. Maßgeblich bleibt der implementierte Code; bei
+> Abweichung gilt der Code.
 
 ### Architektur-Hinweis
 Seit Phase 6 existiert eine **Service-Schicht** (`app/Services/<DB>/`). Controller
@@ -197,6 +201,7 @@ app/
 │   │   ├── SessionHijackProtection.php
 │   │   ├── SessionIdleTimeout.php
 │   │   ├── ValidateUserExists.php
+│   │   ├── AutoLoginTrustedDevice.php  # NEU 17.07. — vollständiger Auto-Login ohne Passwort
 │   │   ├── RequireRole.php
 │   │   ├── SystUserCheck.php
 │   │   ├── MandantActiveCheck.php
@@ -209,7 +214,8 @@ app/
 │   ├── FotoDB/      (ActivityGroup, ActivitySubgroup, FotoObj, MandProfile,
 │   │                 AgFoContext, AsgFoContext, MpFoContext, FotoDbModel)
 │   ├── FotoBlobDb/  (FotoObjDb, FotoBlobDbModel)
-│   ├── SessionDb/   (Session, PwList, CustInvite, TwofaCode, SessionDbModel)
+│   ├── SessionDb/   (Session, PwList, CustInvite, TwofaCode, TrustedDevice, SessionDbModel)
+│   │                # TrustedDevice NEU 10.07. (Model zu sessiondb.trusted_device)
 │   └── UserDb/      (SystUser, MandUser, CustUser, CustPcode, Invite,
 │                     Passkey, PasskeyDismissed, PolicyVersion, UserDbModel)
 ├── Mail/
@@ -218,7 +224,8 @@ app/
 │   ├── CustAccountDeletedMail.php
 │   ├── MandAccountDeletedMail.php
 │   ├── EmailChangeMail.php
-│   └── TwoFactorCodeMail.php
+│   ├── TwoFactorCodeMail.php
+│   └── TrustedDeviceAddedMail.php  # NEU 10.07. — Benachrichtigung bei neuem Trusted Device
 │   # ModerationMail.php — geplant Phase 7, noch nicht vorhanden
 ├── Services/
 │   ├── FotoDB/FotoDbService.php           # Phase-7-Gerüst (abstrakte Basisklasse, keine Methoden)
@@ -227,14 +234,26 @@ app/
 │   │   ├── SessionDbService.php           # Basisklasse für TwofaService, keine eigenen Methoden
 │   │   ├── SessionIntegrityService.php    # genau ein *_id in Session
 │   │   └── TwofaService.php               # generate(), verify(), generateCode(), verifyCode(), purgeExpired()
-│   ├── UserDb/UserDbService.php           # Phase-7-Gerüst (abstrakte Basisklasse, keine Methoden)
+│   ├── UserDb/
+│   │   ├── UserDbService.php              # Phase-7-Gerüst (abstrakte Basisklasse, keine Methoden)
+│   │   └── LoginSessionBuilder.php        # NEU 17.07. — buildForCust()/buildForMand(),
+│   │                                       # zentralisierter Session-Aufbau (Passwort-Login UND Auto-Login)
 │   └── Passkey/
 │       ├── PasskeyRepository.php
 │       ├── PasskeySessionStorage.php
 │       └── PasskeyUserEntityRepository.php
 ├── Providers/      (AppServiceProvider, PasskeyServiceProvider)
 ├── View/Components/ (AppLayout, GuestLayout)
-└── helpers.php     # genitivName(), detectOsPlatform(), detectBrowser()
+└── helpers.php     # genitivName(), detectOsPlatform(), detectBrowser(),
+                     # trustedDeviceCookieName(), checkTrustedDevice(), issueTrustedDeviceCookie(),
+                     # guessDeviceLabel(), revokeTrustedDevices() — alle NEU 10.–17.07.
+
+resources/views/components/
+└── logout-button.blade.php  # NEU 17.07. — ersetzt 11 duplizierte Logout-Blöcke, bedingter
+                              # Trusted-Device-Löschdialog (siehe Abschnitt 10d)
+
+config/
+└── trusted_device.php  # NEU 10.07. — 'days' => env('TRUSTED_DEVICE_DAYS', 7)
 
 routes/
 ├── web.php       # Route 'home' (GET /) → auth/login-modal.blade.php
@@ -307,7 +326,9 @@ Zuvor erschienen Laravels englische Standard-Meldungen (kein `lang/`-Verzeichnis
 
 ---
 
-## 9. Passkeys (WebAuthn) — Status: Phase 6 abgeschlossen
+## 9. Passkeys (WebAuthn) — Status: Implementiert, gründlicher Test steht noch aus
+
+> **Korrektur 19.07.:** Frühere Doku-Stände bezeichneten Phase 6 als „abgeschlossen". Das ist zu stark formuliert: Die Passkey-Funktionalität (Registrierung, Login, Verwaltung, Prompt-Logik) ist **technisch vollständig implementiert**, aber bislang nur punktuell und nicht systematisch getestet (siehe „Getestet"/„Ausstehend" unten — das deckt nicht alle Kombinationen aus Rolle × Gerät × Browser × Grenzfall ab). Ein **gründlicher Gesamttest der gesamten Passkey-Funktionalität** — nicht nur ein iOS-spezifischer WebAuthn-Test — ist der **nächste anstehende Schritt** und soll im neuen Chat erfolgen. Siehe auch Abschnitt 16 und Inkonsistenzen.md #11.
 
 ### Implementiert
 - `web-auth/webauthn-lib 5.3.5` direkt integriert (Registrierung + Login für `mand` und `cust`)
@@ -316,8 +337,8 @@ Zuvor erschienen Laravels englische Standard-Meldungen (kein `lang/`-Verzeichnis
 - **Plattform-/Browser-Erkennung:** `detectOsPlatform()` (win/andr/ios/unknown) und `detectBrowser()` (chrome/firefox/edge/safari/samsung/unknown) in `app/helpers.php`, Session-Keys `_passkey_os`, `_passkey_browser`, `_passkey_uahash`
 - **Kontextabhängige Hinweistexte** auf Passkey-Verwaltungsseiten — je OS+Browser-Kombination, nutzerorientiert (wo gilt der Passkey, nicht wo wird er gespeichert)
 - **Passkey-Prompt-Logik:** Modal (mand) / Banner (cust) erscheint einmalig nach Login, wenn kein Passkey für dieses OS existiert und kein `passkey_dismissed`-Eintrag (User+OS+Gerät) vorliegt. Buttons: „Einrichten" / „Nie wieder fragen" / „Später". **Hinweis 20.06.:** Die neue Willkommensseite (`show_welcome`, Abschnitt 10c) ist generisches Onboarding (Markdown-Text + „Gelesen") — sie enthält noch KEINEN Passkey-Einrichtungslink. Die ursprünglich geplante strukturelle Lösung des Cust-Passkey-Hinweises über die Welcome-Seite ist damit weiterhin offen, falls gewünscht müsste der Link nachträglich in `willkommen_cust.md` ergänzt oder die Logik im `WelcomeScreenController` erweitert werden.
-- Getestet: Windows (Hello aktiv/inaktiv, Chrome/Firefox/Edge), Android (Handy+Tablet, Chrome mit Google-Sync, Firefox lokal), cust-Banner, Grenzfälle (mehrere Rollen auf einem Windows-Konto)
-- **Ausstehend:** iOS-Test (Block 8) — Gerät (iPhone SE 2020) bestellt
+- Getestet (punktuell, nicht systematisch): Windows (Hello aktiv/inaktiv, Chrome/Firefox/Edge), Android (Handy+Tablet, Chrome mit Google-Sync, Firefox lokal), cust-Banner, Grenzfälle (mehrere Rollen auf einem Windows-Konto)
+- **Ausstehend — NÄCHSTER SCHRITT (neuer Chat):** Gründlicher, systematischer Gesamttest der Passkey-Funktionalität über alle Rollen (mand+cust), Geräte (Windows/Android/iOS) und Browser hinweg — inkl. iOS, wo bislang kein abgeschlossener WebAuthn-Test dokumentiert ist (iPhone SE 2020 vorhanden, wurde aber bereits für andere Tests wie Button-Feedback/Auto-Login genutzt, siehe Abschnitt 10d). Kein reiner iOS-Test, sondern vollständiger Testdurchlauf der gesamten Passkey-Funktionalität.
 
 ### Wichtige Erkenntnisse
 - Passkey ist an die **Windows-Anmeldung** gebunden (nicht an Fotosite-Account direkt) — Login funktioniert nur mit demselben Windows-Konto wie bei der Registrierung
@@ -456,6 +477,52 @@ Es wurde testweise ein neues Feld `cust_user.cust_kommentarname` angelegt (für 
 
 ---
 
+## 10d. iOS-Long-Tap-Fix, Trusted-Device/Auto-Login, Session-Bugfixes — NEU, 09.–19.07.2026
+
+### iOS-Long-Tap-Fix (09.–10.07., Tag `ios_longtap_complete_ok`)
+Ergänzung zur globalen Button-Animation (Abschnitt 10b): Sämtliche verbliebenen button-artigen `<a href>`-Elemente, die noch nicht auf `<button @click="window.location='...'">` umgebaut waren, wurden nachgezogen — **21 Zurück-Links** (Tag `ios_longtap_fix_ok`) + **13 Dashboard-Kacheln/Fließtext-Links** (Tag `ios_longtap_dashboard_ok`), dazwischen ein Regressions-Fix in `customer/galerien.blade.php` sowie eine Bereinigung nicht mehr zutreffender Alt-Tags. Abschließend wurden die **Policy-Update-Popup-Links** (Datenschutz + Upload-Bedingungen, cust+mand) auf `button`/`window.open` umgestellt (Tag `ios_longtap_policy_ok`). Gesamtabschluss Tag `ios_longtap_complete_ok`.
+
+### Upload-Bedingungen-Popup für cust entfernt (10.07., Tag `cust_ds_hinweis_ok`)
+Der Inhalt der Upload-Bedingungen ist für cust nicht relevant (nur mand lädt Content hoch). Entfernt:
+- `PolicyController::confirmCust()` — der `upload`-Zweig (DB-Update von `upload_terms_version`/`upload_terms_accepted_at`) wurde gelöscht
+- `CheckPolicyVersion`-Middleware — der Vergleichs-/Redirect-Block für `upload_version` im cust-Zweig wurde entfernt (auskommentiert mit Verweis auf diese Doku)
+
+Das **DS-Popup bleibt für cust aktiv** (unverändert). Für **mand bleiben beide Popups** (DS + Upload) unverändert aktiv. Als Ersatz: statischer Hinweis in `customer/dashboard.blade.php` (Abschnitt „Rechtliches") sowie ein neuer FAQ-Eintrag `storage/app/private/faq/cust/Upload-Bedingungen.md`.
+
+> Das in einer früheren Chat-Zusammenfassung genannte Tag `cust_upload_popup_removed_ok` **existiert nicht** in der Git-Historie — die tatsächlichen Tags für diese Änderung sind `cust_ds_hinweis_ok` (10.07.) sowie die vorangegangenen `ios_longtap_*`-Tags im selben Arbeitsblock.
+
+### Trusted-Device-Feature → vollständiger Auto-Login (10.–18.07.)
+Mehrstufig entwickelt, ursprünglich als reiner 2FA-Skip geplant, später (Anforderungsänderung) zu vollständigem Auto-Login ohne Passwort erweitert:
+
+- **Neue Tabelle `sessiondb.trusted_device`** (`td_id`, `user_type` enum(mand,cust), `user_id`, `token_hash` UNIQUE, `ua_hash`, `device_label`, `last_used_at`, `expires_at`, `created_at`) — bewusst in `sessiondb`, nicht `userdb` (Sicherheitstrennung, analog zu `session`/`twofa_code`).
+- **Model** `App\Models\SessionDb\TrustedDevice`.
+- **Helper-Funktionen** in `app/helpers.php`: `trustedDeviceCookieName()`, `checkTrustedDevice()`, `issueTrustedDeviceCookie()`, `guessDeviceLabel()`, `revokeTrustedDevices()`.
+- **Konfigurierbare Gültigkeitsdauer:** `config/trusted_device.php` (`'days' => env('TRUSTED_DEVICE_DAYS', 7)`).
+  > **Achtung — Duplikat in `.env`:** Der Schlüssel `TRUSTED_DEVICE_DAYS` ist aktuell **zweimal** in `.env` gesetzt (Zeile 17: `=1`, Zeile 97: `=7`). Da Laravels `phpdotenv` bereits gesetzte Variablen nicht überschreibt, gewinnt die **erste** Definition — effektiv gilt also `1` Tag (passt zum aktuellen Testbetrieb), nicht `7`. Vor einer produktiven Umstellung auf 7 Tage muss die doppelte Zeile bereinigt werden, sonst bleibt der spätere Wert wirkungslos. Siehe Inkonsistenzen.md.
+- **Checkbox** „Dieses Gerät als sicher merken" im Login-Modal (cust+mand), Labeltext ohne sichtbare Tagesangabe (mehrfach gekürzt, siehe Commits `fb2c49a`/`54375a6`/`609c58f`).
+- **Service** `App\Services\UserDb\LoginSessionBuilder` (`buildForCust()`/`buildForMand()`) — zentralisiert den Session-Aufbau (Regeneration, `_user_type`/`_cust_id`/`_mand_id`/`_sec_level`, Passkey-Prompt-Logik, Session-Cleanup), gemeinsam genutzt von `CustLoginController` (Passwort-Login), `MandantLoginController` (Passwort-Login) und `AutoLoginTrustedDevice`.
+- **Middleware** `App\Http\Middleware\AutoLoginTrustedDevice`: greift nur auf der `home`-Route ohne bestehende Session (`_user_type` nicht gesetzt). Prüft Trusted-Device-Cookies für cust UND mand; sind **beide** gültig, wird **immer cust bevorzugt** (mand wird in diesem Fall nie automatisch eingeloggt). Bei bereits bestehender Session: sofortiger Redirect zum passenden Dashboard (`customer.content`/`mandant.dashboard`/`system.dashboard`) statt Login-Modal. Eingehängt in `bootstrap/app.php` in der Kette `SessionHijackProtection → SessionIdleTimeout → ValidateUserExists → AutoLoginTrustedDevice → CheckPolicyVersion → CheckWelcome`.
+- **Logout widerruft Trusted-Device:** neue gemeinsame Blade-Komponente `resources/views/components/logout-button.blade.php` (ersetzt 11 duplizierte Logout-Blöcke in customer-/mandant-Views). Zeigt einen Bestätigungsdialog **nur**, wenn für den aktuellen User ein gültiger `trusted_device`-Eintrag existiert: „Dieses Gerät ist als sicher gespeichert. Möchtest du dies löschen?" mit den Buttons „Abmelden mit Löschen" und „Zurück" (schließt nur den Dialog, kein separater „ohne Löschen"-Pfad — siehe offener Punkt unten). Bei jedem Logout (unabhängig vom Nutzer) werden zusätzlich global alle abgelaufenen `trusted_device`-Einträge aller User bereinigt.
+- **iOS-Caching-Probleme gelöst:** `home`-Route sendet explizit `Cache-Control: no-store`; zusätzlich ein `pageshow`-Event-Listener mit `persisted`-Check in `login-modal.blade.php` erzwingt einen Reload bei bfcache-Restaurierung (verhinderte, dass iOS Safari nach Logout das gecachte eingeloggte Layout aus dem Zurück-Cache zeigt).
+- **Neue Mail** `App\Mail\TrustedDeviceAddedMail` + `resources/views/emails/trusted-device-added.blade.php` — Benachrichtigung bei neu hinzugefügtem Trusted Device.
+- Getestet auf iOS/Windows/Android (Commit `b64d3ce`).
+- **Tags:** `trusted_device_cust_ok`, `trusted_device_2fa_skip_complete_ok`, `trusted_device_config_ok`, `trusted_device_config_2FA_ok`, `trusted_device_logout_revoke_ok`, `autologin_pre_live_test`, `autologin_complete_ok`.
+
+**Offener Punkt (nicht umgesetzt, Nutzer hat abgebrochen):** Eine Umbenennung des „Zurück"-Buttons im Trusted-Device-Bestätigungsdialog zu „Verlassen ohne Löschen" (mit Tab-Schließen statt nur Dialog-Schließen) wurde besprochen, aber nicht implementiert. Siehe Inkonsistenzen.md.
+
+### sessiondb.session — zwei unabhängige Bugs behoben (18.–19.07., Tag `session_usertype_fix_ok`)
+1. **Verwaiste Session-Zeilen:** `session()->regenerate()` lief an mehreren Login-Stellen ohne `$destroy=true` — die alte Zeile blieb als Leiche in der DB stehen. Jetzt `regenerate(true)` an **allen 7** Session-Übergängen: cust Passwort (`LoginSessionBuilder::buildForCust()`), cust 2FA-Verifikation, cust Passkey-Login, **cust anon-Kurzzeit-Kennwort-Login** (`CustLoginController::handleAnonLogin()`, Zeile 305), mand Passwort (`LoginSessionBuilder::buildForMand()`), mand Passkey-Login, syst 2FA-Verifikation.
+   > **Korrektur:** Es gibt **keine** Ausnahme für den anon-Login. `handleAnonLogin()` nutzte vor diesem Fix `regenerate()` ohne `destroy` und wurde im selben Commit auf `regenerate(true)` umgestellt — identisch zu allen anderen Stellen. Eine frühere Aussage, anon sei bewusst ausgenommen, trifft auf den aktuellen Code nicht zu.
+2. **`user_type` in `sessiondb.session` war immer `'anon'`** — hartkodiert in `SessionDbSessionHandler::write()` beim `INSERT`, nie per `UPDATE` korrigiert (der Session-Handler kennt zum Zeitpunkt des Schreibens die Rolle nicht). Fix: `App::terminating()`-Callback (registriert in `LoginSessionBuilder::buildForCust()`/`buildForMand()`, `CustLoginController::verifyTwoFactor()`/`passkeyLogin()`, `MandantLoginController`, `SystemLoginController`) läuft **nach** dem finalen `write()`/INSERT und aktualisiert `user_type` + `cust_id`/`mand_id`/`syst_id` nachträglich per gezieltem `UPDATE ... WHERE sess_token = ...`.
+3. **`SessionDbSessionHandler::destroy()`** nutzte nicht dieselbe ID-Kürzung `substr($id, 0, 128)` wie `write()` — potenzielle Diskrepanz (und damit ein nie greifendes `DELETE`) bei Session-IDs über 128 Zeichen. Korrigiert.
+
+Betroffene Dateien: `app/Extensions/SessionDbSessionHandler.php`, `app/Services/UserDb/LoginSessionBuilder.php`, `app/Http/Controllers/UserDb/SystemLoginController.php`, `CustLoginController.php`, `MandantLoginController.php`.
+
+### „Sitzung abgelaufen"-Meldungen entfernt + `/backstage`-Redirect-Bug (18.07., Tag `session_messages_removed_ok`)
+Die dedizierten „Sitzung abgelaufen"-Meldungen für cust/mand/syst/anon wurden entfernt. Dabei entdeckt und behoben: `REDIRECT_TARGETS['syst']` verwies in drei Middlewares auf die nicht existierende Route `/system/login` (führte zu 404) — korrigiert auf `/backstage` (tatsächliche Route `system.backstage.login`) in `SessionIdleTimeout.php`, `ValidateUserExists.php`, `RequireRole.php`. Die jeweils eigenen, andersartigen Fehlermeldungen dieser drei Middlewares (z. B. `ValidateUserExists`: „Ihre Sitzung ist ungültig. Bitte melden Sie sich erneut an.") blieben unverändert bestehen — nur die spezifischen „abgelaufen"-Texte wurden entfernt.
+
+---
+
 **Geräteklassen:**
 
 | Gerät | Primäre Nutzer | Besonderheit |
@@ -509,6 +576,11 @@ Es wurde testweise ein neues Feld `cust_user.cust_kommentarname` angelegt (für 
 | 21 | **`<a href>` löst auf iOS bei langem Tap immer das Kontextmenü aus** (Text markieren, „Öffnen"-Popup) — unabhängig von `user-select` | Button-artige `<a>`-Tags (mit Button-Styling) auf `<button type="button" @click="window.location='...'">` umbauen. Guard-Seiten (mit unsaved-changes-guard) stattdessen `@click="$store.unsavedGuard.requestNav('...')"`, da der Guard nur `a[href]` abfängt. Navigations-Links ohne Button-Styling bleiben `<a>` (29.06.) |
 | 22 | **iOS Apple Mail ignoriert `user-select:none` komplett** — auch Inline-Style am `<a>`-Tag wirkt nicht; Button-Text in Einladungsmails bleibt auf iOS markierbar | Bekannte, akzeptierte Einschränkung (29.06.). Nicht per CSS lösbar. Inline-`user-select:none` in den Mail-Templates schadet nicht (wird auf anderen Plattformen genutzt/ignoriert), löst das iOS-Mail-Verhalten aber nicht |
 | 23 | **Doppel-Submit auf Login-Buttons** (cust/mand/syst): mehrfaches Antippen verschickte mehrere 2FA-/Sicherheitscode-Mails. Das `submitted`-Pattern deaktiviert den Button korrekt, aber `:disabled` darf erst NACH dem Submit greifen, sonst wird gar nicht abgeschickt | Reihenfolge: `type="button"` + `@click="$el.closest('form').submit(); submitted = true"` und `:disabled="submitted"`. Erst nativ submitten, dann deaktivieren. Nur auf Login-Buttons nötig (mailauslösend), nicht global (29.06.) |
+| 24 | **`TRUSTED_DEVICE_DAYS` doppelt in `.env` gesetzt** (Zeile 17 `=1`, Zeile 97 `=7`) — Laravels `phpdotenv` überschreibt bereits gesetzte Variablen nicht, es gewinnt die erste Definition. Effektiv gilt aktuell `1` Tag, nicht `7` | Vor produktiver Umstellung auf 7 Tage die doppelte Zeile in `.env` bereinigen (nur eine der beiden behalten), sonst bleibt der zweite Wert dauerhaft wirkungslos (19.07., gefunden bei Doku-Aktualisierung) |
+| 25 | **`sessiondb.session.user_type` war dauerhaft `'anon'`**, weil `SessionDbSessionHandler::write()` den Wert beim `INSERT` hartkodiert und nie per `UPDATE` korrigiert hat — der Session-Handler kennt die Rolle zum Schreibzeitpunkt nicht | Behoben 19.07. (`session_usertype_fix_ok`) via `App::terminating()`-Callback, der nach dem finalen `write()` `user_type`/`cust_id`/`mand_id`/`syst_id` nachträglich per `UPDATE ... WHERE sess_token=...` setzt. Details Abschnitt 10d |
+| 26 | **Verwaiste `sessiondb.session`-Zeilen** durch `regenerate()` ohne `$destroy=true` an mehreren Login-Stellen (inkl. anon-Login) | Behoben 19.07. — `regenerate(true)` jetzt an allen 7 Session-Übergängen, keine Ausnahme mehr für anon (frühere Annahme einer bewussten Ausnahme war unzutreffend). Details Abschnitt 10d |
+| 27 | **Logout-Button-Komponente:** Trusted-Device-Bestätigungsdialog hat aktuell nur „Abmelden mit Löschen" / „Zurück" (schließt nur den Dialog). Eine besprochene Umbenennung zu „Verlassen ohne Löschen" (Tab schließen statt Dialog schließen) wurde NICHT umgesetzt | Nutzer hat die Änderung abgebrochen — offener Punkt, falls gewünscht künftig nachziehen. `resources/views/components/logout-button.blade.php` |
+| 28 | **E-Mail-Footer im Sie-Form trotz Du-Form-Mailtext** in drei Templates: `two-factor-code.blade.php`, `trusted-device-added.blade.php` UND zusätzlich `cust-invite.blade.php` (beim Abgleich am 19.07. gefunden — war in der ursprünglichen Meldung nicht enthalten) — „Bitte antworten Sie nicht auf diese E-Mail." | Niedrige Priorität, nicht behoben. Bei Gelegenheit auf „Bitte antworte nicht auf diese E-Mail." vereinheitlichen |
 
 ---
 
@@ -517,9 +589,10 @@ Es wurde testweise ein neues Feld `cust_user.cust_kommentarname` angelegt (für 
 - **Repo:** `github.com/fotosite/fotosite` (privat)
 - **Aktiver Branch:** `feature/passkey-infra`
 - **Lokaler Pfad:** `D:\mwa\Projekte\fotosite\Fotosite_V08\claudescode\fotosite`
-- **Meilenstein-Tag:** `user_management_complete_ok` (20.06.2026) — komplette Benutzer-/Sicherheitsverwaltung abgeschlossen, sicherer Rückfallpunkt vor Phase 7 (Content). Auch als Startpunkt für künftige Projekte geeignet (siehe Abschnitt 15).
+- **Meilenstein-Tag:** `user_management_complete_ok` (20.06.2026) — komplette Benutzer-/Sicherheitsverwaltung implementiert, sicherer Rückfallpunkt vor Phase 7 (Content). Auch als Startpunkt für künftige Projekte geeignet (siehe Abschnitt 15). **Einschränkung:** Die darin enthaltene Passkey-Funktionalität ist implementiert, aber noch nicht gründlich getestet (siehe Abschnitt 9) — „complete" bezieht sich auf den Implementierungsstand, nicht auf einen abgeschlossenen Testdurchlauf.
 - **Relevante Tags:** `phase5_cust_login_ok`, `p6_passkey_prompt_ok`, `p6_passkey_ui_ok`, `ag_banner_removed_ok`, `sec_level_sync_ok`, `datenschutz_ok`, `cust_invite_ok`, `mand_invite_ok`, `mand_register_ok`, `ui_begriffe_ok`, `mand_adressfelder_ok`, `cust_adressfelder_ok`, `email_pw_modal_ok`, `registrierung_ok`, `rechtliches_ok`, `pw_reset_mail_ok`, `policy_popup_ok`, `cust_delete_mail_ok`, `login_labels_ok`, `unsaved_changes_guard_ok`, `galerien_ajax_ok`, `mand_mitgliederliste_ok`, `welcome_screen_ok`, `faq_feature_ok`, `user_management_complete_ok`, `redirect_loop_fix_ok`, `policy_view_link_fix_ok`, `syst_primary_ok`, `fixes_23jun_ok`, `touch_and_trim_ok`, `pw_eye_ok`, `ios_button_feedback_ok`
-- **Nach `ios_button_feedback_ok` (29.06., noch ungetaggt):** syst-Löschlogik-Fix, `MandAccountDeletedMail`, deutsche PW-Fehlermeldungen, PW-Hinweistexte syst min:12. Committet/hochgeladen.
+- **29.06. (nach `ios_button_feedback_ok`):** syst-Löschlogik-Fix, `MandAccountDeletedMail`, deutsche PW-Fehlermeldungen, PW-Hinweistexte syst min:12 — Tag `stable_2026-06-30_logins_ok` (30.06.).
+- **Seit 09.07. (neu, Stand 19.07.):** `ios_longtap_fix_ok`, `ios_longtap_dashboard_ok`, `ios_longtap_complete_ok`, `ios_longtap_policy_ok`, `cust_ds_hinweis_ok`, `trusted_device_cust_ok`, `trusted_device_2fa_skip_complete_ok`, `trusted_device_config_ok`, `trusted_device_config_2FA_ok`, `trusted_device_logout_revoke_ok`, `autologin_pre_live_test`, `autologin_complete_ok`, `session_messages_removed_ok`, `session_usertype_fix_ok` (aktueller Stand). Details Abschnitt 10d.
 - `.gitignore`: `.env`, `/vendor/`, `/node_modules/`, `/storage/logs/`, `fotosite_DDL_*.sql`
 
 ---
@@ -559,14 +632,20 @@ Stand `user_management_complete_ok` (20.06.2026) ist als **Startimplementierung 
 
 ---
 
-## 16. Offene Aufgaben & Anschlusspunkte (Stand 26.06.2026)
+## 16. Offene Aufgaben & Anschlusspunkte (Stand 19.07.2026)
 
 Dieser Abschnitt ist der **Einstiegspunkt für den nächsten Chat**. Er listet auf, was unmittelbar offen ist.
 
+### 16a-0. NÄCHSTER SCHRITT: Gründlicher Passkey-Gesamttest
+Die Passkey-Funktionalität (Phase 6) ist technisch vollständig implementiert, aber noch **nicht** gründlich getestet — frühere Doku-Stände, die Phase 6 als „✓ Fertig" oder „abgeschlossen" bezeichneten, waren zu stark formuliert (korrigiert 19.07.). Der ausstehende Test ist **kein** reiner iOS-Test, sondern ein **umfassender Test der gesamten Passkey-Funktionalität**: Registrierung, Login, Umbenennen, Löschen, Prompt-/Dismiss-Logik, jeweils für mand UND cust, über Windows/Android/iOS und die jeweils relevanten Browser hinweg, inkl. Grenzfälle (mehrere Rollen auf einem Gerät, Passkey-Widerruf nach Geräteverlust o. Ä.). Dies ist der **erste inhaltliche Punkt für den neuen Chat**, vor Fortsetzung von Phase 7. Details Abschnitt 9, Inkonsistenzen.md #11.
+
 ### 16a. Noch nicht umgesetzt
-1. **`dirty`-Ausblendung nachziehen** bei zwei Views mit noch statischer Fehlermeldung: `system/mandanten/index.blade.php` und `customer/auth/register.blade.php`. Muster: `x-data="{dirty:false}"` + `@input="dirty=true"` + `x-show="!dirty"` auf `@error`-Block.
-2. **Regressionstest Android/Windows** der globalen Button-Animation (sicherstellen, dass `:active`-Skalierung + `user-select:none` auf Desktop/Android wie gewünscht wirken). iOS-Button-Animation ist getestet und abgeschlossen.
+1. **`dirty`-Ausblendung nachziehen** bei zwei Views mit noch statischer Fehlermeldung: `system/mandanten/index.blade.php` und `customer/auth/register.blade.php`. Muster: `x-data="{dirty:false}"` + `@input="dirty=true"` + `x-show="!dirty"` auf `@error`-Block. (Weiterhin offen seit 26.06.)
+2. **Regressionstest Android/Windows** der globalen Button-Animation. iOS-Button-Animation inkl. Long-Tap-Fix ist getestet und abgeschlossen.
 3. **iOS Apple Mail:** Button-Text in Einladungsmails bleibt markierbar (Lerneffekt 22) — akzeptierte Einschränkung, kein offener Handlungsbedarf.
+4. **`TRUSTED_DEVICE_DAYS`-Duplikat in `.env` bereinigen** (Zeile 17 vs. 97, siehe Inkonsistenzen #24) — vor produktiver Umstellung von 1 auf 7 Tage zwingend.
+5. **Logout-Button-Dialog:** „Zurück"-Button ggf. zu „Verlassen ohne Löschen" umbenennen (besprochen, abgebrochen, siehe Inkonsistenzen #27).
+6. **Trusted-Device-Gültigkeit von 1 auf 7 Tage** produktiv umstellen, sobald Testphase abgeschlossen (aktuell bewusst auf 1 Tag für Tests).
 
 ### 16b. Abnahmetest cust-Bereich
 Weiterhin offen, mehrfach verschoben. Nach Abschluss Tag `cust_complete_ok`. Testplan liegt vor (Word + Excel, siehe Projektdateien).
@@ -576,11 +655,11 @@ Weiterhin offen, mehrfach verschoben. Nach Abschluss Tag `cust_complete_ok`. Tes
 - `20260621_Fotosite_V08_Testplan_1.xlsx` — 588 Zeilen (147×4 Geräte), durchgehend nummeriert 1–588, zusätzliche Spalte „Testfall-Nr." (fett, 1–147 je Gerät), Status-Dropdown. Aktuell pausiert.
 
 ### 16d. Phase 7 (danach)
-Priorität: mand-Content (Fotoupload & Fotoadmin) VOR Cust-UI. Details in Abschnitt 11 / Notfall-Dokument. iOS-Passkey-Test ausstehend (iPhone SE 2020 bestellt).
+Priorität: mand-Content (Fotoupload & Fotoadmin) VOR Cust-UI. Details in Abschnitt 11 / Notfall-Dokument. **Vor Phase 7 steht der gründliche Passkey-Gesamttest (Abschnitt 16a-0) an.**
 
 ### 16e. Bekannte Mail-Zustellungs-Einschränkung
 E-Mail-Änderungs-Bestätigungsmails landen häufig im Spam (Alfahosting ohne DKIM/SPF). Aktuell per UI-Hinweis (amber) im E-Mail-Ändern-Modal adressiert. Mittelfristig: SPF-/DKIM-Setup auf dem Mailserver prüfen.
 
 ### 16f. Dokumentations-Pflege
-- Konzeptdatei ist bekannt veraltet (niedrige Priorität).
+- Konzeptdatei wurde am 19.07. aktualisiert (siehe Konzept_Fotosite_V8.md).
 - Bei jedem neuen stabilen Stand: PROJECT_CONTEXT + Notfall-Dokument + Projektstatus synchron halten.

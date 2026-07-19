@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Erstellungszeit: 29. Jun 2026 um 19:23
+-- Erstellungszeit: 19. Jul 2026 um 11:18
 -- Server-Version: 10.11.10-MariaDB-cll-lve
 -- PHP-Version: 8.3.11
 
@@ -35,8 +35,7 @@ CREATE TABLE `activity_group` (
   `mand_id` bigint(20) NOT NULL,
   `ag_sec_level` tinyint(3) UNSIGNED NOT NULL,
   `ag_prefstat` bigint(20) NOT NULL DEFAULT 50,
-  `ag_sort_date` date NOT NULL,
-  `ags_comment` blob NOT NULL
+  `ag_sort_date` date NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
 -- --------------------------------------------------------
@@ -55,8 +54,7 @@ CREATE TABLE `activity_subgroup` (
   `asg_sec_level` tinyint(3) UNSIGNED NOT NULL,
   `ag_id` bigint(20) UNSIGNED NOT NULL,
   `asg_prefstat` bigint(20) NOT NULL DEFAULT 5,
-  `asg_sort_date` date NOT NULL,
-  `ag_comment` blob NOT NULL
+  `asg_sort_date` date NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
 -- --------------------------------------------------------

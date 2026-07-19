@@ -1,8 +1,8 @@
-**Konzept Fotosite V8 #3 — aktualisierte Fassung**
+**Konzept Fotosite V8 #4 — aktualisierte Fassung**
 
-*Ursprünglich: 2026-06-07 · Korrigiert: 2026-06-20 · Aktualisiert: 2026-07-07*
+*Ursprünglich: 2026-06-07 · Korrigiert: 2026-06-20 · Aktualisiert: 2026-07-07 · Aktualisiert: 2026-07-19*
 
-**Diese Fassung synchronisiert das Konzept vollständig mit dem aktuellen Implementierungsstand (PROJECT_CONTEXT.md, Projektstatus #12, Notfall-Startdokument, Inkonsistenzen.md — Stand 29.06./07.07.2026). Die frühere korrigierte Fassung (#2, Stand 26.06.) sowie das Original (2026-06-07) bleiben als historische Dokumente unverändert in den Projektdateien. Maßgeblich bei jedem weiteren Widerspruch ist PROJECT_CONTEXT.md, nicht dieses Konzeptdokument.**
+**Diese Fassung synchronisiert das Konzept vollständig mit dem aktuellen Implementierungsstand (PROJECT_CONTEXT.md, Projektstatus #13, Notfall-Startdokument, Inkonsistenzen.md — Stand 19.07.2026). Die früheren Fassungen (#3, Stand 07.07.; #2, Stand 26.06.) sowie das Original (2026-06-07) bleiben als historische Dokumente unverändert in den Projektdateien. Maßgeblich bei jedem weiteren Widerspruch ist PROJECT_CONTEXT.md, nicht dieses Konzeptdokument.**
 
 # Summary
 
@@ -10,7 +10,7 @@ Die Website dient der Anzeige von Fotos. Die Fotos werden von mehreren Mandanten
 
 Coding wird wo immer möglich an Claude Code delegiert. Es gibt keine standardmäßigen Laravel-Migrationen für Domain-Tabellen — die DDL wird direkt auf dem Server verwaltet.
 
-Das Benutzer- und Sicherheitsverwaltungssystem (Login, 2FA, Passkeys, Einladungen, Datenschutz, Selbstverwaltung) ist vollständig fertiggestellt (Meilenstein-Tag `user_management_complete_ok`, 20.06.2026, seither um mehrere Bugfix-Runden ergänzt, zuletzt 29.06.2026). Nächster Entwicklungsschritt ist Phase 7 (Foto-Content: Upload, Verwaltung, Anzeige).
+Das Benutzer- und Sicherheitsverwaltungssystem (Login, 2FA, Passkeys, Trusted-Device-Auto-Login, Einladungen, Datenschutz, Selbstverwaltung) ist implementiert (Meilenstein-Tag `user_management_complete_ok`, 20.06.2026, seither um mehrere Bugfix- und Erweiterungsrunden ergänzt, zuletzt 19.07.2026 — u.a. vollständiger passwortloser Auto-Login über vertrauenswürdige Geräte, siehe Abschnitt „Website Login"). **Einschränkung (Korrektur 19.07.):** Die Passkey-Funktionalität (Phase 6) ist technisch vollständig implementiert, wurde aber bisher nur punktuell und nicht systematisch getestet — ein gründlicher Gesamttest der Passkey-Funktionalität ist der **nächste anstehende Schritt** und soll im neuen Chat erfolgen, noch vor Fortsetzung von Phase 7 (Foto-Content: Upload, Verwaltung, Anzeige).
 
 # Datenhaltung
 
@@ -90,7 +90,7 @@ Ein initialer Willkommens-Bildschirm (`show_welcome`-Gate) wird beim allerersten
 
 Session-Timeouts sind konfigurierbar per `.env`: anon = 900 s (Standard), cust = 900 s, mand = 1800 s, syst = 600 s. Die Dauer ist für mand höher, damit längere Uploads nicht durch das Timeout unterbrochen werden.
 
-Jeder Besucher — auch anon — erhält einen Eintrag in `sessiondb.session` (eigener Session-Driver mit `sess_id` als PK statt Laravel-Standard-`id`, Abfrage über `sess_token`). Sessions werden beim Login (abgelaufene) bzw. beim Logout (eigene) aus der DB gelöscht — kein Cron/Scheduler.
+Jeder Besucher — auch anon — erhält einen Eintrag in `sessiondb.session` (eigener Session-Driver mit `sess_id` als PK statt Laravel-Standard-`id`, Abfrage über `sess_token`). Sessions werden beim Login (abgelaufene) bzw. beim Logout (eigene) aus der DB gelöscht — kein Cron/Scheduler. Bei jedem Login-/Session-Übergang (Passwort-Login, 2FA-Verifikation, Passkey-Login, anon-Kurzzeit-Kennwort-Login sowie Trusted-Device-Auto-Login — insgesamt 7 Stellen) wird die Session per `regenerate(true)` vollständig neu aufgebaut, damit keine verwaisten Zeilen in der Tabelle zurückbleiben.
 
 # Passcodes
 
@@ -119,6 +119,8 @@ Cust-Login: Passwort + optionale 2FA, alternativ Passkey (Priorität).
 Auf dem Cust-Login-Modal befindet sich ein unauffälliger Link zum Mandanten-Login-Modal: Mand-Login: Passwort + 2FA per E-Mail, alternativ Passkey (Priorität).
 
 Alle Login-Buttons, die eine Sicherheits-/2FA-Mail auslösen, besitzen einen Doppel-Submit-Schutz (`type="button"` + `@click="$el.closest('form').submit(); submitted = true"` + `:disabled="submitted"`), damit mehrfaches Antippen nicht mehrere Mails verschickt.
+
+**Trusted-Device / vollständiger Auto-Login (NEU, 10.–18.07.2026):** Im Login-Modal (cust + mand) steht eine Checkbox „Dieses Gerät als sicher merken" zur Verfügung. Bei Aktivierung wird ein Trusted-Device-Cookie ausgestellt (Token gehasht in `sessiondb.trusted_device` gespeichert, bewusst getrennt von `userdb`). Ruft ein Besucher ohne bestehende Session die Startseite auf, prüft die Middleware `AutoLoginTrustedDevice`, ob ein gültiges Trusted-Device-Cookie für cust und/oder mand vorliegt, und baut bei Treffer die Session automatisch auf — **ohne erneute Passwort- oder 2FA-Eingabe**. Sind gleichzeitig gültige Cookies für cust und mand vorhanden (z. B. gleiche Person mit beiden Rollen), wird **immer cust bevorzugt**, mand wird in diesem Fall nicht automatisch eingeloggt. Die Gültigkeitsdauer ist über `TRUSTED_DEVICE_DAYS` konfigurierbar (konzeptionell 7 Tage vorgesehen, aktuell auf 1 Tag für den Testbetrieb reduziert). Beim Logout wird — sofern ein Trusted-Device-Eintrag für den aktuellen Nutzer existiert — ein Bestätigungsdialog eingeblendet, der die Löschung des Eintrags anbietet; unabhängig davon werden bei jedem Logout global alle abgelaufenen Trusted-Device-Einträge aller Nutzer bereinigt.
 
 # User-Frontend: Mandantenseiten
 
@@ -166,8 +168,11 @@ Folgende Features wurden nach dem ursprünglichen Konzept (07.06.) ergänzt und 
 - Willkommensseite beim ersten Login (`show_welcome`-Gate)
 - FAQ & Infos (dynamisches, dateibasiertes Hilfesystem, Markdown-Dateien pro Rolle)
 - cust-Account-Löschung mit E-Mail-Benachrichtigung bei Verwaisung; analoge Kaskade bei syst-seitiger Mandanten-Löschung (`MandAccountDeletedMail`)
-- Globale iOS/Android-Button-Rückmeldung, `<a>`→`<button>`-Umbauten, Doppel-Submit-Schutz auf Login-Buttons (siehe Abschnitt „User-Frontend: Mandantenseiten")
+- Globale iOS/Android-Button-Rückmeldung, `<a>`→`<button>`-Umbauten, Doppel-Submit-Schutz auf Login-Buttons (siehe Abschnitt „User-Frontend: Mandantenseiten"); Long-Tap-Fix am 09.–10.07. mit den verbliebenen ~34 button-artigen Links abgeschlossen
 - Deutsche Fehlermeldungen für sämtliche passwortverarbeitenden Formulare
+- Upload-Bedingungen-Popup für cust entfernt (10.07.) — für cust nicht relevanter Inhalt, ersetzt durch statischen Hinweis + FAQ-Eintrag; DS-Popup bleibt für cust aktiv, mand unverändert mit beiden Popups
+- Trusted-Device / vollständiger Auto-Login ohne Passwort (10.–18.07., siehe Abschnitt „Website Login")
+- Session-Bugfixes (18.–19.07.): „Sitzung abgelaufen"-Meldungen entfernt, defekter `/system/login`-Redirect auf `/backstage` korrigiert, verwaiste `sessiondb.session`-Zeilen sowie dauerhaft falsch befüllter `user_type` behoben
 
 # Ausblick: Phase 7 (nächster Entwicklungsschritt)
 
@@ -186,10 +191,15 @@ Bereits getroffene technische Entscheidungen für Phase 7 (Details siehe PROJECT
 
 # Offene Punkte außerhalb Phase 7
 
+**Nächster Schritt (oberste Priorität, vor allem Übrigen):** Gründlicher, systematischer Test der gesamten Passkey-Funktionalität (Phase 6) — Registrierung, Login, Umbenennen, Löschen, Prompt-/Dismiss-Logik, jeweils für mand UND cust, über Windows/Android/iOS und die relevanten Browser hinweg. Bisher wurde nur punktuell getestet (Windows Hello, Android Chrome/Firefox, cust-Banner, ein Grenzfall). **Ausdrücklich kein reiner iOS-Test** — auch wenn zusätzlich speziell für iOS kein abgeschlossener WebAuthn-Passkey-Test dokumentiert ist (die bisherigen iOS-Tests betrafen Button-Feedback/Long-Tap-Fix und Auto-Login, nicht den Passkey-Flow).
+
+Danach:
 - `dirty`-Ausblendung bei zwei verbliebenen Views nachziehen (`system/mandanten/index.blade.php`, `customer/auth/register.blade.php`)
 - Regressionstest der globalen Button-Animation auf Android/Windows (iOS ist getestet und abgeschlossen)
 - Abnahmetest cust-Bereich (Testplan liegt vor, pausiert; Ziel-Tag `cust_complete_ok`)
-- iOS-Passkey-Test (Testgerät bestellt)
 - SPF-/DKIM-Setup auf dem Mailserver prüfen (E-Mail-Änderungsmails landen derzeit teils im Spam, aktuell per UI-Hinweis adressiert)
+- Doppelter `.env`-Schlüssel `TRUSTED_DEVICE_DAYS` (Zeile 17 `=1`, Zeile 97 `=7`) bereinigen, bevor die Gültigkeitsdauer produktiv von 1 auf 7 Tage umgestellt wird
+- Logout-Bestätigungsdialog: „Zurück"-Button ggf. zu „Verlassen ohne Löschen" umbenennen (besprochen, nicht umgesetzt)
+- E-Mail-Footer-Inkonsistenz (Sie-Form trotz Du-Form-Mailtext) in drei Templates vereinheitlichen (niedrige Priorität)
 
-Fotosite V08 — Konzept (aktualisierte Fassung) | Stand 07.07.2026
+Fotosite V08 — Konzept (aktualisierte Fassung) | Stand 19.07.2026

@@ -1,8 +1,8 @@
 # Fotosite V08 — Geduldete Inkonsistenzen
 
-*Stand: 07.07.2026*
+*Stand: 19.07.2026*
 
-Bekannte Abweichungen ohne Handlungsbedarf.
+Bekannte Abweichungen ohne Handlungsbedarf, sowie offene Klärungspunkte, die beim Dokumentations-Abgleich vom 19.07.2026 gefunden wurden.
 
 | # | Befund | Begründung |
 |---|---|---|
@@ -11,5 +11,11 @@ Bekannte Abweichungen ohne Handlungsbedarf.
 | 3 | `cust_user.cust_2fa_opt_in` — Funktion noch ungeklärt | Feld existiert in DB, Verwendung wird zu einem späteren Zeitpunkt definiert |
 | 4 | `cust_pcode.mand_sort_date` — Funktion noch ungeklärt | Feld existiert in DB, Verwendung wird zu einem späteren Zeitpunkt definiert |
 | 5 | `mand_user.valid_to` — Funktion noch ungeklärt | Option für zahlende mand bei Zahlungsausfall — erst bei Einführung eines Bezahlmodells relevant |
+| 6 | **`TRUSTED_DEVICE_DAYS` doppelt in `.env` gesetzt** (Zeile 17: `=1`, Zeile 97: `=7`) | Laravels `phpdotenv` überschreibt bereits gesetzte Variablen nicht — die erste Definition gewinnt, effektiv gilt aktuell `1` Tag. Passt zufällig zum gewollten Testbetrieb, ist aber ein Duplikat und muss vor Umstellung auf 7 Tage bereinigt werden. **Handlungsbedarf, nicht nur geduldet** — siehe Projektstatus #13 / PROJECT_CONTEXT #24 |
+| 7 | **Logout-Button-Dialog:** „Zurück"-Button im Trusted-Device-Löschdialog (`logout-button.blade.php`) schließt nur den Dialog, keine separate „ohne Löschen abmelden"-Aktion | Eine Umbenennung zu „Verlassen ohne Löschen" (Tab schließen statt Dialog schließen) wurde besprochen, aber der Nutzer hat die Umsetzung abgebrochen. Bewusst offen gelassen |
+| 8 | **E-Mail-Footer im Sie-Form trotz Du-Form-Mailtext** in `two-factor-code.blade.php`, `trusted-device-added.blade.php` **und** `cust-invite.blade.php` (dritte Datei erst beim Abgleich am 19.07. gefunden — war in der ursprünglichen Meldung nicht enthalten) | Niedrige Priorität, bewusst nicht behoben. „Bitte antworten Sie nicht..." statt „Bitte antworte nicht..." |
+| 9 | **Tag `cust_upload_popup_removed_ok` existiert nicht** in der Git-Historie, obwohl in einer Chat-Zusammenfassung als Beleg für die Entfernung des Upload-Bedingungen-Popups (cust) genannt | Die tatsächliche Änderung ist vorhanden und korrekt (Commit `c74f6a4`), nur unter anderem Tag: `cust_ds_hinweis_ok`. Reine Namens-Diskrepanz in der Doku, kein funktionaler Fehler |
+| 10 | **Anon-Login-„Ausnahme" bei `regenerate()` existiert nicht** — eine frühere Chat-Zusammenfassung behauptete, der anon-Kurzzeit-Kennwort-Login nutze bewusst `regenerate()` ohne `destroy`, weil kein Login-Wechsel stattfinde | Tatsächlich wurde `CustLoginController::handleAnonLogin()` im Commit `8b4a875` ebenfalls auf `regenerate(true)` umgestellt — identisch zu allen anderen 6 Login-Stellen. Es gibt keine Ausnahme mehr. **Korrigiert in PROJECT_CONTEXT.md Abschnitt 10d/Header und Notfall_Start.md** |
+| 11 | **Phase 6 (Passkey) fälschlich als „✓ Fertig"/„abgeschlossen" dargestellt — korrigiert 19.07.** Die Passkey-Funktionalität (WebAuthn, Registrierung/Login/Verwaltung für mand+cust) ist **technisch implementiert**, aber **noch nicht gründlich getestet**. Das betrifft nicht nur iOS: Getestet wurde bisher nur punktuell (Windows Hello, Android Chrome/Firefox, cust-Banner, ein Grenzfall mehrerer Rollen) — ein systematischer Test über alle Rollen × Geräte × Browser × Grenzfälle fehlt komplett, unabhängig von iOS. Zusätzlich ist speziell für iOS kein abgeschlossener WebAuthn-Passkey-Test dokumentiert; seit 09.07. wurde iOS zwar nachweislich getestet (Commit `b64d3ce`: „Getestet auf iOS/Windows/Android"), aber für Button-Feedback/Long-Tap-Fix und Auto-Login — nicht für den Passkey-Flow selbst | **Kein geduldeter Befund, sondern offener Handlungsbedarf.** Der gründliche Gesamttest der Passkey-Funktionalität ist der **explizite nächste Schritt für den neuen Chat**, vor Fortsetzung von Phase 7. Siehe PROJECT_CONTEXT.md Abschnitt 9/16a-0, Notfall_Start.md Abschnitt 5.2/7, Projektstatus.md Abschnitt 6 |
 
-Fotosite V08 — Geduldete Inkonsistenzen | Stand 07.07.2026
+Fotosite V08 — Geduldete Inkonsistenzen | Stand 19.07.2026
