@@ -124,7 +124,7 @@ class SessionDbSessionHandler implements SessionHandlerInterface
 
     public function destroy(string $id): bool
     {
-        $this->db()->where('sess_token', $id)->delete();
+        $this->db()->where('sess_token', substr($id, 0, 128))->delete();
 
         return true;
     }

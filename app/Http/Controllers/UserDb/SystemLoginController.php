@@ -103,12 +103,23 @@ class SystemLoginController extends UserDbController
                 ->with('show_2fa', true);
         }
 
-        $request->session()->regenerate();
+        $request->session()->regenerate(true);
 
         $request->session()->put('_user_type', 'syst');
         $request->session()->put('_syst_id', $systId);
         $request->session()->put('_is_primary', (bool) SystUser::find($systId)?->is_primary);
         $request->session()->forget('2fa_syst_id');
+
+        $newSessionId = substr($request->session()->getId(), 0, 128);
+
+        app()->terminating(function () use ($newSessionId, $systId) {
+            DB::connection('sessiondb')->table('session')
+                ->where('sess_token', $newSessionId)
+                ->update([
+                    'user_type' => 'syst',
+                    'syst_id'   => $systId,
+                ]);
+        });
 
         DB::connection('sessiondb')
             ->table('session')

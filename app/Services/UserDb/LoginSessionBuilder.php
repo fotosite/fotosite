@@ -47,6 +47,7 @@ use App\Models\UserDb\Passkey;
 use App\Services\SessionDb\SessionIntegrityService;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 
 class LoginSessionBuilder
 {
@@ -63,12 +64,26 @@ class LoginSessionBuilder
     {
         $sessionData = $this->sessionIntegrityService->buildSessionData('cust', $cust->cust_id);
 
-        $request->session()->regenerate();
+        $request->session()->regenerate(true);
         $request->session()->put('_user_type',     $sessionData['user_type']);
         $request->session()->put('_cust_id',       $cust->cust_id);
         $request->session()->put('_mand_id',       $pcode->mand_id);
         $request->session()->put('_sec_level',     $pcode->cust_passcode);
         $request->session()->put('_last_activity', time());
+
+        $newSessionId = substr($request->session()->getId(), 0, 128);
+        $custId       = $cust->cust_id;
+        $mandId       = $pcode->mand_id;
+
+        app()->terminating(function () use ($newSessionId, $custId, $mandId) {
+            DB::connection('sessiondb')->table('session')
+                ->where('sess_token', $newSessionId)
+                ->update([
+                    'user_type' => 'cust',
+                    'cust_id'   => $custId,
+                    'mand_id'   => $mandId,
+                ]);
+        });
 
         // OS erkennen
         $os = detectOsPlatform($request->userAgent());
@@ -111,10 +126,22 @@ class LoginSessionBuilder
     {
         $sessionData = $this->sessionIntegrityService->buildSessionData('mand', $mand->mand_id);
 
-        $request->session()->regenerate();
+        $request->session()->regenerate(true);
         $request->session()->put('_user_type', $sessionData['user_type']);
         $request->session()->put('_mand_id',   $sessionData['mand_id']);
         $request->session()->forget('pending_mand_id');
+
+        $newSessionId = substr($request->session()->getId(), 0, 128);
+        $mandId       = $mand->mand_id;
+
+        app()->terminating(function () use ($newSessionId, $mandId) {
+            DB::connection('sessiondb')->table('session')
+                ->where('sess_token', $newSessionId)
+                ->update([
+                    'user_type' => 'mand',
+                    'mand_id'   => $mandId,
+                ]);
+        });
 
         // OS erkennen
         $os = detectOsPlatform($request->userAgent());

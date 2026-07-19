@@ -302,7 +302,7 @@ class CustLoginController extends UserDbController
                 ->with('cust_tab', 'anon');
         }
 
-        $request->session()->regenerate();
+        $request->session()->regenerate(true);
         $request->session()->put('_user_type',     'anon');
         $request->session()->put('_mand_id',       $mandId);
         $request->session()->put('_sec_level',     $secLevel);
@@ -344,12 +344,24 @@ class CustLoginController extends UserDbController
             return back()->withErrors(['tfa_code' => 'Ungültiger oder abgelaufener Code.']);
         }
 
-        $request->session()->regenerate();
+        $request->session()->regenerate(true);
         $request->session()->put('_user_type',     'cust');
         $request->session()->put('_cust_id',       $custId);
         $request->session()->put('_mand_id',       $mandId);
         $request->session()->put('_sec_level',     $secLevel);
         $request->session()->put('_last_activity', time());
+
+        $newSessionId = substr($request->session()->getId(), 0, 128);
+
+        app()->terminating(function () use ($newSessionId, $custId, $mandId) {
+            DB::connection('sessiondb')->table('session')
+                ->where('sess_token', $newSessionId)
+                ->update([
+                    'user_type' => 'cust',
+                    'cust_id'   => $custId,
+                    'mand_id'   => $mandId,
+                ]);
+        });
 
         // OS erkennen
         $os = detectOsPlatform($request->userAgent());
@@ -512,13 +524,26 @@ class CustLoginController extends UserDbController
             // Session aufbauen (gleiche Struktur wie handleLogin)
             $sessionData = $this->sessionIntegrityService->buildSessionData('cust', $userId);
 
-            $request->session()->regenerate();
+            $request->session()->regenerate(true);
             $request->session()->put('_user_type',     $sessionData['user_type']);
             $request->session()->put('_cust_id',       $userId);
             $request->session()->put('_mand_id',       $pcode?->mand_id);
             $request->session()->put('_sec_level',     $pcode?->cust_passcode);
             $request->session()->put('_last_activity', time());
             $request->session()->put('_prompt_passkey', false);
+
+            $newSessionId = substr($request->session()->getId(), 0, 128);
+            $pcodeMandId  = $pcode?->mand_id;
+
+            app()->terminating(function () use ($newSessionId, $userId, $pcodeMandId) {
+                DB::connection('sessiondb')->table('session')
+                    ->where('sess_token', $newSessionId)
+                    ->update([
+                        'user_type' => 'cust',
+                        'cust_id'   => $userId,
+                        'mand_id'   => $pcodeMandId,
+                    ]);
+            });
 
             $this->passkeySessionStorage->clear($request);
 

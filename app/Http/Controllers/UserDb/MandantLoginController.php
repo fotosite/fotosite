@@ -343,10 +343,21 @@ class MandantLoginController extends UserDbController
             // Session aufbauen (gleiche Logik wie verifyTwoFactor)
             $sessionData = $this->sessionIntegrityService->buildSessionData('mand', $userId);
 
-            $request->session()->regenerate();
+            $request->session()->regenerate(true);
             $request->session()->put('_user_type', $sessionData['user_type']);
             $request->session()->put('_mand_id',   $sessionData['mand_id']);
             $request->session()->put('_prompt_passkey', false);
+
+            $newSessionId = substr($request->session()->getId(), 0, 128);
+
+            app()->terminating(function () use ($newSessionId, $userId) {
+                DB::connection('sessiondb')->table('session')
+                    ->where('sess_token', $newSessionId)
+                    ->update([
+                        'user_type' => 'mand',
+                        'mand_id'   => $userId,
+                    ]);
+            });
 
             $this->passkeySessionStorage->clear($request);
 
