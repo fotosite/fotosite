@@ -111,9 +111,7 @@ class LoginSessionBuilder
             '_passkey_uahash'  => $uaHash,
         ]);
 
-        // Abgelaufene Sessions bereinigen
-        \App\Models\SessionDb\Session::where('expires_at', '<', now())
-            ->delete();
+        $this->cleanupExpiredRecords();
 
         return redirect()->route('customer.content');
     }
@@ -169,10 +167,31 @@ class LoginSessionBuilder
             '_passkey_uahash'  => $uaHash,
         ]);
 
-        // Abgelaufene Sessions bereinigen
+        $this->cleanupExpiredRecords();
+
+        return redirect()->route('mandant.dashboard');
+    }
+
+    /**
+     * Bereinigt global (kein user_id/cust_id-Bezug) abgelaufene Datensätze
+     * aus allen Tabellen mit Verfallsdatum. userdb.cust_invite bleibt
+     * bewusst ausgenommen (dokumentiertes, ungenutztes Relikt).
+     */
+    private function cleanupExpiredRecords(): void
+    {
         \App\Models\SessionDb\Session::where('expires_at', '<', now())
             ->delete();
 
-        return redirect()->route('mandant.dashboard');
+        \App\Models\UserDb\Invite::where('expires_at', '<', now())
+            ->delete();
+
+        \App\Models\SessionDb\CustInvite::where('expires_at', '<', now())
+            ->delete();
+
+        \App\Models\SessionDb\TrustedDevice::where('expires_at', '<', now())
+            ->delete();
+
+        \App\Models\SessionDb\TwofaCode::where('tfa_expires_at', '<', now())
+            ->delete();
     }
 }
