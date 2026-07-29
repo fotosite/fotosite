@@ -10,12 +10,12 @@
 <body class="bg-gray-100 font-sans antialiased">
 
 <div class="min-h-screen flex items-center justify-center px-4">
-    <div x-data="{}" class="w-full max-w-sm bg-white rounded-lg shadow-md px-8 py-8">
+    <div x-data="{ dirty: false }" class="w-full max-w-sm bg-white rounded-lg shadow-md px-8 py-8">
 
         <h1 class="text-xl font-semibold text-gray-800 mb-6">Bestätigungscode</h1>
 
         @if ($errors->any())
-            <div class="mb-5 space-y-1">
+            <div class="mb-5 space-y-1" x-show="!dirty">
                 @foreach ($errors->all() as $error)
                     <p class="text-sm text-red-600">{{ $error }}</p>
                 @endforeach
@@ -35,6 +35,7 @@
                 <input id="tfa_code" name="tfa_code" type="text"
                        inputmode="numeric" pattern="[0-9]{6}" maxlength="6"
                        required autofocus autocomplete="one-time-code"
+                       @input="dirty = true"
                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm
                               text-center text-xl tracking-widest font-mono
                               focus:border-gray-500 focus:ring-gray-500">

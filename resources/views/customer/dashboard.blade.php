@@ -164,7 +164,8 @@
                     Nach erfolgreicher Änderung werden Sie zur Anmeldung weitergeleitet.
                 </p>
 
-                <form method="POST" action="{{ route('customer.konto.passwort') }}" autocomplete="off">
+                <form method="POST" action="{{ route('customer.konto.passwort') }}" autocomplete="off"
+                      x-data="{ dirty: false }">
                     @csrf
                     <div class="space-y-3">
                         <div>
@@ -174,6 +175,7 @@
                             <div class="relative mt-1" x-data="{ show: false }">
                                 <input name="current_password" :type="show ? 'text' : 'password'" required
                                        autocomplete="current-password"
+                                       @input="dirty = true"
                                        class="block w-full rounded-md border-gray-300
                                               shadow-sm text-sm pr-10
                                               focus:border-indigo-500 focus:ring-indigo-500
@@ -202,7 +204,7 @@
                                 </button>
                             </div>
                             @error('current_password')
-                                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                <p class="mt-1 text-xs text-red-600" x-show="!dirty">{{ $message }}</p>
                             @enderror
                         </div>
                         <div>
@@ -212,6 +214,7 @@
                             <div class="relative mt-1" x-data="{ show: false }">
                                 <input name="password" :type="show ? 'text' : 'password'" required
                                        autocomplete="new-password"
+                                       @input="dirty = true"
                                        class="block w-full rounded-md border-gray-300
                                               shadow-sm text-sm pr-10
                                               focus:border-indigo-500 focus:ring-indigo-500
@@ -241,7 +244,7 @@
                             </div>
                             <p class="text-xs text-gray-400 mt-1">Mindestens 10 Zeichen.</p>
                             @error('password')
-                                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                <p class="mt-1 text-xs text-red-600" x-show="!dirty">{{ $message }}</p>
                             @enderror
                         </div>
                         <div>

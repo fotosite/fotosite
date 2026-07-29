@@ -83,11 +83,11 @@
 
             {{-- Tab: Kurzzeit-Passwort --}}
             <div x-show="custTab === 'anon'" x-cloak>
-                <form method="POST" action="{{ route('customer.login.anon') }}" x-data="{ submitted: false }">
+                <form method="POST" action="{{ route('customer.login.anon') }}" x-data="{ submitted: false, dirty: false }">
                     @csrf
 
-                    @error('password')
-                        <div class="mb-3 text-sm text-red-600">{{ $message }}</div>
+                    @error('password', 'anon')
+                        <div class="mb-3 text-sm text-red-600" x-show="!dirty">{{ $message }}</div>
                     @enderror
 
                     <div>
@@ -99,6 +99,7 @@
                             <input id="anon_password"
                                    :type="show ? 'text' : 'password'"
                                    name="password"
+                                   @input="dirty = true"
                                    class="block w-full rounded-lg border-gray-300 shadow-sm
                                           focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm pr-10"
                                    required autofocus>
@@ -210,6 +211,7 @@
                             <input id="cust_password"
                                    :type="show ? 'text' : 'password'"
                                    name="password"
+                                   @input="dirty = true"
                                    class="block w-full rounded-lg border-gray-300 shadow-sm
                                           focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm pr-10"
                                    required>
@@ -328,7 +330,7 @@
                 @error('password')
                     <div class="mb-3 text-sm text-red-600">{{ $message }}</div>
                 @enderror
-                @error('credentials')
+                @error('credentials', 'mand')
                     <div class="mb-3 text-sm text-red-600" x-show="!dirty">{{ $message }}</div>
                 @enderror
 
@@ -358,6 +360,7 @@
                         <input id="mand_password"
                                :type="show ? 'text' : 'password'"
                                name="password"
+                               @input="dirty = true"
                                class="block w-full rounded-lg border-gray-300 shadow-sm
                                       focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm pr-10"
                                required>

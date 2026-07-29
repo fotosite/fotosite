@@ -268,11 +268,7 @@ class CustLoginController extends UserDbController
 
     public function handleAnonLogin(Request $request): RedirectResponse
     {
-        $request->validate([
-            'password' => ['required', 'string', 'min:8'],
-        ]);
-
-        $password = trim($request->input('password'));
+        $password = trim((string) $request->input('password'));
 
         $pwLists = PwList::where('valid_from', '<=', now())
             ->where('valid_until', '>=', now())
@@ -297,7 +293,7 @@ class CustLoginController extends UserDbController
 
         if ($mandId === null) {
             return back()
-                ->withErrors(['password' => 'Passwort nicht gültig oder abgelaufen.'])
+                ->withErrors(['password' => 'Passwort nicht gültig oder abgelaufen.'], 'anon')
                 ->with('login_page', 'cust')
                 ->with('cust_tab', 'anon');
         }

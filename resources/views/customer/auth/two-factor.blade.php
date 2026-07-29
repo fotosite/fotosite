@@ -25,7 +25,7 @@
 <body class="min-h-screen bg-gray-100 font-sans antialiased">
 
 <div class="min-h-screen flex items-center justify-center px-4">
-    <div x-data="{}" class="w-full max-w-sm bg-white rounded-lg shadow-md px-8 py-8">
+    <div x-data="{ dirty: false }" class="w-full max-w-sm bg-white rounded-lg shadow-md px-8 py-8">
 
         <p class="text-[11px] font-mono tracking-widest uppercase text-gray-400 mb-1">
             Fotogalerie
@@ -33,7 +33,7 @@
         <h1 class="text-xl font-semibold text-gray-800 mb-6">Bestätigungscode</h1>
 
         @if ($errors->any())
-            <div class="mb-5 space-y-1">
+            <div class="mb-5 space-y-1" x-show="!dirty">
                 @foreach ($errors->all() as $error)
                     <p class="text-sm text-red-600">{{ $error }}</p>
                 @endforeach
@@ -58,12 +58,13 @@
                 <input id="tfa_code" name="tfa_code" type="text"
                        inputmode="numeric" pattern="[0-9]{6}" maxlength="6"
                        required autofocus autocomplete="one-time-code"
+                       @input="dirty = true"
                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm
                               text-center text-xl tracking-widest font-mono
                               focus:border-indigo-500 focus:ring-indigo-500
                               @error('tfa_code') border-red-400 @enderror">
                 @error('tfa_code')
-                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                    <p class="mt-1 text-xs text-red-600" x-show="!dirty">{{ $message }}</p>
                 @enderror
             </div>
 

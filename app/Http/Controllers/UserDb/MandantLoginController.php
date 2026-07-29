@@ -144,8 +144,7 @@ class MandantLoginController extends UserDbController
 
         if (! $mand || ! Hash::check($request->password, $mand->mand_pw_hash)) {
             return back()
-                ->withErrors(['credentials' => 'Diese Zugangsdaten sind uns nicht bekannt.'])
-                ->withInput(['mand_email' => $request->mand_email])
+                ->withErrors(['credentials' => 'Diese Zugangsdaten sind uns nicht bekannt.'], 'mand')
                 ->with('login_page', 'mand');
         }
 

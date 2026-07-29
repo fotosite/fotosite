@@ -88,7 +88,7 @@
     {{-- ══════════════════════════════════════════════════════
          MAIN
     ══════════════════════════════════════════════════════ --}}
-    <main class="mx-auto max-w-4xl px-6 pt-14 pb-24">
+    <main class="mx-auto max-w-4xl px-6 pt-14 pb-24" x-data="{ dirty: false }">
 
         {{-- Back link --}}
         <div class="mt-4 mb-6">
@@ -123,7 +123,8 @@
         {{-- Error notice --}}
         @if($errors->any())
             <div class="mb-6 rounded-lg border border-red-300
-                        bg-red-50 px-4 py-3 text-sm text-red-700 space-y-1">
+                        bg-red-50 px-4 py-3 text-sm text-red-700 space-y-1"
+                 x-show="!dirty">
                 @foreach($errors->all() as $error)
                     <p>{{ $error }}</p>
                 @endforeach
@@ -256,6 +257,7 @@
                             </label>
                             <input id="current_password" name="current_password"
                                    type="password" required
+                                   @input="dirty = true"
                                    class="mt-1 block w-full rounded-md border-gray-300
                                           shadow-sm text-sm
                                           focus:border-gray-500 focus:ring-gray-500">
@@ -268,6 +270,7 @@
                             </label>
                             <input id="password" name="password"
                                    type="password" required
+                                   @input="dirty = true"
                                    class="mt-1 block w-full rounded-md border-gray-300
                                           shadow-sm text-sm
                                           focus:border-gray-500 focus:ring-gray-500">

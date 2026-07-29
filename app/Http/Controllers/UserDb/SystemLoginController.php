@@ -75,7 +75,7 @@ class SystemLoginController extends UserDbController
 
         if (! $user || ! Hash::check($request->password, $user->syst_pw_hash)) {
             return back()
-                ->withErrors(['credentials' => 'Ungültige Anmeldedaten.'])
+                ->withErrors(['credentials' => 'Ungültige Anmeldedaten.'], 'syst')
                 ->withInput(['email' => $request->email]);
         }
 
@@ -99,7 +99,7 @@ class SystemLoginController extends UserDbController
 
         if (! $systId || ! $this->twofaService->verify('syst', $systId, 'login', $request->string('code')->toString())) {
             return back()
-                ->withErrors(['code' => 'Ungültiger oder abgelaufener Code.'])
+                ->withErrors(['code' => 'Ungültiger oder abgelaufener Code.'], 'syst')
                 ->with('show_2fa', true);
         }
 
