@@ -1,9 +1,9 @@
 <?php
 /**
  * FILE:        app/helpers.php
- * VERSION:     1.3.0
+ * VERSION:     1.4.0
  * AUTHOR:      Martin Wagner
- * DATE:        2026-07-10
+ * DATE:        2026-07-30
  * PURPOSE:     Globale Helper-Funktionen
  *
  * FUNCTIONS:   genitivName()             — Bildet den Genitiv eines Eigennamens (deutsch)
@@ -14,15 +14,26 @@
  *              issueTrustedDeviceCookie()— Legt trusted_device-Eintrag an, gibt Cookie zurück
  *              guessDeviceLabel()        — Kosmetische Geräte-Bezeichnung aus User-Agent
  *              revokeTrustedDevices()    — Löscht alle trusted_device-Einträge eines Nutzers
+ *              renderMarkdownVariant()   — Extrahiert genau EINEN Tag-Block aus einer
+ *                                          Markdown-Datei (<!--TAG-->...<!--/TAG-->) und
+ *                                          rendert ihn per CommonMarkConverter zu HTML
  *
  * CALLS:       App\Models\SessionDb\TrustedDevice::where()/create()
+ *              League\CommonMark\CommonMarkConverter::convert()
  *
  * DB ACCESS:   sessiondb.trusted_device (td_id, user_type, user_id, token_hash,
  *              ua_hash, device_label, last_used_at, expires_at, created_at)
  *
- * CHANGES:     1.3.0 (2026-07-10) Trusted-Device-Helper ergänzt (cust/mand-Login,
+ * CHANGES:     1.4.0 (2026-07-30) renderMarkdownVariant() ergänzt: Ein-Block-Auswahl
+ *              aus Tag-markierten Markdown-Dateien (analog zum <!--MAND-->-Mechanismus
+ *              in DatenschutzController::erlaeuterung(), aber Auswahl statt Filterung),
+ *              für Passkey-Hinweistexte (customer/mandant passkey index).
+ *              1.3.0 (2026-07-10) Trusted-Device-Helper ergänzt (cust/mand-Login,
  *              betrifft NICHT anon/pw_list) — siehe FUNCTIONS oben.
  */
+
+use Illuminate\Support\Facades\Log;
+use League\CommonMark\CommonMarkConverter;
 
 if (! function_exists('genitivName')) {
     /**
@@ -193,5 +204,57 @@ if (! function_exists('revokeTrustedDevices')) {
         return \App\Models\SessionDb\TrustedDevice::where('user_type', $userType)
             ->where('user_id', $userId)
             ->delete();
+    }
+}
+
+if (! function_exists('renderMarkdownVariant')) {
+    /**
+     * Extrahiert GENAU EINEN Tag-Block (<!--TAG-->...<!--/TAG-->) aus einer
+     * Markdown-Datei und rendert dessen Inhalt per CommonMarkConverter zu HTML.
+     * Im Unterschied zum <!--MAND-->-Mechanismus in
+     * DatenschutzController::erlaeuterung() (dort wird bei Nichtübereinstimmung
+     * herausgeschnitten) wird hier aus mehreren Varianten EINE ausgewählt.
+     *
+     * Fallback, falls $tag in der Datei nicht gefunden wird: 'STANDARD' bei
+     * Dateien mit 'allgemein' im Pfad, sonst 'UNKNOWN' — zusätzlich
+     * Log::warning() mit Dateiname und gesuchtem Tag (kein harter Fehler,
+     * da reiner Anzeige-Text).
+     */
+    function renderMarkdownVariant(string $filePath, string $tag): string
+    {
+        if (! file_exists($filePath)) {
+            Log::warning('renderMarkdownVariant: Datei nicht gefunden.', [
+                'file' => $filePath,
+                'tag'  => $tag,
+            ]);
+
+            return '';
+        }
+
+        $content = file_get_contents($filePath);
+
+        $extractTag = static function (string $tag) use ($content): ?string {
+            $pattern = '/<!--\s*' . preg_quote($tag, '/') . '\s*-->(.*?)<!--\s*\/' . preg_quote($tag, '/') . '\s*-->/s';
+
+            return preg_match($pattern, $content, $matches) ? trim($matches[1]) : null;
+        };
+
+        $block = $extractTag($tag);
+
+        if ($block === null) {
+            $fallbackTag = str_contains($filePath, 'allgemein') ? 'STANDARD' : 'UNKNOWN';
+
+            Log::warning('renderMarkdownVariant: Tag nicht gefunden, Fallback verwendet.', [
+                'file'     => $filePath,
+                'tag'      => $tag,
+                'fallback' => $fallbackTag,
+            ]);
+
+            $block = $extractTag($fallbackTag) ?? '';
+        }
+
+        $converter = new CommonMarkConverter();
+
+        return $converter->convert($block)->getContent();
     }
 }

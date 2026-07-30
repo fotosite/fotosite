@@ -106,82 +106,21 @@
             </p>
         </div>
 
-        {{-- Passkey-Hinweistexte --}}
-        @php
-            $isFirefox = $passkeyBrowser === 'firefox';
-            $isChrome  = $passkeyBrowser === 'chrome';
-            $isEdge    = $passkeyBrowser === 'edge';
-            $isIos     = $passkeyOs === 'ios';
-            $isAndroid = $passkeyOs === 'andr';
-            $isWin     = $passkeyOs === 'win';
-        @endphp
-
         {{-- Box 1: allgemein, immer sichtbar --}}
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
             <p class="text-sm font-semibold text-blue-800 mb-2">
                 Passkey einrichten
             </p>
-            @if($isChrome || $isIos)
-            <p class="text-sm text-blue-700">
-                Mit einem Passkey entfällt die Anmeldung mit dem
-                Sicherheitscode per Email. Du kannst Passkeys am Notebook
-                oder auch auf einem Mobilgerät anlegen. Benutze dabei immer
-                den gleichen Fingerabdruck, den du auch für das Gerät selbst
-                benutzt.
-            </p>
-            @else
-            <p class="text-sm text-blue-700">
-                Mit einem Passkey entfällt die Anmeldung mit dem
-                Sicherheitscode per Email. Mit dem Passkey kannst du dich
-                beim nächsten Login einfach per Fingerabdruck oder
-                Gesichtserkennung anmelden.
-            </p>
-            @endif
+            <div class="text-sm text-blue-700">
+                {!! $passkeyAllgemeinHtml !!}
+            </div>
         </div>
 
         {{-- Box 2: OS+Browser-spezifisch --}}
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-            <p class="text-sm text-blue-700">
-                @if($isEdge)
-                    Der Passkey für den Browser Edge wird lokal gespeichert
-                    und ist an dieses Windows-Konto gebunden. Wenn du auch
-                    andere Geräte verwenden möchtest, lege auf allen Geräten
-                    einen eigenen Passkey an.
-                @elseif($isFirefox && $isWin)
-                    Der Passkey für den Browser Firefox wird lokal gespeichert
-                    und ist an deinen Rechner und an dieses Windows-Konto
-                    gebunden. Wenn du auch andere Geräte verwenden möchtest,
-                    lege auf allen Geräten einen eigenen Passkey an. Dies gilt
-                    für alle Windows- und Android-Geräte, ist aber schnell
-                    gemacht.
-                @elseif($isFirefox && $isAndroid)
-                    Der Passkey für den Browser Firefox wird lokal gespeichert
-                    und ist an dein Mobilgerät gebunden. Leg auf allen deinen
-                    Android-Geräten einen Passkey an, dann brauchst du zum
-                    Login nur deinen Fingerabdruck, um die Fotogalerie
-                    anzusehen. Dies gilt für alle Windows- und Android-Geräte,
-                    ist aber schnell gemacht.
-                @elseif($isChrome)
-                    Chrome-Nutzer mit Google-Konto brauchen den Passkey nur
-                    einmal anlegen und können ihn dann auf allen ihren Geräten
-                    mit dem Browser Chrome verwenden — egal ob Windows oder
-                    Android.
-                @elseif($isIos)
-                    Mit einem Apple-Gerät und einer Apple-ID brauchst du nur
-                    einmal einen Passkey per Fingerabdruck oder
-                    Gesichtserkennung anlegen. Damit kannst du dich dann auf
-                    allen Apple-Geräten mit der gleichen Apple-ID an der
-                    Fotogalerie anmelden.
-                @else
-                    Leider kennen wir deinen Browser nicht und können nicht
-                    sagen, ob das Anlegen eines Passkeys funktionieren wird.
-                    Dies gilt vor allem für Browser mit sehr hohen
-                    Sicherheitsstandards wie z.B. DuckDuckGo. Wenn es nicht
-                    klappen sollte, verwende auf Android und Windows lieber
-                    Firefox. Firefox bietet eine gute Datensicherheit und ist
-                    mit der Fotogalerie kompatibel.
-                @endif
-            </p>
+            <div class="text-sm text-blue-700">
+                {!! $passkeySpezifischHtml !!}
+            </div>
         </div>
 
         {{-- Neuen Passkey registrieren --}}

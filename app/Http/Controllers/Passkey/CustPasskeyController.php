@@ -1,16 +1,20 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/Passkey/CustPasskeyController.php
- * VERSION:     1.4.0
+ * VERSION:     1.5.0
  * AUTOR:       Martin Wagner
- * DATUM:       2026-06-08
+ * DATUM:       2026-07-30
  *
  * ZWECK:       Passkey-Registrierung für Kunden — Liste, Options, Register,
  *              Umbenennen, Löschen, Passkey-Prompt dauerhaft abweisen.
  *
  * FUNCTIONS:   index()               — Passkey-Liste für eingeloggten Kunden;
- *                                      ermittelt $passkeyOs für plattformspezifischen
- *                                      Hinweistext in der View
+ *                                      ermittelt aus $passkeyOs/$passkeyBrowser den
+ *                                      Tag für den plattformspezifischen Hinweistext
+ *                                      und rendert diesen sowie den allgemeinen
+ *                                      Hinweistext per renderMarkdownVariant() aus
+ *                                      storage/app/private/passkey_{allgemein,
+ *                                      spezifisch}_cust.md zu HTML für die View
  *                                      Reads: userdb.passkey.pk_id, device_name,
  *                                             created_at, last_used_at
  *                                      Reads: session._passkey_os, _passkey_browser
@@ -33,6 +37,7 @@
  *                                              session._prompt_passkey
  *
  * CALLS:       App\Models\UserDb\CustUser::find()
+ *              renderMarkdownVariant() (app/helpers.php)
  *              App\Models\UserDb\Passkey::where()->get()
  *              App\Models\UserDb\Passkey::create()
  *              App\Models\UserDb\Passkey::where()->firstOrFail()
@@ -52,7 +57,8 @@
  * SESSION ACCESS: _cust_id, _passkey_os, _passkey_browser, _passkey_uahash, _user_type (read)
  *                 _prompt_passkey (read + reset, in dismiss())
  *
- * VIEW DATA:   customer.passkey.index — passkeys, $passkeyOs, $passkeyBrowser
+ * VIEW DATA:   customer.passkey.index — passkeys, $passkeyOs, $passkeyBrowser,
+ *              $passkeyAllgemeinHtml, $passkeySpezifischHtml
  */
 
 namespace App\Http\Controllers\Passkey;
@@ -108,10 +114,38 @@ class CustPasskeyController extends Controller
         $passkeyOs      = session('_passkey_os', 'unknown');
         $passkeyBrowser = session('_passkey_browser', 'unknown');
 
+        $isFirefox = $passkeyBrowser === 'firefox';
+        $isChrome  = $passkeyBrowser === 'chrome';
+        $isEdge    = $passkeyBrowser === 'edge';
+        $isIos     = $passkeyOs === 'ios';
+        $isAndroid = $passkeyOs === 'andr';
+        $isWin     = $passkeyOs === 'win';
+
+        $specTag = match (true) {
+            $isEdge                     => 'EDGE',
+            $isFirefox && $isWin        => 'FIREFOX_WIN',
+            $isFirefox && $isAndroid    => 'FIREFOX_ANDROID',
+            $isChrome                   => 'CHROME',
+            $isIos                      => 'IOS',
+            default                     => 'UNKNOWN',
+        };
+
+        $passkeyAllgemeinHtml = renderMarkdownVariant(
+            storage_path('app/private/passkey_allgemein_cust.md'),
+            $isChrome || $isIos ? 'CHROME_IOS' : 'STANDARD'
+        );
+
+        $passkeySpezifischHtml = renderMarkdownVariant(
+            storage_path('app/private/passkey_spezifisch_cust.md'),
+            $specTag
+        );
+
         return view('customer.passkey.index', [
-            'passkeys'       => $passkeys,
-            'passkeyOs'      => $passkeyOs,
-            'passkeyBrowser' => $passkeyBrowser,
+            'passkeys'              => $passkeys,
+            'passkeyOs'             => $passkeyOs,
+            'passkeyBrowser'        => $passkeyBrowser,
+            'passkeyAllgemeinHtml'  => $passkeyAllgemeinHtml,
+            'passkeySpezifischHtml' => $passkeySpezifischHtml,
         ]);
     }
 
