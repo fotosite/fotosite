@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/helpers.php
- * VERSION:     1.4.0
+ * VERSION:     1.5.0
  * AUTHOR:      Martin Wagner
  * DATE:        2026-07-30
  * PURPOSE:     Globale Helper-Funktionen
@@ -17,14 +17,30 @@
  *              renderMarkdownVariant()   — Extrahiert genau EINEN Tag-Block aus einer
  *                                          Markdown-Datei (<!--TAG-->...<!--/TAG-->) und
  *                                          rendert ihn per CommonMarkConverter zu HTML
+ *              loginThrottleKey()        — Gemeinsamer IP-Rate-Limit-Schlüssel für alle
+ *                                          Login-Ebenen (cust, mand, syst)
+ *              checkLoginThrottle()      — Prüft aktive Login-Sperre für die IP, verlängert
+ *                                          sie bei fortgesetztem Angriff
+ *              recordFailedLoginAttempt()— Zählt einen fehlgeschlagenen Login-Versuch,
+ *                                          meldet, falls dieser Versuch die Sperre auslöst
+ *              clearLoginThrottle()      — Setzt den Fehlversuchs-Zähler einer IP zurück
+ *                                          (bei erfolgreichem Login)
  *
  * CALLS:       App\Models\SessionDb\TrustedDevice::where()/create()
  *              League\CommonMark\CommonMarkConverter::convert()
+ *              Illuminate\Support\Facades\RateLimiter::tooManyAttempts()/hit()/clear()
  *
  * DB ACCESS:   sessiondb.trusted_device (td_id, user_type, user_id, token_hash,
  *              ua_hash, device_label, last_used_at, expires_at, created_at)
  *
- * CHANGES:     1.4.0 (2026-07-30) renderMarkdownVariant() ergänzt: Ein-Block-Auswahl
+ * CHANGES:     1.5.0 (2026-07-30) loginThrottleKey()/checkLoginThrottle()/
+ *              recordFailedLoginAttempt()/clearLoginThrottle() ergänzt — einheitliche,
+ *              IP-basierte, rollenübergreifende Login-Sperre nach
+ *              config('app.login_lockout_max_attempts') Fehlversuchen für
+ *              config('app.login_lockout_minutes') Minuten; ersetzt die bisherigen
+ *              getrennten RateLimiter cust-login/login-2fa/cust-anon-login. Deaktiviert
+ *              bei DEBUGMODE=true, analog zu den bisherigen RateLimitern.
+ *              1.4.0 (2026-07-30) renderMarkdownVariant() ergänzt: Ein-Block-Auswahl
  *              aus Tag-markierten Markdown-Dateien (analog zum <!--MAND-->-Mechanismus
  *              in DatenschutzController::erlaeuterung(), aber Auswahl statt Filterung),
  *              für Passkey-Hinweistexte (customer/mandant passkey index).
@@ -32,7 +48,9 @@
  *              betrifft NICHT anon/pw_list) — siehe FUNCTIONS oben.
  */
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 use League\CommonMark\CommonMarkConverter;
 
 if (! function_exists('genitivName')) {
@@ -256,5 +274,76 @@ if (! function_exists('renderMarkdownVariant')) {
         $converter = new CommonMarkConverter();
 
         return $converter->convert($block)->getContent();
+    }
+}
+
+if (! function_exists('loginThrottleKey')) {
+    /**
+     * Gemeinsamer Rate-Limit-Schlüssel pro IP für alle Login-Ebenen
+     * (cust, mand, syst) — zählt rollenübergreifend, EIN Schlüssel pro IP.
+     */
+    function loginThrottleKey(Request $request): string
+    {
+        return 'login-throttle:' . $request->ip();
+    }
+}
+
+if (! function_exists('checkLoginThrottle')) {
+    /**
+     * Prüft, ob für die aktuelle IP bereits eine Login-Sperre aktiv ist.
+     * Verlängert bei aktiver Sperre zusätzlich deren Laufzeit (fortgesetzter
+     * Angriff). Im Debug-Modus (DEBUGMODE=true) immer null.
+     */
+    function checkLoginThrottle(Request $request): ?string
+    {
+        if (config('app.debugmode') === true) {
+            return null;
+        }
+
+        $key = loginThrottleKey($request);
+
+        if (RateLimiter::tooManyAttempts($key, config('app.login_lockout_max_attempts'))) {
+            RateLimiter::hit($key, config('app.login_lockout_minutes') * 60);
+
+            return 'Zu viele Fehlversuche. Versuche es später noch einmal.';
+        }
+
+        return null;
+    }
+}
+
+if (! function_exists('recordFailedLoginAttempt')) {
+    /**
+     * Zählt einen fehlgeschlagenen Login-Versuch für die aktuelle IP. Gibt
+     * die Sperr-Meldung zurück, wenn DIESER Versuch die Sperre gerade
+     * ausgelöst hat — sonst null (bisherige Fehlermeldung soll weiter
+     * greifen). Im Debug-Modus (DEBUGMODE=true) immer null (kein Zählen).
+     */
+    function recordFailedLoginAttempt(Request $request): ?string
+    {
+        if (config('app.debugmode') === true) {
+            return null;
+        }
+
+        $key = loginThrottleKey($request);
+
+        RateLimiter::hit($key, config('app.login_lockout_minutes') * 60);
+
+        if (RateLimiter::tooManyAttempts($key, config('app.login_lockout_max_attempts'))) {
+            return 'Zu viele Fehlversuche. Versuche es später noch einmal.';
+        }
+
+        return null;
+    }
+}
+
+if (! function_exists('clearLoginThrottle')) {
+    /**
+     * Setzt den Login-Fehlversuchs-Zähler für die aktuelle IP zurück —
+     * bei jedem erfolgreichen Login aufrufen.
+     */
+    function clearLoginThrottle(Request $request): void
+    {
+        RateLimiter::clear(loginThrottleKey($request));
     }
 }

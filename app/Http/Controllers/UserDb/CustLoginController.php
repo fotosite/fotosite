@@ -1,14 +1,21 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustLoginController.php
- * VERSION:     1.15.1
+ * VERSION:     1.16.0
  * AUTOR:       Martin Wagner
- * DATUM:       2026-06-25
+ * DATUM:       2026-07-30
  *
  * ZWECK:       Cust-Login — registrierter Login mit optionaler 2FA,
  *              anonymer Login per Passwort-Sequenz, Passkey-Login, Logout.
  *
- * CHANGES:     1.15.1 (2026-06-25) handleAnonLogin() — eingegebenes Passwort
+ * CHANGES:     1.16.0 (2026-07-30) Einheitliche, IP-basierte, rollenübergreifende
+ *              Login-Sperre ergänzt (checkLoginThrottle()/recordFailedLoginAttempt()/
+ *              clearLoginThrottle() aus app/helpers.php) in handleLogin(),
+ *              handleAnonLogin() und verifyTwoFactor() — ersetzt die bisherigen
+ *              RateLimiter cust-login/cust-anon-login/login-2fa (siehe
+ *              AppServiceProvider.php, routes/customer.php). Passkey-Login bleibt
+ *              unverändert (separater Flow ohne Passwort-Fehlversuche).
+ *              1.15.1 (2026-06-25) handleAnonLogin() — eingegebenes Passwort
  *              wird vor dem decrypt()-Vergleich gegen pw1-pw6 mit trim()
  *              versehen, da das Feld 'password' per Laravel TrimStrings-
  *              Middleware von automatischem Trimming ausgenommen ist; die
@@ -83,6 +90,8 @@
  * CALLS:       App\Models\UserDb\CustUser::where()->first()
  *              detectOsPlatform() (app/helpers.php)
  *              detectBrowser() (app/helpers.php)
+ *              checkLoginThrottle()/recordFailedLoginAttempt()/clearLoginThrottle()
+ *              (app/helpers.php)
  *              App\Models\UserDb\CustPcode::where()->orderByDesc()->first()
  *              App\Models\UserDb\MandUser::find()
  *              App\Models\UserDb\Passkey::where()->first()
@@ -176,6 +185,13 @@ class CustLoginController extends UserDbController
 
     public function handleLogin(Request $request): RedirectResponse
     {
+        if ($lockMsg = checkLoginThrottle($request)) {
+            return back()
+                ->withErrors(['credentials' => $lockMsg])
+                ->with('login_page', 'cust')
+                ->with('cust_tab', 'reg');
+        }
+
         $request->validate([
             'cust_email' => ['required', 'email'],
             'password'   => ['required', 'string'],
@@ -184,6 +200,13 @@ class CustLoginController extends UserDbController
         $cust = CustUser::where('cust_email', $request->cust_email)->first();
 
         if (! $cust || ! Hash::check($request->password, $cust->cust_pw_hash)) {
+            if ($lockMsg = recordFailedLoginAttempt($request)) {
+                return back()
+                    ->withErrors(['credentials' => $lockMsg])
+                    ->with('login_page', 'cust')
+                    ->with('cust_tab', 'reg');
+            }
+
             return back()
                 ->withErrors(['credentials' => 'Diese Zugangsdaten sind uns nicht bekannt.'])
                 ->with('login_page', 'cust')
@@ -263,11 +286,20 @@ class CustLoginController extends UserDbController
             return redirect()->route('customer.login.2fa');
         }
 
+        clearLoginThrottle($request);
+
         return $this->loginSessionBuilder->buildForCust($request, $cust, $pcode);
     }
 
     public function handleAnonLogin(Request $request): RedirectResponse
     {
+        if ($lockMsg = checkLoginThrottle($request)) {
+            return back()
+                ->withErrors(['password' => $lockMsg], 'anon')
+                ->with('login_page', 'cust')
+                ->with('cust_tab', 'anon');
+        }
+
         $password = trim((string) $request->input('password'));
 
         $pwLists = PwList::where('valid_from', '<=', now())
@@ -292,11 +324,20 @@ class CustLoginController extends UserDbController
         }
 
         if ($mandId === null) {
+            if ($lockMsg = recordFailedLoginAttempt($request)) {
+                return back()
+                    ->withErrors(['password' => $lockMsg], 'anon')
+                    ->with('login_page', 'cust')
+                    ->with('cust_tab', 'anon');
+            }
+
             return back()
                 ->withErrors(['password' => 'Passwort nicht gültig oder abgelaufen.'], 'anon')
                 ->with('login_page', 'cust')
                 ->with('cust_tab', 'anon');
         }
+
+        clearLoginThrottle($request);
 
         $request->session()->regenerate(true);
         $request->session()->put('_user_type',     'anon');
@@ -318,6 +359,10 @@ class CustLoginController extends UserDbController
 
     public function verifyTwoFactor(Request $request): RedirectResponse
     {
+        if ($lockMsg = checkLoginThrottle($request)) {
+            return back()->withErrors(['tfa_code' => $lockMsg]);
+        }
+
         $request->validate([
             'tfa_code' => ['required', 'digits:6'],
         ]);
@@ -337,8 +382,14 @@ class CustLoginController extends UserDbController
         );
 
         if (! $verified) {
+            if ($lockMsg = recordFailedLoginAttempt($request)) {
+                return back()->withErrors(['tfa_code' => $lockMsg]);
+            }
+
             return back()->withErrors(['tfa_code' => 'Ungültiger oder abgelaufener Code.']);
         }
+
+        clearLoginThrottle($request);
 
         $request->session()->regenerate(true);
         $request->session()->put('_user_type',     'cust');

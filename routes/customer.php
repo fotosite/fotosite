@@ -50,10 +50,8 @@ Route::middleware('web')->prefix('customer')->name('customer.')->group(function 
     Route::get('/login',          [CustLoginController::class, 'showLogin'])
         ->name('login');
     Route::post('/login',         [CustLoginController::class, 'handleLogin'])
-        ->middleware('throttle:cust-login')
         ->name('login.handle');
     Route::post('/login/anon',    [CustLoginController::class, 'handleAnonLogin'])
-        ->middleware('throttle:cust-anon-login')
         ->name('login.anon');
     Route::get('/login/passkey/options', [CustLoginController::class, 'passkeyOptions'])
         ->name('login.passkey.options');
@@ -62,7 +60,6 @@ Route::middleware('web')->prefix('customer')->name('customer.')->group(function 
     Route::get('/login/2fa',      [CustLoginController::class, 'showTwoFactor'])
         ->name('login.2fa');
     Route::post('/login/2fa',     [CustLoginController::class, 'verifyTwoFactor'])
-        ->middleware('throttle:login-2fa')
         ->name('login.2fa.verify');
     Route::post('/logout',        [CustLoginController::class, 'logout'])
         ->name('logout');

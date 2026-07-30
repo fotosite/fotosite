@@ -1,12 +1,16 @@
 <?php
 /**
  * FILE:        app/Providers/AppServiceProvider.php
- * VERSION:     1.2.0
+ * VERSION:     1.3.0
  *
  * FUNCTIONS:   register() — Leer; keine eigenen Bindings.
  *              boot()     — Registriert den Custom-Session-Driver 'sessiondb'.
- *                           Definiert benannte RateLimiter für alle throttle-Routen;
+ *                           Definiert benannte RateLimiter für die verbleibenden
+ *                           throttle-Routen (email-verify, password-reset);
  *                           bei DEBUGMODE=true werden alle Limits deaktiviert.
+ *                           cust-login/cust-anon-login/login-2fa wurden durch die
+ *                           einheitliche, IP-basierte Login-Sperre in app/helpers.php
+ *                           (checkLoginThrottle()/recordFailedLoginAttempt()) ersetzt.
  *
  * CALLS:       Illuminate\Support\Facades\Session::extend()
  *              App\Extensions\SessionDbSessionHandler::__construct()
@@ -58,26 +62,8 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(6)->by($request->ip());
         });
 
-        // routes/customer.php: POST /customer/login
-        RateLimiter::for('cust-login', function (Request $request) use ($debug) {
-            if ($debug) return Limit::none();
-            return Limit::perMinute(10)->by($request->ip());
-        });
-
-        // routes/customer.php: POST /customer/login/anon
-        RateLimiter::for('cust-anon-login', function (Request $request) use ($debug) {
-            if ($debug) return Limit::none();
-            return Limit::perMinutes(1, 5)->by($request->ip());
-        });
-
-        // routes/customer.php: POST /customer/login/2fa
         // routes/customer.php: POST /customer/password-reset
         // routes/mandant.php:  POST /mandant/password-reset
-        RateLimiter::for('login-2fa', function (Request $request) use ($debug) {
-            if ($debug) return Limit::none();
-            return Limit::perMinutes(10, 3)->by($request->ip());
-        });
-
         RateLimiter::for('password-reset', function (Request $request) use ($debug) {
             if ($debug) return Limit::none();
             return Limit::perMinutes(10, 3)->by($request->ip());

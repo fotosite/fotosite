@@ -1,8 +1,8 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/SystemLoginController.php
- * VERSION:     1.5.0
- * DATUM:       2026-06-22
+ * VERSION:     1.6.0
+ * DATUM:       2026-07-30
  *
  * FUNCTIONS:   login()           — Zeigt das System-Login-Formular an.
  *                                  Reads: —
@@ -24,6 +24,8 @@
  *
  * CALLS:       App\Models\UserDb\SystUser::where()->first()
  *              App\Models\UserDb\SystUser::find()
+ *              checkLoginThrottle()/recordFailedLoginAttempt()/clearLoginThrottle()
+ *              (app/helpers.php)
  *              App\Services\SessionDb\TwofaService::generate()
  *              App\Services\SessionDb\TwofaService::verify()
  *              App\Mail\TwoFactorCodeMail
@@ -38,7 +40,12 @@
  *              sessiondb.session.expires_at (DELETE abgelaufene Sessions bei Login)
  *              sessiondb.session.sess_token (DELETE eigene Session bei Logout)
  *
- * CHANGES:     1.5.0 (2026-06-22) verifyTwoFactor() schreibt zusätzlich _is_primary
+ * CHANGES:     1.6.0 (2026-07-30) Einheitliche, IP-basierte, rollenübergreifende
+ *              Login-Sperre ergänzt (checkLoginThrottle()/recordFailedLoginAttempt()/
+ *              clearLoginThrottle() aus app/helpers.php) in handleLogin() und
+ *              verifyTwoFactor() — es existierte bisher kein RateLimiter für
+ *              syst-Login-Routen, daher rein additiv.
+ *              1.5.0 (2026-06-22) verifyTwoFactor() schreibt zusätzlich _is_primary
  *              in die Session (aus userdb.syst_user.is_primary) — Grundlage für
  *              Berechtigungsprüfungen rund um primäre System-User.
  */
@@ -66,6 +73,12 @@ class SystemLoginController extends UserDbController
 
     public function handleLogin(Request $request): RedirectResponse
     {
+        if ($lockMsg = checkLoginThrottle($request)) {
+            return back()
+                ->withErrors(['credentials' => $lockMsg], 'syst')
+                ->withInput(['email' => $request->email]);
+        }
+
         $request->validate([
             'email'    => ['required', 'email'],
             'password' => ['required', 'string'],
@@ -74,6 +87,12 @@ class SystemLoginController extends UserDbController
         $user = SystUser::where('syst_email', $request->email)->first();
 
         if (! $user || ! Hash::check($request->password, $user->syst_pw_hash)) {
+            if ($lockMsg = recordFailedLoginAttempt($request)) {
+                return back()
+                    ->withErrors(['credentials' => $lockMsg], 'syst')
+                    ->withInput(['email' => $request->email]);
+            }
+
             return back()
                 ->withErrors(['credentials' => 'Ungültige Anmeldedaten.'], 'syst')
                 ->withInput(['email' => $request->email]);
@@ -91,6 +110,12 @@ class SystemLoginController extends UserDbController
 
     public function verifyTwoFactor(Request $request): RedirectResponse
     {
+        if ($lockMsg = checkLoginThrottle($request)) {
+            return back()
+                ->withErrors(['code' => $lockMsg], 'syst')
+                ->with('show_2fa', true);
+        }
+
         $request->validate([
             'code' => ['required', 'string', 'size:6'],
         ]);
@@ -98,10 +123,18 @@ class SystemLoginController extends UserDbController
         $systId = $request->session()->get('2fa_syst_id');
 
         if (! $systId || ! $this->twofaService->verify('syst', $systId, 'login', $request->string('code')->toString())) {
+            if ($lockMsg = recordFailedLoginAttempt($request)) {
+                return back()
+                    ->withErrors(['code' => $lockMsg], 'syst')
+                    ->with('show_2fa', true);
+            }
+
             return back()
                 ->withErrors(['code' => 'Ungültiger oder abgelaufener Code.'], 'syst')
                 ->with('show_2fa', true);
         }
+
+        clearLoginThrottle($request);
 
         $request->session()->regenerate(true);
 

@@ -1,13 +1,20 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/MandantLoginController.php
- * VERSION:     1.13.0
+ * VERSION:     1.14.0
  * AUTOR:       Martin Wagner
- * DATUM:       2026-06-22
+ * DATUM:       2026-07-30
  *
  * ZWECK:       Mand-Login mit 2FA und Passkey — Formular anzeigen, Credentials prüfen,
  *              2FA-Code verifizieren, Passkey-Options liefern, Passkey-Assertion prüfen,
  *              Session schreiben, Logout.
+ *
+ * CHANGES:     1.14.0 (2026-07-30) Einheitliche, IP-basierte, rollenübergreifende
+ *              Login-Sperre ergänzt (checkLoginThrottle()/recordFailedLoginAttempt()/
+ *              clearLoginThrottle() aus app/helpers.php) in handleLogin() (alle drei
+ *              Erfolgspfade: Trusted-Device, mand_2fa_opt_in-Bypass, 2FA-Pfad) und
+ *              verifyTwoFactor() — es existierte bisher kein RateLimiter für
+ *              mand-Login-Routen, daher rein additiv.
  *
  * FUNCTIONS:   showLogin()       — Zeigt das Mandant-Login-Formular an.
  *                                  Reads: —
@@ -55,6 +62,8 @@
  *              App\Models\UserDb\MandUser::find()
  *              detectOsPlatform() (app/helpers.php)
  *              detectBrowser() (app/helpers.php)
+ *              checkLoginThrottle()/recordFailedLoginAttempt()/clearLoginThrottle()
+ *              (app/helpers.php)
  *              App\Models\UserDb\Passkey::where()->first()
  *              App\Models\UserDb\PasskeyDismissed::where()->exists()
  *              App\Mail\TwoFactorCodeMail
@@ -135,6 +144,12 @@ class MandantLoginController extends UserDbController
 
     public function handleLogin(Request $request): RedirectResponse
     {
+        if ($lockMsg = checkLoginThrottle($request)) {
+            return back()
+                ->withErrors(['credentials' => $lockMsg], 'mand')
+                ->with('login_page', 'mand');
+        }
+
         $request->validate([
             'mand_email' => ['required', 'email'],
             'password'   => ['required', 'string'],
@@ -143,6 +158,12 @@ class MandantLoginController extends UserDbController
         $mand = MandUser::where('mand_email', $request->mand_email)->first();
 
         if (! $mand || ! Hash::check($request->password, $mand->mand_pw_hash)) {
+            if ($lockMsg = recordFailedLoginAttempt($request)) {
+                return back()
+                    ->withErrors(['credentials' => $lockMsg], 'mand')
+                    ->with('login_page', 'mand');
+            }
+
             return back()
                 ->withErrors(['credentials' => 'Diese Zugangsdaten sind uns nicht bekannt.'], 'mand')
                 ->with('login_page', 'mand');
@@ -151,10 +172,14 @@ class MandantLoginController extends UserDbController
         $checkboxChecked = $request->boolean('remember_device');
 
         if (checkTrustedDevice('mand', $mand->mand_id, $request)) {
+            clearLoginThrottle($request);
+
             return $this->buildMandSession($request, $mand);
         }
 
         if (! $mand->mand_2fa_opt_in) {
+            clearLoginThrottle($request);
+
             $response = $this->buildMandSession($request, $mand);
             $this->issueTrustedDeviceIfRequested($response, $mand, $request, $checkboxChecked);
 
@@ -183,6 +208,10 @@ class MandantLoginController extends UserDbController
 
     public function verifyTwoFactor(Request $request): RedirectResponse
     {
+        if ($lockMsg = checkLoginThrottle($request)) {
+            return back()->withErrors(['tfa_code' => $lockMsg]);
+        }
+
         $request->validate([
             'tfa_code' => ['required', 'digits:6'],
         ]);
@@ -201,6 +230,10 @@ class MandantLoginController extends UserDbController
         );
 
         if (! $verified) {
+            if ($lockMsg = recordFailedLoginAttempt($request)) {
+                return back()->withErrors(['tfa_code' => $lockMsg]);
+            }
+
             return back()->withErrors(['tfa_code' => 'Ungültiger oder abgelaufener Code.']);
         }
 
@@ -209,6 +242,8 @@ class MandantLoginController extends UserDbController
         if (! $mand) {
             return redirect()->route('mandant.login');
         }
+
+        clearLoginThrottle($request);
 
         $response = $this->buildMandSession($request, $mand);
 
