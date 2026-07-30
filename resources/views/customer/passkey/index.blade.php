@@ -65,8 +65,9 @@
                 <span class="text-zinc-800 select-none">|</span>
                 <span class="text-sm font-semibold tracking-widest
                              uppercase text-indigo-600">
-                    {{ $cust?->cust_firstname ?? 'Mitglied' }}
+                    Mitglied
                 </span>
+                <span class="text-sm text-indigo-200">{{ $cust?->cust_firstname }}</span>
             </div>
 
             {{-- Logout --}}
