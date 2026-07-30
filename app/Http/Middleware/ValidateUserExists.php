@@ -1,9 +1,9 @@
 <?php
 /**
  * FILE:        app/Http/Middleware/ValidateUserExists.php
- * VERSION:     1.1.1
+ * VERSION:     1.2.0
  * AUTOR:       Martin Wagner
- * DATUM:       2026-05-26
+ * DATUM:       2026-07-30
  *
  * ZWECK:       Check 4 — Stellt sicher, dass der in der Session gespeicherte
  *              User-Datensatz noch in der Datenbank existiert. Verhindert, dass
@@ -35,7 +35,12 @@
  *              userdb.cust_user.cust_id
  *              userdb.syst_user.syst_id
  *
- * CHANGES:     1.1.1 (2026-07-18) REDIRECT_TARGETS['syst'] von
+ * CHANGES:     1.2.0 (2026-07-30) REDIRECT_TARGETS von Klassenkonstante auf private
+ *              Methode redirectTargets() umgestellt — 'syst' verweist jetzt per
+ *              route('system.backstage.login') auf den konfigurierbaren
+ *              config('app.backstage_path')-Pfad statt hartkodiertem '/backstage'
+ *              (const erlaubt keine Funktionsaufrufe).
+ *              1.1.1 (2026-07-18) REDIRECT_TARGETS['syst'] von
  *              '/system/login' (existierte nicht, führte zu 404) auf
  *              '/backstage' korrigiert (tatsächliche Route:
  *              system.backstage.login).
@@ -53,12 +58,15 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ValidateUserExists
 {
-    private const REDIRECT_TARGETS = [
-        'anon' => '/',
-        'cust' => '/customer/login',
-        'mand' => '/mandant/login',
-        'syst' => '/backstage',
-    ];
+    private function redirectTargets(): array
+    {
+        return [
+            'anon' => '/',
+            'cust' => '/customer/login',
+            'mand' => '/mandant/login',
+            'syst' => route('system.backstage.login'),
+        ];
+    }
 
     private const NOT_FOUND_MESSAGES = [
         'cust' => 'Ihre Sitzung ist ungültig. Bitte melden Sie sich erneut an.',
@@ -123,7 +131,7 @@ class ValidateUserExists
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        $target  = self::REDIRECT_TARGETS[$userType] ?? '/';
+        $target  = $this->redirectTargets()[$userType] ?? '/';
         $message = self::NOT_FOUND_MESSAGES[$userType] ?? 'Bitte melden Sie sich erneut an.';
 
         return redirect($target)->with('error', $message);

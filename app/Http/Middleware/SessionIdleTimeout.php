@@ -1,9 +1,9 @@
 <?php
 /**
  * FILE:        app/Http/Middleware/SessionIdleTimeout.php
- * VERSION:     1.1.0
+ * VERSION:     1.2.0
  * AUTOR:       Martin Wagner
- * DATUM:       2026-05-26
+ * DATUM:       2026-07-30
  *
  * ZWECK:       Erzwingt konfigurierbare Idle-Timeouts für alle User-Typen
  *              (anon, cust, mand, syst). Ersetzt AnonymousSessionTimeout.
@@ -28,7 +28,12 @@
  *
  * DB ACCESS:   sessiondb.session.expires_at (DELETE, probabilistisch 5 %)
  *
- * CHANGES:     1.1.0 (2026-07-18) TIMEOUT_MESSAGES entfernt — Session-Timeout
+ * CHANGES:     1.2.0 (2026-07-30) REDIRECT_TARGETS von Klassenkonstante auf private
+ *              Methode redirectTargets() umgestellt — 'syst' verweist jetzt per
+ *              route('system.backstage.login') auf den konfigurierbaren
+ *              config('app.backstage_path')-Pfad statt hartkodiertem '/backstage'
+ *              (const erlaubt keine Funktionsaufrufe).
+ *              1.1.0 (2026-07-18) TIMEOUT_MESSAGES entfernt — Session-Timeout
  *              zeigt keine Flash-Meldung mehr (Nutzerentscheidung, betraf
  *              alle Rollen gleichermaßen). REDIRECT_TARGETS['syst'] von
  *              '/system/login' (existierte nicht, führte zu 404) auf
@@ -45,12 +50,15 @@ use Symfony\Component\HttpFoundation\Response;
 
 class SessionIdleTimeout
 {
-    private const REDIRECT_TARGETS = [
-        'anon' => '/',
-        'cust' => '/customer/login',
-        'mand' => '/mandant/login',
-        'syst' => '/backstage',
-    ];
+    private function redirectTargets(): array
+    {
+        return [
+            'anon' => '/',
+            'cust' => '/customer/login',
+            'mand' => '/mandant/login',
+            'syst' => route('system.backstage.login'),
+        ];
+    }
 
     public function handle(Request $request, Closure $next): Response
     {
@@ -74,7 +82,7 @@ class SessionIdleTimeout
                     ->delete();
             }
 
-            return redirect(self::REDIRECT_TARGETS[$userType]);
+            return redirect($this->redirectTargets()[$userType]);
         }
 
         $request->session()->put('_last_activity', time());

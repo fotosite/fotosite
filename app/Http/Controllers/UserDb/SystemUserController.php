@@ -224,7 +224,7 @@ class SystemUserController extends UserDbController
 
         $invite->delete();
 
-        return redirect('/backstage')
+        return redirect()->route('system.backstage.login')
             ->with('status', 'Account erstellt. Bitte melden Sie sich an.');
     }
 
@@ -267,7 +267,7 @@ class SystemUserController extends UserDbController
 
         $invite->delete();
 
-        return redirect('/backstage')
+        return redirect()->route('system.backstage.login')
             ->with('status', 'Passwort wurde geändert. Bitte melden Sie sich an.');
     }
 }

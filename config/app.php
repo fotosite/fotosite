@@ -46,6 +46,8 @@ return [
     'login_lockout_max_attempts' => (int) env('LOGIN_LOCKOUT_MAX_ATTEMPTS', 5),
     'login_lockout_minutes'      => (int) env('LOGIN_LOCKOUT_MINUTES', 5),
 
+    'backstage_path' => env('BACKSTAGE_PATH', 'backstage'),
+
     /*
     |--------------------------------------------------------------------------
     | Application URL

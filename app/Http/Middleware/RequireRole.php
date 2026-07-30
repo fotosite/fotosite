@@ -1,9 +1,9 @@
 <?php
 /**
  * FILE:        app/Http/Middleware/RequireRole.php
- * VERSION:     1.1
+ * VERSION:     1.2
  * AUTOR:       Martin Wagner
- * DATUM:       2026-05-26
+ * DATUM:       2026-07-30
  *
  * ZWECK:       Check 2 — Stellt sicher, dass die aktive Session dem geforderten
  *              user_type entspricht. Schützt Routen-Gruppen vor unberechtigtem
@@ -24,7 +24,12 @@
  *
  * DB ACCESS:   none
  *
- * CHANGES:     1.1 (2026-07-18) REDIRECT_TARGETS['syst'] von
+ * CHANGES:     1.2 (2026-07-30) REDIRECT_TARGETS von Klassenkonstante auf private
+ *              Methode redirectTargets() umgestellt — 'syst' verweist jetzt per
+ *              route('system.backstage.login') auf den konfigurierbaren
+ *              config('app.backstage_path')-Pfad statt hartkodiertem '/backstage'
+ *              (const erlaubt keine Funktionsaufrufe).
+ *              1.1 (2026-07-18) REDIRECT_TARGETS['syst'] von
  *              '/system/login' (existierte nicht, führte zu 404) auf
  *              '/backstage' korrigiert (tatsächliche Route:
  *              system.backstage.login).
@@ -38,12 +43,15 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RequireRole
 {
-    private const REDIRECT_TARGETS = [
-        'anon' => '/',
-        'cust' => '/customer/login',
-        'mand' => '/mandant/login',
-        'syst' => '/backstage',
-    ];
+    private function redirectTargets(): array
+    {
+        return [
+            'anon' => '/',
+            'cust' => '/customer/login',
+            'mand' => '/mandant/login',
+            'syst' => route('system.backstage.login'),
+        ];
+    }
 
     private const ACCESS_MESSAGES = [
         'anon' => 'Bitte melden Sie sich an.',
@@ -63,7 +71,7 @@ class RequireRole
                 $request->session()->regenerateToken();
             }
 
-            $target  = self::REDIRECT_TARGETS[$userType] ?? '/';
+            $target  = $this->redirectTargets()[$userType] ?? '/';
             $message = self::ACCESS_MESSAGES[$userType] ?? 'Bitte melden Sie sich an.';
 
             return redirect($target)->with('error', $message);

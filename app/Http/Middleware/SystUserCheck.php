@@ -7,7 +7,7 @@
  *                  authentifizierten System-User-Sitzung gehört:
  *                  _user_type muss 'syst' sein, _syst_id muss gesetzt und
  *                  nicht null sein. Bei Fehler: Session invalidieren und
- *                  Redirect auf /backstage mit Fehlermeldung.
+ *                  Redirect auf route('system.backstage.login') mit Fehlermeldung.
  *                  Bei Erfolg: Request durchlassen.
  *
  * CALLS:       Illuminate\Http\Request::session()::get()
@@ -34,7 +34,7 @@ class SystUserCheck
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            return redirect('/backstage')
+            return redirect()->route('system.backstage.login')
                 ->withErrors(['session' => 'Bitte melden Sie sich an.']);
         }
 

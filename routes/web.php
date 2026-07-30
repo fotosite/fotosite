@@ -22,6 +22,9 @@ Route::middleware('auth')->group(function () {
 });
 
 // System-Login — kein Link, kein Modal; URL nur dem System-User bekannt
-Route::get('/backstage', [SystemLoginController::class, 'login'])->name('system.backstage.login');
-Route::post('/backstage', [SystemLoginController::class, 'handleLogin'])->name('system.backstage.handle');
-Route::post('/backstage/verify', [SystemLoginController::class, 'verifyTwoFactor'])->name('system.login.verify');
+Route::get(config('app.backstage_path'), [SystemLoginController::class, 'login'])
+    ->name('system.backstage.login');
+Route::post(config('app.backstage_path'), [SystemLoginController::class, 'handleLogin'])
+    ->name('system.backstage.handle');
+Route::post(config('app.backstage_path') . '/verify', [SystemLoginController::class, 'verifyTwoFactor'])
+    ->name('system.login.verify');
