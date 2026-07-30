@@ -98,7 +98,7 @@
                        id="cust_email"
                        name="cust_email"
                        value="{{ old('cust_email') }}"
-                       placeholder="ihre@email.de"
+                       placeholder="E-Mail Mitglied"
                        required
                        autocomplete="off"
                        @input="dirty = true"

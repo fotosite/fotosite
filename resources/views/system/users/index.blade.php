@@ -152,7 +152,7 @@
                         </label>
                         <input id="email" name="email" type="email"
                                value="{{ old('email') }}"
-                               placeholder="ihre@email.de"
+                               placeholder="E-Mail Systuser"
                                required
                                class="block w-full rounded-md border-gray-300 shadow-sm
                                       text-sm focus:border-gray-500 focus:ring-gray-500">
