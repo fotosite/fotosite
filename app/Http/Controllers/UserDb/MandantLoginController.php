@@ -154,6 +154,13 @@ class MandantLoginController extends UserDbController
             return $this->buildMandSession($request, $mand);
         }
 
+        if (! $mand->mand_2fa_opt_in) {
+            $response = $this->buildMandSession($request, $mand);
+            $this->issueTrustedDeviceIfRequested($response, $mand, $request, $checkboxChecked);
+
+            return $response;
+        }
+
         $code = $this->twofaService->generate('mand', $mand->mand_id, 'login');
 
         Mail::to($mand->mand_email)
@@ -205,16 +212,37 @@ class MandantLoginController extends UserDbController
 
         $response = $this->buildMandSession($request, $mand);
 
-        if ($request->session()->pull('pending_remember_device', false)) {
-            $response->cookie(issueTrustedDeviceCookie('mand', $mand->mand_id, $request));
-
-            Mail::to($mand->mand_email)->send(new \App\Mail\TrustedDeviceAddedMail(
-                guessDeviceLabel($request->userAgent() ?? ''),
-                $mand->mand_firstname ?? ''
-            ));
-        }
+        $this->issueTrustedDeviceIfRequested(
+            $response,
+            $mand,
+            $request,
+            $request->session()->pull('pending_remember_device', false)
+        );
 
         return $response;
+    }
+
+    /**
+     * Stellt bei Bedarf das Trusted-Device-Cookie aus und versendet die
+     * Benachrichtigungsmail — gemeinsame Logik für verifyTwoFactor() (2FA-Pfad)
+     * und den mand_2fa_opt_in-Bypass in handleLogin() (kein-2FA-Pfad).
+     */
+    private function issueTrustedDeviceIfRequested(
+        RedirectResponse $response,
+        MandUser $mand,
+        Request $request,
+        bool $rememberDevice
+    ): void {
+        if (! $rememberDevice) {
+            return;
+        }
+
+        $response->cookie(issueTrustedDeviceCookie('mand', $mand->mand_id, $request));
+
+        Mail::to($mand->mand_email)->send(new \App\Mail\TrustedDeviceAddedMail(
+            guessDeviceLabel($request->userAgent() ?? ''),
+            $mand->mand_firstname ?? ''
+        ));
     }
 
     /**

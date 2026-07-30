@@ -587,7 +587,7 @@
                         Konto
                     </h2>
                     <p class="text-xs text-gray-500 leading-relaxed">
-                        Profil und Passwort<br>verwalten
+                        Profil verwalten
                     </p>
                 </div>
 

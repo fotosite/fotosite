@@ -274,27 +274,27 @@
                         @enderror
                     </div>
 
-                    {{-- mand_2fa_opt_in --}}
+                    {{-- mand_2fa_disable --}}
                     <div class="pt-1">
                         <div class="flex items-start gap-3">
                             <div class="flex h-5 items-center mt-0.5">
-                                <input id="mand_2fa_opt_in" name="mand_2fa_opt_in"
+                                <input id="mand_2fa_disable" name="mand_2fa_disable"
                                        type="checkbox" value="1"
-                                       {{ old('mand_2fa_opt_in', $mand->mand_2fa_opt_in) ? 'checked' : '' }}
+                                       {{ old('mand_2fa_disable', ! $mand->mand_2fa_opt_in) ? 'checked' : '' }}
                                        class="h-4 w-4 rounded border-gray-300
                                               text-indigo-600 focus:ring-indigo-500">
                             </div>
                             <div>
-                                <label for="mand_2fa_opt_in"
+                                <label for="mand_2fa_disable"
                                        class="text-sm font-medium text-gray-700 cursor-pointer">
-                                    2FA per E-Mail aktivieren
+                                    Anmeldung ohne Sicherheitscode per E-Mail
                                 </label>
                                 <p class="text-xs text-gray-400 mt-0.5">
-                                    Deaktivieren nur wenn Passkey registriert
+                                    Diese Funktion nur vorübergehend verwenden, da dein Galeristenkonto dann nur durch ein Passwort geschützt ist.
                                 </p>
                             </div>
                         </div>
-                        @error('mand_2fa_opt_in')
+                        @error('mand_2fa_disable')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                         @enderror
                     </div>

@@ -122,14 +122,16 @@ class MandantSelfController extends UserDbController
             'mand_street+nr'     => ['required', 'string', 'max:255'],
             'mand_postcode+city' => ['required', 'string', 'max:255'],
             'mand_company'       => ['nullable', 'string', 'max:255'],
-            'mand_2fa_opt_in'    => ['sometimes', 'boolean'],
+            'mand_2fa_disable'   => ['sometimes', 'boolean'],
             'mand_cust_2fa'      => ['required', 'integer', 'min:0', 'max:7'],
         ]);
 
         $validated['mand_tel']        = $validated['mand_tel'] ?? 'nicht vorhanden';
         $validated['mand_company']    = $validated['mand_company'] ?? 'nicht vorhanden';
-        $validated['mand_2fa_opt_in'] = $request->boolean('mand_2fa_opt_in');
+        $validated['mand_2fa_opt_in'] = ! $request->boolean('mand_2fa_disable');
         $validated['mand_cust_2fa']   = (int) $validated['mand_cust_2fa'];
+
+        unset($validated['mand_2fa_disable']);
 
         $mand->update($validated);
 
