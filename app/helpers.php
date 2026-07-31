@@ -1,9 +1,9 @@
 <?php
 /**
  * FILE:        app/helpers.php
- * VERSION:     1.5.0
+ * VERSION:     1.6.0
  * AUTHOR:      Martin Wagner
- * DATE:        2026-07-30
+ * DATE:        2026-07-31
  * PURPOSE:     Globale Helper-Funktionen
  *
  * FUNCTIONS:   genitivName()             — Bildet den Genitiv eines Eigennamens (deutsch)
@@ -25,15 +25,28 @@
  *                                          meldet, falls dieser Versuch die Sperre auslöst
  *              clearLoginThrottle()      — Setzt den Fehlversuchs-Zähler einer IP zurück
  *                                          (bei erfolgreichem Login)
+ *              triggerHoneypotLockout()  — Verhaengt sofort eine volle Login-Sperre gegen
+ *                                          die IP (gleicher Schluessel wie regulaere
+ *                                          Login-Sperre), ausgeloest durch Honeypot-Treffer
+ *              registerHoneypotRoutes()  — Registriert die Koeder-Pfade aus
+ *                                          storage/app/private/honeypot_paths.txt als Routen
+ *                                          auf HoneypotController::handle()
  *
  * CALLS:       App\Models\SessionDb\TrustedDevice::where()/create()
  *              League\CommonMark\CommonMarkConverter::convert()
  *              Illuminate\Support\Facades\RateLimiter::tooManyAttempts()/hit()/clear()
+ *              Illuminate\Support\Facades\Route::any()
  *
  * DB ACCESS:   sessiondb.trusted_device (td_id, user_type, user_id, token_hash,
  *              ua_hash, device_label, last_used_at, expires_at, created_at)
  *
- * CHANGES:     1.5.0 (2026-07-30) loginThrottleKey()/checkLoginThrottle()/
+ * CHANGES:     1.6.0 (2026-07-31) triggerHoneypotLockout()/registerHoneypotRoutes()
+ *              ergaenzt — dynamische Honeypot-Routen aus honeypot_paths.txt, Treffer
+ *              loesen sofortige volle Login-Sperre (gleicher Schluessel wie
+ *              checkLoginThrottle()/recordFailedLoginAttempt()) und Log-Eintrag im
+ *              neuen Kanal 'login_attacks' aus. checkLoginThrottle() loggt bei aktiver/
+ *              verlaengerter Sperre zusaetzlich in 'login_attacks'.
+ *              1.5.0 (2026-07-30) loginThrottleKey()/checkLoginThrottle()/
  *              recordFailedLoginAttempt()/clearLoginThrottle() ergänzt — einheitliche,
  *              IP-basierte, rollenübergreifende Login-Sperre nach
  *              config('app.login_lockout_max_attempts') Fehlversuchen für
@@ -48,9 +61,11 @@
  *              betrifft NICHT anon/pw_list) — siehe FUNCTIONS oben.
  */
 
+use App\Http\Controllers\HoneypotController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use League\CommonMark\CommonMarkConverter;
 
 if (! function_exists('genitivName')) {
@@ -305,6 +320,11 @@ if (! function_exists('checkLoginThrottle')) {
         if (RateLimiter::tooManyAttempts($key, config('app.login_lockout_max_attempts'))) {
             RateLimiter::hit($key, config('app.login_lockout_minutes') * 60);
 
+            Log::channel('login_attacks')->warning('Login-Sperre aktiv/verlaengert', [
+                'ip'   => $request->ip(),
+                'path' => $request->path(),
+            ]);
+
             return 'Zu viele Fehlversuche. Versuche es später noch einmal.';
         }
 
@@ -345,5 +365,73 @@ if (! function_exists('clearLoginThrottle')) {
     function clearLoginThrottle(Request $request): void
     {
         RateLimiter::clear(loginThrottleKey($request));
+    }
+}
+
+if (! function_exists('triggerHoneypotLockout')) {
+    /**
+     * Verhaengt sofort eine volle Login-Sperre gegen die IP des Aufrufers
+     * (gleicher Schluessel wie die regulaere Login-Sperre, siehe
+     * loginThrottleKey()) — ausgeloest durch Aufruf eines Honeypot-Pfads.
+     * Im Debug-Modus (DEBUGMODE=true) kein Lockout.
+     */
+    function triggerHoneypotLockout(Request $request): void
+    {
+        if (config('app.debugmode') === true) {
+            return;
+        }
+
+        $key = loginThrottleKey($request);
+
+        for ($i = 0; $i < config('app.login_lockout_max_attempts'); $i++) {
+            RateLimiter::hit($key, config('app.honeypot_lockout_minutes') * 60);
+        }
+
+        Log::channel('login_attacks')->warning('Honeypot-Treffer', [
+            'ip' => $request->ip(),
+            'path' => $request->path(),
+            'method' => $request->method(),
+            'user_agent' => $request->userAgent(),
+        ]);
+    }
+}
+
+if (! function_exists('registerHoneypotRoutes')) {
+    /**
+     * Registriert alle in storage/app/private/honeypot_paths.txt gelisteten
+     * Koeder-Pfade als Route::any(...) auf HoneypotController::handle().
+     * Zeilen mit "/*"-Endung werden als Wildcard (faengt alle Unterpfade ab)
+     * registriert. Fehlt die Datei, wird nur ein Standard-Log::warning()
+     * geschrieben (kein honeypot-spezifischer Kanal) und die Funktion kehrt
+     * sofort zurueck.
+     */
+    function registerHoneypotRoutes(): void
+    {
+        $path = storage_path('app/private/honeypot_paths.txt');
+
+        if (! file_exists($path)) {
+            Log::warning('registerHoneypotRoutes: honeypot_paths.txt nicht gefunden.', [
+                'path' => $path,
+            ]);
+
+            return;
+        }
+
+        $lines = file($path, FILE_IGNORE_NEW_LINES);
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+
+            if ($line === '' || str_starts_with($line, '#')) {
+                continue;
+            }
+
+            if (str_ends_with($line, '/*')) {
+                Route::any(rtrim($line, '/*') . '/{any?}', [HoneypotController::class, 'handle'])
+                    ->where('any', '.*');
+            } else {
+                Route::any($line, [HoneypotController::class, 'handle']);
+            }
+        }
     }
 }

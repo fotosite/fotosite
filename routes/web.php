@@ -28,3 +28,8 @@ Route::post(config('app.backstage_path'), [SystemLoginController::class, 'handle
     ->name('system.backstage.handle');
 Route::post(config('app.backstage_path') . '/verify', [SystemLoginController::class, 'verifyTwoFactor'])
     ->name('system.login.verify');
+
+// Honeypot-Routen aus storage/app/private/honeypot_paths.txt — ausserhalb jeder
+// Auth-Middleware-Gruppe, muss ganz am Ende stehen (fungiert als Fallback fuer
+// Koeder-Pfade wie wp-login.php, admin, phpmyadmin, .env etc.)
+registerHoneypotRoutes();

@@ -73,6 +73,13 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'login_attacks' => [
+            'driver' => 'daily',
+            'path'   => storage_path('logs/login-attacks.log'),
+            'level'  => env('LOG_LEVEL', 'warning'),
+            'days'   => 14,
+        ],
+
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),
