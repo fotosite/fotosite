@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/system/profile.blade.php
-    VERSION: 1.3.2
-    DATE:    2026-06-29
+    VERSION: 1.3.3
+    DATE:    2026-07-31
 
     DESCRIPTION:
       System-Eigenverwaltung — profile and password management for the
@@ -30,6 +30,9 @@
              auf 2FA-Codes und Passwort-Erneuerung; Feld ist aktiv/editierbar).
     CHANGES: 1.3.2 (2026-06-29) PW-Hinweistext auf Controller-Anforderung
              korrigiert: "14 Zeichen + Regeln" → "Mindestens 12 Zeichen."
+    CHANGES: 1.3.3 (2026-07-31) PW-Hinweistext auf verschärfte syst-Passwort-Policy
+             aktualisiert: "Mindestens 20 Zeichen, mit Groß- und Kleinbuchstaben,
+             einer Ziffer und einem Sonderzeichen."
     CHANGES: 1.3.1 (2026-06-25) Android-Touch-Targets vergroessert: Logout-
              Button, Zurueck-Link und beide Submit-Buttons (Speichern/
              Passwort ändern) auf min-h-11 angehoben.
@@ -274,7 +277,7 @@
                                    class="mt-1 block w-full rounded-md border-gray-300
                                           shadow-sm text-sm
                                           focus:border-gray-500 focus:ring-gray-500">
-                            <p class="text-sm text-gray-500 mt-1">Mindestens 12 Zeichen.</p>
+                            <p class="text-sm text-gray-500 mt-1">Mindestens 20 Zeichen, mit Groß- und Kleinbuchstaben, einer Ziffer und einem Sonderzeichen.</p>
                         </div>
 
                         <div>

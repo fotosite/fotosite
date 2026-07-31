@@ -1,15 +1,21 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/SystemLoginController.php
- * VERSION:     1.6.0
- * DATUM:       2026-07-30
+ * VERSION:     1.7.0
+ * DATUM:       2026-07-31
  *
  * FUNCTIONS:   login()           — Zeigt das System-Login-Formular an.
  *                                  Reads: —
- *              handleLogin()     — Prüft E-Mail + Passwort; delegiert Code-Erzeugung
- *                                  an TwofaService::generate(); sendet Code per
- *                                  TwoFactorCodeMail; speichert 2fa_syst_id in Session;
- *                                  leitet mit show_2fa-Flash zurück zum Formular.
+ *              handleLogin()     — Prüft E-Mail + Passwort; prüft nach korrektem
+ *                                  Passwort zusätzlich die aktuelle syst-Passwort-
+ *                                  Policy (min. 20 Zeichen, Groß-/Kleinbuchstaben,
+ *                                  Ziffer, Sonderzeichen) und blockt bei Nicht-
+ *                                  erfüllung hart (ohne Login-Sperre zu zählen,
+ *                                  da kein Angriffsindiz); delegiert sonst Code-
+ *                                  Erzeugung an TwofaService::generate(); sendet
+ *                                  Code per TwoFactorCodeMail; speichert
+ *                                  2fa_syst_id in Session; leitet mit show_2fa-
+ *                                  Flash zurück zum Formular.
  *                                  Reads: userdb.syst_user.syst_id, syst_email,
  *                                         syst_pw_hash, syst_firstname
  *              verifyTwoFactor() — Delegiert Prüfung an TwofaService::verify();
@@ -31,6 +37,8 @@
  *              App\Mail\TwoFactorCodeMail
  *              Illuminate\Support\Facades\Hash::check()
  *              Illuminate\Support\Facades\Mail::to()->send()
+ *              Illuminate\Support\Facades\Validator::make()
+ *              Illuminate\Validation\Rules\Password::min()
  *              Illuminate\Support\Facades\DB::connection('sessiondb')->table()->delete()
  *              App\Models\SessionDb\Session::where()->delete()
  *
@@ -40,7 +48,12 @@
  *              sessiondb.session.expires_at (DELETE abgelaufene Sessions bei Login)
  *              sessiondb.session.sess_token (DELETE eigene Session bei Logout)
  *
- * CHANGES:     1.6.0 (2026-07-30) Einheitliche, IP-basierte, rollenübergreifende
+ * CHANGES:     1.7.0 (2026-07-31) handleLogin() — Hard-Block bei korrektem, aber
+ *              nicht mehr policy-konformem syst-Passwort (Password::min(20)
+ *              ->mixedCase()->numbers()->symbols()); Fehlermeldung verweist auf
+ *              Reset durch anderen System-Administrator (kein Self-Service-
+ *              Reset für syst); zählt NICHT als Fehlversuch für die Login-Sperre.
+ *              1.6.0 (2026-07-30) Einheitliche, IP-basierte, rollenübergreifende
  *              Login-Sperre ergänzt (checkLoginThrottle()/recordFailedLoginAttempt()/
  *              clearLoginThrottle() aus app/helpers.php) in handleLogin() und
  *              verifyTwoFactor() — es existierte bisher kein RateLimiter für
@@ -61,6 +74,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
 
 class SystemLoginController extends UserDbController
 {
@@ -95,6 +110,17 @@ class SystemLoginController extends UserDbController
 
             return back()
                 ->withErrors(['credentials' => 'Ungültige Anmeldedaten.'], 'syst')
+                ->withInput(['email' => $request->email]);
+        }
+
+        $policyCheck = Validator::make(
+            ['password' => $request->password],
+            ['password' => Password::min(20)->mixedCase()->numbers()->symbols()]
+        );
+
+        if ($policyCheck->fails()) {
+            return back()
+                ->withErrors(['credentials' => 'Ihr Passwort erfüllt nicht mehr die aktuellen Sicherheitsanforderungen. Bitten Sie einen anderen System-Administrator, Ihnen über die Benutzerverwaltung ein neues Passwort zuzusenden.'], 'syst')
                 ->withInput(['email' => $request->email]);
         }
 

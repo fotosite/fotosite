@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/SystemProfileController.php
- * VERSION:     1.1.0
+ * VERSION:     1.2.0
  *
  * FUNCTIONS:   edit()            — Loads SystUser by _syst_id from session;
  *                                  returns system.profile with $user.
@@ -25,7 +25,11 @@
  * DB ACCESS:   userdb.syst_user.syst_id, syst_uname, syst_email, syst_tel,
  *              syst_firstname, syst_lastname, syst_pw_hash
  *
- * CHANGES:     1.1.0 (2026-06-29) updatePassword() — deutschsprachige Fehlermeldungen
+ * CHANGES:     1.2.0 (2026-07-31) updatePassword() — verschärfte syst-Passwort-Policy:
+ *              min. 20 Zeichen, Groß-/Kleinbuchstaben, Ziffer, Sonderzeichen
+ *              (Password::min(20)->mixedCase()->numbers()->symbols()), deutsche
+ *              Fehlermeldungen ergänzt.
+ *              1.1.0 (2026-06-29) updatePassword() — deutschsprachige Fehlermeldungen
  *              für password.confirmed, password.min, current_password ergänzt.
  */
 
@@ -36,6 +40,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 
 class SystemProfileController extends UserDbController
 {
@@ -75,10 +80,13 @@ class SystemProfileController extends UserDbController
     {
         $request->validate([
             'current_password' => ['required'],
-            'password'         => ['required', 'min:12', 'confirmed'],
+            'password'         => ['required', 'confirmed', Password::min(20)->mixedCase()->numbers()->symbols()],
         ], [
             'password.confirmed' => 'Die eingegebenen Passwörter stimmen nicht überein.',
-            'password.min'       => 'Das Passwort erfüllt nicht die Mindestanforderungen.',
+            'password.min'       => 'Das Passwort muss mindestens 20 Zeichen lang sein.',
+            'password.mixed'     => 'Das Passwort muss sowohl Groß- als auch Kleinbuchstaben enthalten.',
+            'password.numbers'   => 'Das Passwort muss mindestens eine Ziffer enthalten.',
+            'password.symbols'   => 'Das Passwort muss mindestens ein Sonderzeichen enthalten.',
             'current_password'   => 'Das eingegebene Passwort ist nicht korrekt.',
         ]);
 

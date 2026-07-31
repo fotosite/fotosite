@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/system/users/register.blade.php
-    VERSION: 1.4.1
-    DATE:    2026-06-22
+    VERSION: 1.5.0
+    DATE:    2026-07-31
 
     DESCRIPTION:
       Standalone registration page for invited system users.
@@ -21,6 +21,9 @@
              Voreinstellung ersetzt (Feld ist read-only).
              1.4.1 (2026-06-29) PW-Hinweistext auf Controller-Anforderung
              korrigiert: "14 Zeichen + Regeln" → "Mindestens 12 Zeichen."
+             1.5.0 (2026-07-31) PW-Hinweistext auf verschärfte syst-Passwort-Policy
+             aktualisiert: "Mindestens 20 Zeichen, mit Groß- und Kleinbuchstaben,
+             einer Ziffer und einem Sonderzeichen."
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -172,7 +175,7 @@
                                 </svg>
                             </button>
                         </div>
-                        <p class="text-sm text-gray-500 mt-1">Mindestens 12 Zeichen.</p>
+                        <p class="text-sm text-gray-500 mt-1">Mindestens 20 Zeichen, mit Groß- und Kleinbuchstaben, einer Ziffer und einem Sonderzeichen.</p>
                     </div>
 
                     <div>

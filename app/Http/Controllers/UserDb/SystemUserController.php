@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/SystemUserController.php
- * VERSION:     1.3.0
+ * VERSION:     1.4.0
  *
  * FUNCTIONS:   index()               — Lists all SystUser records ordered by syst_lastname.
  *                                      Reads: userdb.syst_user.*
@@ -48,7 +48,11 @@
  *              syst_pcode+city, syst_company, is_primary
  *              userdb.invite.* (inkl. is_primary)
  *
- * CHANGES:     1.3.0 (2026-06-29) handleRegister()/handlePasswordReset() —
+ * CHANGES:     1.4.0 (2026-07-31) handleRegister()/handlePasswordReset() —
+ *              verschärfte syst-Passwort-Policy: min. 20 Zeichen, Groß-/Klein-
+ *              buchstaben, Ziffer, Sonderzeichen (Password::min(20)->mixedCase()
+ *              ->numbers()->symbols()), deutsche Fehlermeldungen ergänzt.
+ *              1.3.0 (2026-06-29) handleRegister()/handlePasswordReset() —
  *              deutschsprachige Fehlermeldungen für password.confirmed und
  *              password.min ergänzt.
  *              1.2.0 (2026-06-22) is_primary-Feature ergänzt: invite() übernimmt
@@ -69,6 +73,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 
 class SystemUserController extends UserDbController
 {
@@ -201,10 +206,13 @@ class SystemUserController extends UserDbController
             'syst_firstname' => ['required', 'string'],
             'syst_lastname'  => ['required', 'string'],
             'syst_tel'       => ['required', 'string'],
-            'password'       => ['required', 'min:12', 'confirmed'],
+            'password'       => ['required', 'confirmed', Password::min(20)->mixedCase()->numbers()->symbols()],
         ], [
             'password.confirmed' => 'Die eingegebenen Passwörter stimmen nicht überein.',
-            'password.min'       => 'Das Passwort erfüllt nicht die Mindestanforderungen.',
+            'password.min'       => 'Das Passwort muss mindestens 20 Zeichen lang sein.',
+            'password.mixed'     => 'Das Passwort muss sowohl Groß- als auch Kleinbuchstaben enthalten.',
+            'password.numbers'   => 'Das Passwort muss mindestens eine Ziffer enthalten.',
+            'password.symbols'   => 'Das Passwort muss mindestens ein Sonderzeichen enthalten.',
         ]);
 
         SystUser::create([
@@ -256,10 +264,13 @@ class SystemUserController extends UserDbController
         }
 
         $request->validate([
-            'password' => ['required', 'min:12', 'confirmed'],
+            'password' => ['required', 'confirmed', Password::min(20)->mixedCase()->numbers()->symbols()],
         ], [
             'password.confirmed' => 'Die eingegebenen Passwörter stimmen nicht überein.',
-            'password.min'       => 'Das Passwort erfüllt nicht die Mindestanforderungen.',
+            'password.min'       => 'Das Passwort muss mindestens 20 Zeichen lang sein.',
+            'password.mixed'     => 'Das Passwort muss sowohl Groß- als auch Kleinbuchstaben enthalten.',
+            'password.numbers'   => 'Das Passwort muss mindestens eine Ziffer enthalten.',
+            'password.symbols'   => 'Das Passwort muss mindestens ein Sonderzeichen enthalten.',
         ]);
 
         $user = SystUser::findOrFail($invite->inv_user_id);
