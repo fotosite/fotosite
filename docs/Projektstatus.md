@@ -1,12 +1,12 @@
 **Fotosite V08**
 
-**Projektstatus #13**
+**Projektstatus #14**
 
-*Stand: 19. Juli 2026*
+*Stand: 31. Juli 2026*
 
-**Tag: session_usertype_fix_ok — iOS-Long-Tap-Fix abgeschlossen, Upload-Bedingungen-Popup fuer cust entfernt, Trusted-Device-Feature zu vollstaendigem Auto-Login ausgebaut, "Sitzung abgelaufen"-Meldungen entfernt, zwei sessiondb.session-Bugs behoben (verwaiste Sessions, dauerhaft falscher user_type).**
+**Tag: honeypot_login_attacks_log_ok — Sicherheits-Härtung des Logins abgeschlossen: einheitliche IP-basierte Login-Sperre (cust/mand/syst), dynamische Honeypot-Routen + Log-Kanal login_attacks, syst-Login-Pfad über .env konfigurierbar, mand-2FA-Opt-out, Passkey-Hinweistexte ausgelagert. Zusätzlich, noch UNCOMMITTED: syst-Passwort-Policy auf min. 20 Zeichen + Komplexität verschärft, inkl. Login-Hard-Block.**
 
-**🎯 NÄCHSTER SCHRITT (Korrektur 19.07.): Phase 6 (Passkey) wurde in früheren Doku-Ständen fälschlich als „✓ Fertig" geführt. Korrekt: technisch vollständig implementiert, aber noch NICHT gründlich getestet. Ein umfassender Test der gesamten Passkey-Funktionalität (nicht nur iOS-spezifisch) ist der nächste anstehende Schritt und soll im neuen Chat erfolgen — siehe Abschnitt 6.**
+**🎯 NÄCHSTER SCHRITT (weiterhin gültig, zuletzt bestätigt 19.07.): Phase 6 (Passkey) wurde in früheren Doku-Ständen fälschlich als „✓ Fertig" geführt. Korrekt: technisch vollständig implementiert, aber noch NICHT gründlich getestet. Ein umfassender Test der gesamten Passkey-Funktionalität (nicht nur iOS-spezifisch) ist der nächste anstehende Schritt und soll im neuen Chat erfolgen — siehe Abschnitt 6. Zwischen dem #13-Stand (19.07.) und heute kam ausschließlich Sicherheits-Härtung dazwischen (Abschnitt 8) — am Passkey-Testbedarf hat sich nichts geändert.**
 
 # 1. Phasen-Übersicht
 
@@ -21,6 +21,7 @@
 | Upload-Bedingungen-Popup cust entfernt 10.07. | Popup deaktiviert (DS-Popup bleibt), statischer Hinweis + FAQ-Eintrag | **✓ Fertig** | cust_ds_hinweis_ok |
 | Trusted-Device / Auto-Login 10.–18.07. | Vollständiger Auto-Login ohne Passwort (mand+cust), Logout-Widerruf | **✓ Fertig** | autologin_complete_ok |
 | Session-Bugfixes 18.–19.07. | "Sitzung abgelaufen"-Meldungen entfernt, /backstage-Redirect-Fix, verwaiste Sessions, user_type-Fix | **✓ Fertig** | session_messages_removed_ok, session_usertype_fix_ok |
+| Sicherheits-Härtung Login 29.–31.07. | IP-Sperre, Honeypot+Log-Kanäle, Login-Cleanup, mand-2FA-Opt-out, BACKSTAGE_PATH, Passkey-Hints ausgelagert | **✓ Fertig** (syst-PW-Policy+Hard-Block: uncommitted) | honeypot_login_attacks_log_ok |
 | Passkey-Gesamttest | Gründlicher, systematischer Test über alle Rollen/Geräte/Browser (nicht nur iOS) | 🎯 **Nächster Schritt** | — |
 | Phase 7 | Foto-Content (Upload, Anzeige, Filter) | ⏳ Danach | — |
 
@@ -105,6 +106,22 @@ Entfernt für cust/mand/syst/anon. Dabei entdeckt und behoben: `REDIRECT_TARGETS
 
 Betroffene Dateien: `SessionDbSessionHandler.php`, `LoginSessionBuilder.php`, `SystemLoginController.php`, `CustLoginController.php`, `MandantLoginController.php`.
 
+# 4a. Implementierungen 29.–31.07.2026 — Sicherheits-Härtung Login
+
+Neun Commits (`error_messages_dirty_fix_ok` bis `honeypot_login_attacks_log_ok`), Details in PROJECT_CONTEXT.md Abschnitt 8a/10e und Notfall_Start.md Abschnitt 5.2f:
+
+- **Fehlermeldungen dirty-ausgeblendet + Error-Bag-isoliert** (10 Stellen, `error_messages_dirty_fix_ok`) — cust/anon/mand/syst-Login teilen sich teilweise dieselbe Seite (`login-modal.blade.php`), benannte Bags verhindern Cross-Tab-Bleed
+- **Login-Cleanup erweitert** (`login_cleanup_expired_records_ok`) — `LoginSessionBuilder::cleanupExpiredRecords()` bereinigt jetzt auch `invite`, `cust_invite`, `trusted_device`, `twofa_code` bei jedem cust/mand-Login
+- **Passkey-Hinweistexte ausgelagert** (`passkey_hints_markdown_ok`) — 4 editierbare md-Dateien statt hartkodierter Blade-Blöcke, neue Funktion `renderMarkdownVariant()`
+- **Platzhaltertexte präzisiert** (`invite_placeholder_texts_ok`) — Einladungsformulare zeigen jetzt „E-Mail Mitglied"/„E-Mail Galerist:in"/„E-Mail Systuser" statt irreführendem `ihre@email.de`
+- **mand-2FA optional deaktivierbar** (`mand_2fa_optin_login_fix_ok`) — `mand_2fa_opt_in` war totes Feld, wird jetzt beim Login ausgewertet; Checkbox invertiert/umbenannt
+- **Seitenkopf-Label MITGLIED + Inkonsistenz #12** (`mitglied_label_und_inkonsistenz12_ok`) — `passkey.sign_count` als faktisch wirkungslos dokumentiert
+- **Einheitliche IP-basierte Login-Sperre** (`login_lockout_ip_based_ok`) — 5 Fehlversuche/5 Minuten, EIN Schlüssel über cust/mand/syst; mand+syst hatten zuvor gar keine Drosselung
+- **syst-Login-Pfad über `.env` konfigurierbar** (`backstage_path_configurable_ok`) — löst die hartkodierten `/backstage`-Vorkommen strukturell ab
+- **Log-Kanal `login_attacks` + dynamische Honeypot-Routen** (`honeypot_login_attacks_log_ok`) — Köder-Pfade aus `storage/app/private/honeypot_paths.txt`, Treffer lösen volle IP-Sperre über denselben Schlüssel aus
+
+**Zusätzlich, zum Zeitpunkt dieses Doku-Standes noch UNCOMMITTED:** syst-Passwort-Policy auf `Password::min(20)->mixedCase()->numbers()->symbols()` verschärft (bisher `min:12`) + Hard-Block beim Login bei nicht mehr konformem Bestandspasswort (kein Self-Service-Reset für syst, Notfallverfahren dokumentiert in Notfall_Start.md Abschnitt 6a).
+
 # 5. Datenbankstand (19.07.2026)
 
 | **DB** | **Änderungen seit #12** |
@@ -119,6 +136,7 @@ Betroffene Dateien: `SessionDbSessionHandler.php`, `LoginSessionBuilder.php`, `S
 | **Priorität** | **Punkt** | **Detail** |
 | --- | --- | --- |
 | **Höchste (nächster Schritt)** | Gründlicher Passkey-Gesamttest | Phase 6 ist technisch implementiert, aber noch nicht systematisch getestet. Umfasst Registrierung, Login, Umbenennen, Löschen, Prompt-/Dismiss-Logik für mand UND cust über Windows/Android/iOS und die relevanten Browser — **kein reiner iOS-Test**. Für iOS zusätzlich zu beachten: kein Commit mit abgeschlossenem WebAuthn-Passkey-Test gefunden (bisherige iOS-Tests betrafen Button-Feedback/Auto-Login, nicht Passkeys) |
+| **Hoch** | syst-Passwort-Policy + Honeypot-Infrastruktur committen | Aktuell uncommitted (Abschnitt 4a). Zusätzlich `HONEYPOT_LOCKOUT_MINUTES` und `LOG_STACK=daily` auf Server-`.env` nachtragen |
 | **Hoch** | dirty-Ausblendung nachziehen | `system/mandanten/index.blade.php` + `customer/auth/register.blade.php` |
 | **Hoch** | Regressionstest Android/Windows | Globale Button-Animation auf Desktop/Android prüfen |
 | **Hoch** | Abnahmetest cust-Bereich | Blöcke 1–6; Tag: `cust_complete_ok`. Testplan liegt vor (docx + xlsx), pausiert |
@@ -135,7 +153,7 @@ Betroffene Dateien: `SessionDbSessionHandler.php`, `LoginSessionBuilder.php`, `S
 | **Niedrig** | Tote Datei löschen | nur `welcome.blade.php` (Breeze-Default) |
 | **Plan** | Newsletter | Eigene DB-Tabelle, kein Code derzeit |
 
-# 7. Git-Tags (neu seit #12)
+# 7. Git-Tags (neu seit #12, Passkey-Gesamttest weiterhin ausstehend)
 
 | **Tag** | **Inhalt** |
 | --- | --- |
@@ -145,8 +163,17 @@ Betroffene Dateien: `SessionDbSessionHandler.php`, `LoginSessionBuilder.php`, `S
 | `trusted_device_cust_ok`, `trusted_device_2fa_skip_complete_ok`, `trusted_device_config_ok`, `trusted_device_config_2FA_ok`, `trusted_device_logout_revoke_ok` | Trusted-Device-Feature (2FA-Skip-Stufe) |
 | `autologin_pre_live_test`, **`autologin_complete_ok`** | Ausbau zu vollständigem Auto-Login ohne Passwort |
 | `session_messages_removed_ok` | „Sitzung abgelaufen"-Meldungen entfernt, `/backstage`-Redirect-Fix |
-| **`session_usertype_fix_ok`** | sessiondb.session: verwaiste Sessions + user_type-Bug behoben (aktueller Stand) |
+| `session_usertype_fix_ok` | sessiondb.session: verwaiste Sessions + user_type-Bug behoben |
+| `error_messages_dirty_fix_ok` | Fehlermeldungen dirty-ausgeblendet + Error-Bag-Isolation (10 Stellen) |
+| `login_cleanup_expired_records_ok` | Login-Cleanup erweitert: invite, cust_invite, trusted_device, twofa_code |
+| `passkey_hints_markdown_ok` | Passkey-Hinweistexte in editierbare md-Dateien ausgelagert |
+| `invite_placeholder_texts_ok` | Platzhaltertexte Einladungsformulare präzisiert |
+| `mand_2fa_optin_login_fix_ok` | mand-2FA-Deaktivierung überarbeitet, Trusted-Device-Cookie auch im 2FA-Bypass |
+| `mitglied_label_und_inkonsistenz12_ok` | Seitenkopf-Label MITGLIED, Inkonsistenz #12 (passkey.sign_count) |
+| `login_lockout_ip_based_ok` | Einheitliche IP-basierte Login-Sperre (5/5min, cust+mand+syst) |
+| `backstage_path_configurable_ok` | syst-Login-Pfad über `.env` konfigurierbar (BACKSTAGE_PATH) |
+| **`honeypot_login_attacks_log_ok`** | Log-Kanal `login_attacks` + dynamische Honeypot-Routen (aktueller Stand) |
 
-Alle früheren Tags siehe Projektstatus #12 / PROJECT_CONTEXT Abschnitt 13.
+Alle früheren Tags siehe Projektstatus #12 / PROJECT_CONTEXT Abschnitt 13. **Noch uncommitted, kein Tag:** syst-Passwort-Policy-Verschärfung (min:20) + Login-Hard-Block, fünf Doku-Dateien dieser Aktualisierung.
 
-Fotosite V08 — Projektstatus #13  |  Stand 19.07.2026
+Fotosite V08 — Projektstatus #14  |  Stand 31.07.2026

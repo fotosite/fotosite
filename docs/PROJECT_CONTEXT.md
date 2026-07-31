@@ -1,12 +1,14 @@
 # PROJECT_CONTEXT.md — Fotosite V08
 
-> Stand: 19.07.2026 — Tag: `session_usertype_fix_ok`. Seit 29.06.: iOS-Long-Tap-Fix vollständig abgeschlossen (Tag `ios_longtap_complete_ok` + Zwischen-Tags), Upload-Bedingungen-Popup für cust entfernt (`cust_ds_hinweis_ok`), Trusted-Device-Feature vollständig neu implementiert und zu vollständigem Auto-Login ohne Passwort erweitert (`autologin_complete_ok`), „Sitzung abgelaufen"-Meldungen entfernt + `/backstage`-Redirect-Bug behoben (`session_messages_removed_ok`), zwei unabhängige `sessiondb.session`-Bugs behoben — verwaiste Sessions und dauerhaft falscher `user_type` (`session_usertype_fix_ok`). Phase 7 (Foto-Content) ist weiterhin der nächste Schritt. Abnahmetest cust-Bereich weiterhin offen.
+> Stand: 31.07.2026 — Tag: `honeypot_login_attacks_log_ok`. Seit 19.07.: umfangreiche Sicherheits-Härtung des Login-Systems — Fehlermeldungen dirty-ausgeblendet + Error-Bag-isoliert (`error_messages_dirty_fix_ok`), Login-Cleanup um `invite`/`cust_invite`/`trusted_device`/`twofa_code` erweitert (`login_cleanup_expired_records_ok`), Passkey-Hinweistexte in editierbare md-Dateien ausgelagert (`passkey_hints_markdown_ok`), Platzhaltertexte in Einladungsformularen präzisiert (`invite_placeholder_texts_ok`), mand-2FA optional deaktivierbar (`mand_2fa_optin_login_fix_ok`), Seitenkopf-Label „MITGLIED" ergänzt + Inkonsistenz #12 (`passkey.sign_count`) dokumentiert (`mitglied_label_und_inkonsistenz12_ok`), einheitliche IP-basierte Login-Sperre für cust/mand/syst (`login_lockout_ip_based_ok`), syst-Login-Pfad über `.env` konfigurierbar (`backstage_path_configurable_ok`), Log-Kanal `login_attacks` + dynamische Honeypot-Routen (`honeypot_login_attacks_log_ok`). **Zusätzlich, zum Zeitpunkt dieses Doku-Standes noch UNCOMMITTED (kein Tag):** syst-Passwort-Policy auf min. 20 Zeichen + Groß-/Kleinbuchstaben + Ziffer + Sonderzeichen verschärft, inkl. Hard-Block beim Login bei nicht mehr konformem Bestandspasswort (kein Self-Service-Reset für syst). Details Abschnitt 8/8a. Phase 7 (Foto-Content) und der gründliche Passkey-Gesamttest sind weiterhin die fachlich nächsten Schritte — siehe unten.
 >
-> **Offen (Stand 19.07.):** **(0) NÄCHSTER SCHRITT für den neuen Chat: gründlicher Gesamttest der Passkey-Funktionalität (Phase 6) — technisch implementiert, aber noch nicht umfassend getestet, siehe Abschnitt 9.** (a) `dirty`-Ausblendung bei `system/mandanten/index.blade.php` + `customer/auth/register.blade.php` nachziehen, (b) Abnahmetest cust-Bereich (Tag: `cust_complete_ok`), (c) Regressionstest Android/Windows der globalen Button-Animation, (d) SPF/DKIM-Setup Mailserver. Details siehe Abschnitt 16.
+> **Offen (Stand 31.07.):** **(0) NÄCHSTER SCHRITT für den neuen Chat: gründlicher Gesamttest der Passkey-Funktionalität (Phase 6) — technisch implementiert, aber noch nicht umfassend getestet, siehe Abschnitt 9.** Zwischen dem letzten Doku-Stand (19.07.) und heute kam ausschließlich Sicherheits-Härtung dazwischen (siehe oben) — am Passkey-Teststand hat sich inhaltlich nichts geändert. (a) `dirty`-Ausblendung bei `system/mandanten/index.blade.php` + `customer/auth/register.blade.php` nachziehen, (b) Abnahmetest cust-Bereich (Tag: `cust_complete_ok`), (c) Regressionstest Android/Windows der globalen Button-Animation, (d) SPF/DKIM-Setup Mailserver, (e) syst-Passwort-Policy-Änderung + Honeypot-Infrastruktur committen (aktuell uncommitted), `HONEYPOT_LOCKOUT_MINUTES`/`LOG_STACK=daily` auf Server-`.env` nachtragen. Details siehe Abschnitt 16.
 >
 > **KORREKTUR 29.06. (weiterhin gültig):** `resources/views/system/login.blade.php` ist **NICHT** tot — sie ist die **aktive** syst-Login-View. `SystemLoginController@login` rendert `view('system.login')`; Login UND 2FA laufen über diese Datei (2FA-Block via `show_2fa`-Flash-Variable konditionell eingeblendet). Die frühere Einstufung als „tote Datei" (Altlasten 2b, Lerneffekt 17) war falsch und ist hiermit aufgehoben.
 >
 > **KORREKTUR 19.07. (wichtig):** Der anon-Kurzzeit-Kennwort-Login verwendet entgegen einer früheren Chat-Zusammenfassung **kein** `regenerate()` ohne `destroy` — der Commit `8b4a875`/`7b52b05` hat `handleAnonLogin()` in `CustLoginController.php` explizit auf `regenerate(true)` umgestellt (Zeile 305), identisch zu allen anderen Login-Stellen. Es gibt also **keine** Ausnahme für anon — alle 7 Session-Übergänge (cust: Passwort, 2FA, Passkey, anon; mand: Passwort, Passkey; syst: 2FA) nutzen einheitlich `regenerate(true)`. Details siehe Abschnitt 10d.
+>
+> **NEU 30.–31.07.:** `/backstage` ist als hartkodierter Pfad **abgelöst** — der syst-Login-Pfad ist jetzt über `config('app.backstage_path')` (`.env`-Variable `BACKSTAGE_PATH`, Default weiterhin `backstage`) konfigurierbar; alle Vorkommen in Middlewares nutzen `route('system.backstage.login')` statt hartkodierter Strings. Erwähnungen von „`/backstage`" in älteren Abschnitten dieses Dokuments sind als Default-Pfad zu lesen, nicht als fixer Wert. Details Abschnitt 10e.
 
 ## 1. Project Overview
 
@@ -103,8 +105,8 @@ Connection: `userdb`
 | `mand_user` | `mand_id` | Galerist:in-Accounts (inkl. `mand_pw_hash`, `mand_cust_2fa`, `mand_2fa_opt_in`, `has_public_content`, `active`, `valid_to` DATE NULL (Option bei Zahlungsausfall — Nutzung noch offen), `ds_accepted_at`, `ds_version`, `upload_terms_accepted_at`, `upload_terms_version`, `show_welcome` TINYINT(1) Default 1) |
 | `cust_user` | `cust_id` | Mitglieder-Accounts (inkl. `cust_2fa_opt_in` TINYINT(1) Default 0 — Funktion noch zu klären, `ds_accepted_at`, `ds_version`, `upload_terms_accepted_at`, `upload_terms_version` — Felder strukturell vorhanden, Upload-Bedingungen derzeit für cust nicht relevant, `show_welcome` TINYINT(1) Default 1) |
 | `cust_pcode` | `pcode_id` | Sicherheitsstufe je Mitglied+Mandant. Spalten: `cust_passcode` varchar(255) (= sec_level des cust bei diesem mand, „enthält die Ziffer des Securitylevel"), `cust_alias`, `pcode_prefstat`, `mand_id`, `cust_id`, `cust_mailrequest`, `mand_sort_date` DATE (Funktion noch zu klären) |
-| `invite` | `inv_id` | Einladungen/Reset-Tokens für syst/mand/cust (`inv_type`: register\|pw_reset\|email_change; `inv_user_type`: syst\|mand\|cust; `inv_email` dient bei email_change als Speicher für neue Adresse; `is_primary` TINYINT(1) Default 0 — nur für syst-Einladungen relevant) |
-| `passkey` | `pk_id` | WebAuthn-Credentials (`user_type`, `user_id`, `credential_id`, `public_key`, `sign_count`, `device_name`, `last_used_at`) |
+| `invite` | `inv_id` | Einladungen/Reset-Tokens für syst/mand/cust (`inv_type`: register\|pw_reset\|email_change; `inv_user_type`: syst\|mand\|cust; `inv_email` dient bei email_change als Speicher für neue Adresse; `is_primary` TINYINT(1) Default 0 — nur für syst-Einladungen relevant). **Login-Cleanup (NEU 29.07.):** abgelaufene Einträge (`expires_at < now()`) werden bei jedem cust/mand-Login zusätzlich zu den Sessions bereinigt (`LoginSessionBuilder::cleanupExpiredRecords()`) |
+| `passkey` | `pk_id` | WebAuthn-Credentials (`user_type`, `user_id`, `credential_id`, `public_key`, `sign_count`, `device_name`, `last_used_at`). **`sign_count` faktisch wirkungslos** (Inkonsistenz #12) — wird geschrieben, aber nie wieder ausgelesen/geprüft; kein WebAuthn-Rollback-Schutz gegen geklonte Credentials. `last_used_at` ist die verlässliche Größe für Nutzungs-Tracking |
 | `passkey_dismissed` | `pd_id` | „Nie wieder fragen"-Einträge je User+OS+Gerät (`user_type`, `user_id`, `os`: win\|andr\|ios, `ua_hash`) |
 | `cust_invite` | `invite_id` | **Veraltetes Relikt** — Struktur identisch zu `sessiondb.cust_invite`, wird nicht verwendet, aus Vorsicht nicht gelöscht |
 | `policy_versions` | `pv_key` | Aktuelle Policy-Versionsnummern (`pv_key`: ds_version\|upload_version, `pv_value`, `updated_at`) — wird von syst per UI erhöht, triggert Popup bei mand/cust beim nächsten Login |
@@ -116,9 +118,9 @@ Connection: `sessiondb`
 |---|---|---|
 | `session` | `sess_id` | Eine Zeile pro aktiver Session (anon + authentifiziert), `sess_token` für Lookups, `payload` (JSON). Zusätzlich Spalten `user_type`, `cust_id`, `mand_id`, `syst_id` — werden erst NACH dem finalen `write()` per `App::terminating()`-Callback nachträglich befüllt (siehe Abschnitt 10d) |
 | `pw_list` | `pwlist_id` | Bis zu 6 zeitlich begrenzte Kurzzeit-Kennwörter je Mandant (`pw1`–`pw6`, AES-verschlüsselt, `valid_from`/`valid_until`) |
-| `twofa_code` | `tfa_id` | 2FA-Codes (6-stellig, `tfa_purpose`: login\|pw_change\|critical, `tfa_expires_at`, `tfa_used`) |
-| `cust_invite` | `invite_id` | **Führende Tabelle** für Mitglieder-Einladungen (`mand_id`, `cust_email`, `cust_alias`, `sec_level`, `token`, `expires_at`, `used`) |
-| `trusted_device` | `td_id` | **NEU 10.–17.07.** „Gerät als sicher merken" für vollständigen Auto-Login (mand+cust). Spalten: `user_type` (enum mand\|cust), `user_id`, `token_hash` (SHA-256, UNIQUE), `ua_hash`, `device_label`, `last_used_at`, `expires_at`, `created_at`. Bewusst in `sessiondb` statt `userdb` (Sicherheitstrennung) |
+| `twofa_code` | `tfa_id` | 2FA-Codes (6-stellig, `tfa_purpose`: login\|pw_change\|critical, `tfa_expires_at`, `tfa_used`). **Login-Cleanup (NEU 29.07.):** abgelaufene Codes (`tfa_expires_at < now()`) werden bei jedem cust/mand-Login mitbereinigt |
+| `cust_invite` | `invite_id` | **Führende Tabelle** für Mitglieder-Einladungen (`mand_id`, `cust_email`, `cust_alias`, `sec_level`, `token`, `expires_at`, `used`). **Login-Cleanup (NEU 29.07.):** abgelaufene Einladungen werden bei jedem cust/mand-Login mitbereinigt — `userdb.cust_invite` (Relikt) bewusst NICHT einbezogen |
+| `trusted_device` | `td_id` | **NEU 10.–17.07.** „Gerät als sicher merken" für vollständigen Auto-Login (mand+cust). Spalten: `user_type` (enum mand\|cust), `user_id`, `token_hash` (SHA-256, UNIQUE), `ua_hash`, `device_label`, `last_used_at`, `expires_at`, `created_at`. Bewusst in `sessiondb` statt `userdb` (Sicherheitstrennung). **Login-Cleanup (NEU 29.07.):** abgelaufene Einträge werden bei jedem cust/mand-Login mitbereinigt (bisher nur bei Logout) |
 
 ### 4.3 `fotodb` — Foto-Content
 Connection: `fotodb`
@@ -302,27 +304,53 @@ routes/
 
 ## 8. Passwort-Policy
 
-> **KORREKTUR 29.06.:** Die zuvor dokumentierten syst-Anforderungen (14 Zeichen, Sonderzeichen, HIBP) entsprachen NICHT der Implementierung. Die Controller (`SystemUserController`, `SystemProfileController`, `SystemMandantController`) erzwingen für syst tatsächlich nur `min:12` ohne weitere Regeln. Die View-Hinweistexte wurden am 29.06. controller-konform auf „Mindestens 12 Zeichen" korrigiert. Die folgende Tabelle gibt jetzt den implementierten Stand wieder.
+> **KORREKTUR 29.06. (historisch, seit 31.07. überholt):** Die damals dokumentierten syst-Anforderungen (14 Zeichen, Sonderzeichen, HIBP) entsprachen nicht der Implementierung — die Controller erzwangen tatsächlich nur `min:12`. Die View-Hinweistexte wurden am 29.06. controller-konform auf „Mindestens 12 Zeichen" korrigiert.
+>
+> **NEU 31.07. (aktueller Stand, zum Zeitpunkt dieses Doku-Standes noch UNCOMMITTED):** Die syst-Passwort-Policy wurde bewusst verschärft — jetzt `Password::min(20)->mixedCase()->numbers()->symbols()` in `SystemUserController` (`handleRegister()`, `handlePasswordReset()`) und `SystemProfileController::updatePassword()`. Die Tabelle unten gibt den neuen Stand wieder. **Wichtig: Die Policy wird zusätzlich beim LOGIN geprüft** (`SystemLoginController::handleLogin()`, nach korrektem `Hash::check()`, vor 2FA-Versand) — ein syst mit einem alten, nicht mehr konformen Passwort wird beim Login mit korrektem Passwort trotzdem hart abgewiesen. Da es **keinen Self-Service-Passwort-Reset für syst** gibt (neues Passwort nur durch einen anderen syst-Admin über die Benutzerverwaltung), verweist die Fehlermeldung explizit auf diesen Weg. Notfall-Prozedere bei Selbstaussperrung: siehe Notfall_Start.md Abschnitt 6a. Details zum Login-Hard-Block: Abschnitt 8a.
 
 | Kriterium | syst | mand | cust |
 |---|---|---|---|
-| Mindestlänge | 12 Zeichen | 12 Zeichen | 10 Zeichen |
-| Groß-/Kleinbuchstaben | — (nur min:12) | ✅ | ✅ |
-| Ziffern | — (nur min:12) | ✅ | ✅ |
-| Sonderzeichen | — (nur min:12) | ✅ | optional |
+| Mindestlänge | **20 Zeichen** | 12 Zeichen | 10 Zeichen |
+| Groß-/Kleinbuchstaben | ✅ | ✅ | ✅ |
+| Ziffern | ✅ | ✅ | ✅ |
+| Sonderzeichen | ✅ | ✅ | optional |
 | HIBP (`uncompromised()`) | — | ✅ | — |
 | Username im PW verboten | — | — | — |
+| Policy auch beim Login geprüft | ✅ (NEU 31.07., Hard-Block) | — | — |
 
-> Hinweis: syst ist bewusst nur auf `min:12` gesetzt (kein mixedCase/numbers/symbols/uncompromised). Falls strengere syst-Regeln gewünscht sind, müssten die drei genannten Controller UND die View-Hinweistexte gemeinsam angepasst werden.
+> Hinweis: cust/mand-Policy unverändert. syst ist als einzige Rolle strenger als mand, weil syst-Accounts plattformweiten Zugriff haben und kein HIBP-Check vorgesehen ist (Kompensation über Länge/Komplexität + jetzt zusätzlich Login-Zeit-Durchsetzung).
 
-**Deutsche Validierungs-Fehlermeldungen (29.06.):** Alle sieben Passwort-verarbeitenden Controller (`CustPasswordResetController`, `MandPasswordResetController`, `CustSelfController`, `MandantSelfController`, `SystemUserController` [2 Stellen], `SystemProfileController`, `SystemMandantController`) erhielten `messages`-Arrays mit deutschen Texten:
+**Deutsche Validierungs-Fehlermeldungen (29.06., syst-Teil erweitert 31.07.):** Alle sieben Passwort-verarbeitenden Controller (`CustPasswordResetController`, `MandPasswordResetController`, `CustSelfController`, `MandantSelfController`, `SystemUserController` [2 Stellen], `SystemProfileController`, `SystemMandantController`) erhielten `messages`-Arrays mit deutschen Texten:
 - `password.confirmed` → „Die eingegebenen Passwörter stimmen nicht überein."
-- `password.min` / `.mixed_case` / `.numbers` / `.symbols` / `.uncompromised` → „Das Passwort erfüllt nicht die Mindestanforderungen."
+- cust/mand/`SystemMandantController`: `password.min` / `.mixed_case` / `.numbers` / `.symbols` / `.uncompromised` → „Das Passwort erfüllt nicht die Mindestanforderungen."
+- syst (`SystemUserController`, `SystemProfileController`, NEU 31.07.): eigene, spezifische Texte je Regel — `password.min` → „Das Passwort muss mindestens 20 Zeichen lang sein.", `password.mixed` → „...Groß- als auch Kleinbuchstaben...", `password.numbers` → „...mindestens eine Ziffer...", `password.symbols` → „...mindestens ein Sonderzeichen..."
 - `current_password` → „Das eingegebene Passwort ist nicht korrekt."
 
-Zuvor erschienen Laravels englische Standard-Meldungen (kein `lang/`-Verzeichnis vorhanden). Die Anforderungs-Hinweistexte sind in allen PW-Dialogen vorhanden und controller-konform.
+Zuvor erschienen Laravels englische Standard-Meldungen (kein `lang/`-Verzeichnis vorhanden). Die Anforderungs-Hinweistexte sind in allen PW-Dialogen vorhanden und controller-konform (syst-Views: „Mindestens 20 Zeichen, mit Groß- und Kleinbuchstaben, einer Ziffer und einem Sonderzeichen.", NEU 31.07.).
 
 `pw_list`-Kurzzeit-Kennwörter (pw1–pw6): min. 8 Zeichen, AES-verschlüsselt (nicht gehasht — mand muss Klartext einsehen können, um sie zu teilen). **Trim-Asymmetrie beachten:** pw1–pw6 werden beim Speichern durch Laravels `TrimStrings`-Middleware getrimmt (Feldname nicht exempt), das eingegebene `password` beim Anon-Login-Vergleich jedoch nicht (`password` ist in `$except`) → Anon-Login trimmt das eingegebene Passwort daher explizit per Code (`CustLoginController`, Tag `touch_and_trim_ok`).
+
+---
+
+## 8a. Login-Sicherheit — NEU, 29.–31.07.2026
+
+### Einheitliche IP-basierte Login-Sperre (`login_lockout_ip_based_ok`)
+Ersetzt die bisherigen getrennten RateLimiter (`cust-login`, `cust-anon-login`, `login-2fa` in `AppServiceProvider`) durch einen gemeinsamen, **rollenübergreifenden** Mechanismus in `app/helpers.php`:
+- `loginThrottleKey($request)` → EIN Schlüssel pro IP (`login-throttle:<ip>`), gemeinsam für cust/mand/syst
+- `checkLoginThrottle($request)` — prüft vor jedem Login-Versuch, ob die Sperre aktiv ist; verlängert bei fortgesetztem Angriff zusätzlich die Sperrzeit und loggt dabei in den Kanal `login_attacks` (NEU 31.07., siehe unten)
+- `recordFailedLoginAttempt($request)` — zählt einen echten Fehlversuch (nicht jeden Request), meldet nur, wenn DIESER Versuch die Sperre auslöst
+- `clearLoginThrottle($request)` — Reset bei erfolgreichem Login
+
+Konfigurierbar über `LOGIN_LOCKOUT_MAX_ATTEMPTS`/`LOGIN_LOCKOUT_MINUTES` (`.env`, Default 5/5), gespiegelt in `config/app.php`. Deaktiviert bei `DEBUGMODE=true`. **mand- und syst-Login hatten zuvor überhaupt keine Drosselung** — jetzt erstmals abgedeckt. `password-reset`- und `email-verify`-RateLimiter (weiterhin in `AppServiceProvider`) unverändert.
+
+### Log-Kanal `login_attacks` (NEU 31.07.)
+Neuer `daily`-Kanal in `config/logging.php` (`storage/logs/login-attacks.log`, 14 Tage Rotation, Level `warning`). `checkLoginThrottle()` loggt hinein bei aktiver/verlängerter Sperre (`ip`, `path`). Der Standard-Stack-Kanal (`LOG_STACK`) wurde ebenfalls auf `daily`/14 Tage umgestellt (bisher `single`, unbegrenztes Wachstum) — Änderung nur in der Server-`.env` (`LOG_STACK=daily`), `config/logging.php`-Default (`'daily'`) hatte bereits `days => 14`.
+
+### Honeypot-Routen (NEU 31.07., `honeypot_login_attacks_log_ok`)
+Dynamisch registrierte Köder-Routen für typische Scanner-Ziele (`wp-login.php`, `wp-admin/*`, `xmlrpc.php`, `admin`, `phpmyadmin`, `.env`), definiert in `storage/app/private/honeypot_paths.txt` — **unversioniert, per WinSCP editierbar**, analog zu `erlaeuterung.md`/`willkommen_*.md` (Abschnitt 10a). `registerHoneypotRoutes()` (`app/helpers.php`) liest die Datei bei jedem Request-Bootstrap (`routes/web.php`, ganz am Ende, außerhalb jeder Middleware-Gruppe) und registriert `Route::any(...)` auf `HoneypotController::handle()`. Jeder Treffer ruft `triggerHoneypotLockout($request)` auf: verhängt sofort eine volle Sperre (`config('app.login_lockout_max_attempts')`-fach `RateLimiter::hit()`) über **denselben** IP-Schlüssel wie die reguläre Login-Sperre — wirkt also rollenübergreifend — für `HONEYPOT_LOCKOUT_MINUTES` Minuten (Default 60, `.env`, `config/app.php` → `honeypot_lockout_minutes`), loggt in `login_attacks` (`ip`, `path`, `method`, `user_agent`) und liefert von außen nicht unterscheidbar von echtem Content ein Standard-404. Deaktiviert bei `DEBUGMODE=true`. Fehlt `honeypot_paths.txt`, wird nur ein Standard-`Log::warning()` geschrieben (kein Honeypot-Kanal) und keine Route registriert.
+
+### syst-Login-Hard-Block bei veralteter Policy (NEU 31.07., uncommitted)
+Siehe Abschnitt 8 — `SystemLoginController::handleLogin()` prüft nach korrektem `Hash::check()` zusätzlich `Password::min(20)->mixedCase()->numbers()->symbols()` gegen das eingegebene (korrekte) Klartext-Passwort. Bei Nichterfüllung: Hard-Block mit Verweis auf Admin-Reset-Weg, **zählt NICHT** als Fehlversuch für die IP-Sperre (kein Angriffsindiz, das Passwort war korrekt). Notfall-SQL-Weg bei Selbstaussperrung: Notfall_Start.md Abschnitt 6a.
 
 ---
 
@@ -335,7 +363,7 @@ Zuvor erschienen Laravels englische Standard-Meldungen (kein `lang/`-Verzeichnis
 - `userVerification: required`, `authenticatorAttachment: platform`, `residentKey: required`
 - Passkey-Verwaltung (`/mandant/passkeys`, `/customer/passkeys`): registrieren, umbenennen, löschen, Geräteliste mit `last_used_at`
 - **Plattform-/Browser-Erkennung:** `detectOsPlatform()` (win/andr/ios/unknown) und `detectBrowser()` (chrome/firefox/edge/safari/samsung/unknown) in `app/helpers.php`, Session-Keys `_passkey_os`, `_passkey_browser`, `_passkey_uahash`
-- **Kontextabhängige Hinweistexte** auf Passkey-Verwaltungsseiten — je OS+Browser-Kombination, nutzerorientiert (wo gilt der Passkey, nicht wo wird er gespeichert)
+- **Kontextabhängige Hinweistexte** auf Passkey-Verwaltungsseiten — je OS+Browser-Kombination, nutzerorientiert (wo gilt der Passkey, nicht wo wird er gespeichert). **NEU 30.07. (`passkey_hints_markdown_ok`):** Die Texte sind nicht mehr hartkodiert in den Blade-Views, sondern liegen in vier editierbaren Markdown-Dateien `storage/app/private/passkey_{allgemein,spezifisch}_{cust,mand}.md` (unversioniert, per WinSCP editierbar, analog zu `erlaeuterung.md`). `CustPasskeyController`/`MandPasskeyController::index()` leiten aus OS/Browser einen Tag ab (`STANDARD`/`CHROME_IOS` für „allgemein", `EDGE`/`FIREFOX_WIN`/`FIREFOX_ANDROID`/`CHROME`/`IOS`/`UNKNOWN` für „spezifisch") und rendern den passenden `<!--TAG-->...<!--/TAG-->`-Block per neuer Helper-Funktion `renderMarkdownVariant()` (`app/helpers.php`) zu HTML.
 - **Passkey-Prompt-Logik:** Modal (mand) / Banner (cust) erscheint einmalig nach Login, wenn kein Passkey für dieses OS existiert und kein `passkey_dismissed`-Eintrag (User+OS+Gerät) vorliegt. Buttons: „Einrichten" / „Nie wieder fragen" / „Später". **Hinweis 20.06.:** Die neue Willkommensseite (`show_welcome`, Abschnitt 10c) ist generisches Onboarding (Markdown-Text + „Gelesen") — sie enthält noch KEINEN Passkey-Einrichtungslink. Die ursprünglich geplante strukturelle Lösung des Cust-Passkey-Hinweises über die Welcome-Seite ist damit weiterhin offen, falls gewünscht müsste der Link nachträglich in `willkommen_cust.md` ergänzt oder die Logik im `WelcomeScreenController` erweitert werden.
 - Getestet (punktuell, nicht systematisch): Windows (Hello aktiv/inaktiv, Chrome/Firefox/Edge), Android (Handy+Tablet, Chrome mit Google-Sync, Firefox lokal), cust-Banner, Grenzfälle (mehrere Rollen auf einem Windows-Konto)
 - **Ausstehend — NÄCHSTER SCHRITT (neuer Chat):** Gründlicher, systematischer Gesamttest der Passkey-Funktionalität über alle Rollen (mand+cust), Geräte (Windows/Android/iOS) und Browser hinweg — inkl. iOS, wo bislang kein abgeschlossener WebAuthn-Test dokumentiert ist (iPhone SE 2020 vorhanden, wurde aber bereits für andere Tests wie Button-Feedback/Auto-Login genutzt, siehe Abschnitt 10d). Kein reiner iOS-Test, sondern vollständiger Testdurchlauf der gesamten Passkey-Funktionalität.
@@ -347,6 +375,7 @@ Zuvor erschienen Laravels englische Standard-Meldungen (kein `lang/`-Verzeichnis
 - Edge: wie Windows Hello, lokal, kein Sync (zusätzlich schlechte Datenschutz-Reputation, daher nicht aktiv empfohlen)
 - iOS: iCloud Keychain, alle Browser nutzen denselben Speicher (Apple erzwingt das)
 - `passkey_dismissed` schlüsselt auf `(user_type, user_id, os, ua_hash)` — pro Gerät+Browser+OS-Kombination eigener Dismiss-Status
+- **`passkey.sign_count` faktisch wirkungslos** (gefunden 30.07., Inkonsistenzen.md #12) — kein akuter Sicherheitsmangel, aber entgangener Rollback-Schutz gegen geklonte Credentials, bewusst nicht behoben. Details Inkonsistenzen.md #12
 
 ---
 
@@ -523,6 +552,31 @@ Die dedizierten „Sitzung abgelaufen"-Meldungen für cust/mand/syst/anon wurden
 
 ---
 
+## 10e. Sicherheits-Härtung & kleinere Anpassungen — NEU, 29.–31.07.2026
+
+### Fehlermeldungen: dirty-Ausblendung + Error-Bag-Isolation (29.07., `error_messages_dirty_fix_ok`)
+10 Stellen (cust/anon/mand/syst-Login, Dashboards, syst-Profil) erhielten benannte Error-Bags (`->withErrors([...], 'mand')`/`'syst'`/`'anon'`) statt des Default-Bags, plus `x-data="{dirty:false}"` + `@input="dirty=true"` + `x-show="!dirty"` auf den Fehlertext — sobald der User erneut tippt, verschwindet die alte Fehlermeldung, statt bis zum nächsten Submit stehen zu bleiben. **Grund für die Bag-Trennung:** `auth/login-modal.blade.php` rendert cust-, anon- und mand-Login **auf derselben Seite** (Tabs) — ohne benannte Bags hätte ein Fehler aus einem Tab im falschen Tab aufscheinen können. syst läuft auf einer komplett separaten Seite (`system/login.blade.php`, nutzt ausschließlich `$errors->syst`) und war von dieser Kollisionsgefahr nie betroffen, bekam aber ebenfalls einen benannten Bag (Konsistenz). **Geprüft bei dieser Doku-Aktualisierung:** Eine analoge mand/syst-Bag-Kollision existiert nicht und ist auch nicht latent möglich, da beide Logins nie in derselben Response gerendert werden.
+
+### Login-Cleanup erweitert (29.07., `login_cleanup_expired_records_ok`)
+`LoginSessionBuilder` bereinigte bisher nur abgelaufene `sessiondb.session`-Zeilen bei jedem cust/mand-Login. Neue private Methode `cleanupExpiredRecords()` bereinigt zusätzlich abgelaufene `userdb.invite`, `sessiondb.cust_invite`, `sessiondb.trusted_device`, `sessiondb.twofa_code` — `userdb.cust_invite` (Relikt, Abschnitt 12 #1) bewusst ausgenommen. Details Abschnitt 4.1/4.2.
+
+### Passkey-Hinweistexte ausgelagert (30.07., `passkey_hints_markdown_ok`)
+Siehe Abschnitt 9.
+
+### Platzhaltertexte in Einladungsformularen präzisiert (30.07., `invite_placeholder_texts_ok`)
+`ihre@email.de` (ließ vermuten, die eigene Adresse sei gemeint) → „E-Mail Mitglied" (`mandant/cust/einladen.blade.php`), „E-Mail Galerist:in" (`system/mandanten/index.blade.php`), „E-Mail Systuser" (`system/users/index.blade.php`).
+
+### mand: 2FA optional deaktivierbar (30.07., `mand_2fa_optin_login_fix_ok`)
+`mand_user.mand_2fa_opt_in` (Default 1, 2FA per Default aktiv) wurde bisher in der Kontoverwaltung zwar gespeichert, aber **beim Login nie ausgewertet** — totes Feld. Jetzt in `MandantLoginController::handleLogin()`: ist `mand_2fa_opt_in` false, wird der 2FA-Versand übersprungen und direkt die Session aufgebaut (inkl. Trusted-Device-Cookie, falls „Gerät merken" angehakt — vorher nur im 2FA-Pfad ausgestellt, jetzt gemeinsame private Methode `issueTrustedDeviceIfRequested()` für beide Pfade). UI: Checkbox in `mandant/konto.blade.php` invertiert und umbenannt — Feldname im Formular jetzt `mand_2fa_disable` (invertiert zu `mand_2fa_opt_in` in `MandantSelfController::update()`), Label „Anmeldung ohne Sicherheitscode per E-Mail" mit Warnhinweis, dass das Konto dann nur noch durch das Passwort geschützt ist. Dashboard-Kachel-Text „Profil und Passwort verwalten" → „Profil verwalten" (präzisiert, da Passwort-Änderung dort nicht stattfindet). `Konzept_Fotosite_V8.md` entsprechend aktualisiert.
+
+### Seitenkopf-Label „MITGLIED" (30.07., `mitglied_label_und_inkonsistenz12_ok`)
+`customer/dashboard.blade.php` + `customer/passkey/index.blade.php`: Seitenkopf zeigte bisher nur den Vornamen (Fallback „Mitglied"), jetzt zusätzlich fest „MITGLIED" als Rollenlabel + Vorname daneben — Konsistenz mit den anderen Rollen (die eine feste UI-Bezeichnung im Kopf zeigen).
+
+### syst-Login-Pfad über `.env` konfigurierbar (30.07., `backstage_path_configurable_ok`)
+Bisher war `/backstage` an mehreren Stellen hartkodiert (3× `redirect()` + 6× `REDIRECT_TARGETS` in drei Middlewares) — strukturelle Ursache der Bug-Klasse vom 18.07. (Abschnitt 10d, vergessene Stelle bei Pfadänderung). Jetzt einzige Quelle: `config('app.backstage_path')` (`env('BACKSTAGE_PATH', 'backstage')`) in `routes/web.php`; alle Middleware-Redirects nutzen `route('system.backstage.login')` statt des Strings. `REDIRECT_TARGETS` in `RequireRole`/`SessionIdleTimeout`/`ValidateUserExists` von Klassenkonstante auf private Methode umgestellt (Konstanten erlauben keine Funktionsaufrufe). `BACKSTAGE_PATH` muss bei Bedarf separat in der Server-`.env` gesetzt werden, Default bleibt `backstage`.
+
+---
+
 **Geräteklassen:**
 
 | Gerät | Primäre Nutzer | Besonderheit |
@@ -581,6 +635,11 @@ Die dedizierten „Sitzung abgelaufen"-Meldungen für cust/mand/syst/anon wurden
 | 26 | **Verwaiste `sessiondb.session`-Zeilen** durch `regenerate()` ohne `$destroy=true` an mehreren Login-Stellen (inkl. anon-Login) | Behoben 19.07. — `regenerate(true)` jetzt an allen 7 Session-Übergängen, keine Ausnahme mehr für anon (frühere Annahme einer bewussten Ausnahme war unzutreffend). Details Abschnitt 10d |
 | 27 | **Logout-Button-Komponente:** Trusted-Device-Bestätigungsdialog hat aktuell nur „Abmelden mit Löschen" / „Zurück" (schließt nur den Dialog). Eine besprochene Umbenennung zu „Verlassen ohne Löschen" (Tab schließen statt Dialog schließen) wurde NICHT umgesetzt | Nutzer hat die Änderung abgebrochen — offener Punkt, falls gewünscht künftig nachziehen. `resources/views/components/logout-button.blade.php` |
 | 28 | **E-Mail-Footer im Sie-Form trotz Du-Form-Mailtext** in drei Templates: `two-factor-code.blade.php`, `trusted-device-added.blade.php` UND zusätzlich `cust-invite.blade.php` (beim Abgleich am 19.07. gefunden — war in der ursprünglichen Meldung nicht enthalten) — „Bitte antworten Sie nicht auf diese E-Mail." | Niedrige Priorität, nicht behoben. Bei Gelegenheit auf „Bitte antworte nicht auf diese E-Mail." vereinheitlichen |
+| 29 | **WinSCP-Skripte ohne `cd fotos.martinwagner.de` nach `lcd` laden am falschen Server-Pfad hoch** — der FTP-Login-Root liegt eine Ebene ÜBER dem eigentlichen Projektverzeichnis (`.../u14bc1w8.host159.alfahosting-server.de/` statt `.../fotos.martinwagner.de/`). Ohne das `cd` meldet WinSCP „erfolgreich hochgeladen", die Dateien landen aber im falschen Verzeichnis, der Server zeigt weiterhin den alten Stand | Führte zu stundenlanger Fehlsuche. WinSCP-Skripte MÜSSEN nach `lcd` ein `cd fotos.martinwagner.de` enthalten, bevor `put`-Befehle folgen |
+| 30 | **WinSCP-Skripte werden ohne `option transfer binary`/`open <Verbindung>` am Skriptanfang ausgegeben** | Bewusste Auslassung — der Nutzer ergänzt diese Verbindungszeilen selbst. Ausgegebene Skripte beginnen direkt mit `lcd`, dann `cd`, dann `put` |
+| 31 | **Mehrzeilige Commit-Messages in `.bat`-Dateien (cmd.exe) vertragen keine mehrzeiligen Anführungszeichen-Blöcke** (das ist PowerShell-Syntax, in `.bat` nicht gültig) | Stattdessen mehrere separate `-m "..."`-Flags verwenden: `git commit -m "Zeile 1" -m "Zeile 2"` |
+| 32 | **`php artisan config:clear` allein genügt nicht bei `env()`-gesteuerten Routen** (z. B. `BACKSTAGE_PATH`, `LOGIN_LOCKOUT_*`, `HONEYPOT_LOCKOUT_MINUTES`) — werden Routen aus `config()`-Werten gebaut (`routes/web.php`: `config('app.backstage_path')`), friert ein zwischenzeitliches `route:cache` den alten Pfad ein | Nach Änderungen an env-gesteuerten Config-/Routen-Werten zusätzlich `php artisan route:clear` ausführen, nicht nur `config:clear` — deckt sich mit der bestehenden Regel „immer alle 4 Cache-Befehle" (Abschnitt 3), hier nochmal explizit für diesen Fall benannt |
+| 33 | **„Fix wirkt nicht" wurde mehrfach fälschlich als Code-Bug diagnostiziert, obwohl der Upload schlicht nicht angekommen war** (vgl. #7) | Vor jeder weiteren Fehlersuche bei „Fix wirkt nicht": zuerst per SSH direkt auf dem Server verifizieren — `grep` auf den erwarteten Code-Inhalt, `ls -la` auf den Zeitstempel der Datei — bevor am Code selbst weitergesucht wird |
 
 ---
 
@@ -592,7 +651,8 @@ Die dedizierten „Sitzung abgelaufen"-Meldungen für cust/mand/syst/anon wurden
 - **Meilenstein-Tag:** `user_management_complete_ok` (20.06.2026) — komplette Benutzer-/Sicherheitsverwaltung implementiert, sicherer Rückfallpunkt vor Phase 7 (Content). Auch als Startpunkt für künftige Projekte geeignet (siehe Abschnitt 15). **Einschränkung:** Die darin enthaltene Passkey-Funktionalität ist implementiert, aber noch nicht gründlich getestet (siehe Abschnitt 9) — „complete" bezieht sich auf den Implementierungsstand, nicht auf einen abgeschlossenen Testdurchlauf.
 - **Relevante Tags:** `phase5_cust_login_ok`, `p6_passkey_prompt_ok`, `p6_passkey_ui_ok`, `ag_banner_removed_ok`, `sec_level_sync_ok`, `datenschutz_ok`, `cust_invite_ok`, `mand_invite_ok`, `mand_register_ok`, `ui_begriffe_ok`, `mand_adressfelder_ok`, `cust_adressfelder_ok`, `email_pw_modal_ok`, `registrierung_ok`, `rechtliches_ok`, `pw_reset_mail_ok`, `policy_popup_ok`, `cust_delete_mail_ok`, `login_labels_ok`, `unsaved_changes_guard_ok`, `galerien_ajax_ok`, `mand_mitgliederliste_ok`, `welcome_screen_ok`, `faq_feature_ok`, `user_management_complete_ok`, `redirect_loop_fix_ok`, `policy_view_link_fix_ok`, `syst_primary_ok`, `fixes_23jun_ok`, `touch_and_trim_ok`, `pw_eye_ok`, `ios_button_feedback_ok`
 - **29.06. (nach `ios_button_feedback_ok`):** syst-Löschlogik-Fix, `MandAccountDeletedMail`, deutsche PW-Fehlermeldungen, PW-Hinweistexte syst min:12 — Tag `stable_2026-06-30_logins_ok` (30.06.).
-- **Seit 09.07. (neu, Stand 19.07.):** `ios_longtap_fix_ok`, `ios_longtap_dashboard_ok`, `ios_longtap_complete_ok`, `ios_longtap_policy_ok`, `cust_ds_hinweis_ok`, `trusted_device_cust_ok`, `trusted_device_2fa_skip_complete_ok`, `trusted_device_config_ok`, `trusted_device_config_2FA_ok`, `trusted_device_logout_revoke_ok`, `autologin_pre_live_test`, `autologin_complete_ok`, `session_messages_removed_ok`, `session_usertype_fix_ok` (aktueller Stand). Details Abschnitt 10d.
+- **Seit 09.07. (Stand 19.07.):** `ios_longtap_fix_ok`, `ios_longtap_dashboard_ok`, `ios_longtap_complete_ok`, `ios_longtap_policy_ok`, `cust_ds_hinweis_ok`, `trusted_device_cust_ok`, `trusted_device_2fa_skip_complete_ok`, `trusted_device_config_ok`, `trusted_device_config_2FA_ok`, `trusted_device_logout_revoke_ok`, `autologin_pre_live_test`, `autologin_complete_ok`, `session_messages_removed_ok`, `session_usertype_fix_ok`. Details Abschnitt 10d.
+- **Seit 29.07. (neu, Stand 31.07.):** `error_messages_dirty_fix_ok`, `login_cleanup_expired_records_ok`, `passkey_hints_markdown_ok`, `invite_placeholder_texts_ok`, `mand_2fa_optin_login_fix_ok`, `mitglied_label_und_inkonsistenz12_ok`, `login_lockout_ip_based_ok`, `backstage_path_configurable_ok`, `honeypot_login_attacks_log_ok` (aktueller Stand). Details Abschnitt 8a/10e. **Noch uncommitted, kein Tag:** syst-Passwort-Policy-Verschärfung (min:20) + Login-Hard-Block (Abschnitt 8/8a), fünf Doku-Dateien dieser Aktualisierung.
 - `.gitignore`: `.env`, `/vendor/`, `/node_modules/`, `/storage/logs/`, `fotosite_DDL_*.sql`
 
 ---
@@ -632,12 +692,14 @@ Stand `user_management_complete_ok` (20.06.2026) ist als **Startimplementierung 
 
 ---
 
-## 16. Offene Aufgaben & Anschlusspunkte (Stand 19.07.2026)
+## 16. Offene Aufgaben & Anschlusspunkte (Stand 31.07.2026)
 
 Dieser Abschnitt ist der **Einstiegspunkt für den nächsten Chat**. Er listet auf, was unmittelbar offen ist.
 
 ### 16a-0. NÄCHSTER SCHRITT: Gründlicher Passkey-Gesamttest
 Die Passkey-Funktionalität (Phase 6) ist technisch vollständig implementiert, aber noch **nicht** gründlich getestet — frühere Doku-Stände, die Phase 6 als „✓ Fertig" oder „abgeschlossen" bezeichneten, waren zu stark formuliert (korrigiert 19.07.). Der ausstehende Test ist **kein** reiner iOS-Test, sondern ein **umfassender Test der gesamten Passkey-Funktionalität**: Registrierung, Login, Umbenennen, Löschen, Prompt-/Dismiss-Logik, jeweils für mand UND cust, über Windows/Android/iOS und die jeweils relevanten Browser hinweg, inkl. Grenzfälle (mehrere Rollen auf einem Gerät, Passkey-Widerruf nach Geräteverlust o. Ä.). Dies ist der **erste inhaltliche Punkt für den neuen Chat**, vor Fortsetzung von Phase 7. Details Abschnitt 9, Inkonsistenzen.md #11.
+
+> **Hinweis 31.07.:** Zwischen dem 19.07.-Doku-Stand und heute kam ausschließlich Sicherheits-Härtung des Login-Systems dazwischen (IP-Sperre, Honeypot, Log-Kanäle, syst-Passwort-Policy + Login-Hard-Block, kleinere UI-Fixes — Abschnitt 8/8a/10e) sowie Passkey-Hinweistexte-Auslagerung (Abschnitt 9) und Login-Cleanup-Erweiterung (Abschnitt 4.1/4.2/10e). Am Passkey-**Testbedarf** selbst hat sich nichts geändert — der Gesamttest bleibt unverändert oberste Priorität. Zusätzlich vor Phase 7 zu erledigen: syst-Passwort-Policy + Honeypot-Infrastruktur committen (aktuell uncommitted), `HONEYPOT_LOCKOUT_MINUTES` und `LOG_STACK=daily` auf der Server-`.env` nachtragen (siehe Abschnitt 8a).
 
 ### 16a. Noch nicht umgesetzt
 1. **`dirty`-Ausblendung nachziehen** bei zwei Views mit noch statischer Fehlermeldung: `system/mandanten/index.blade.php` und `customer/auth/register.blade.php`. Muster: `x-data="{dirty:false}"` + `@input="dirty=true"` + `x-show="!dirty"` auf `@error`-Block. (Weiterhin offen seit 26.06.)

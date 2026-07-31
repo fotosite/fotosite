@@ -1,8 +1,8 @@
 **Konzept Fotosite V8 #4 — aktualisierte Fassung**
 
-*Ursprünglich: 2026-06-07 · Korrigiert: 2026-06-20 · Aktualisiert: 2026-07-07 · Aktualisiert: 2026-07-19*
+*Ursprünglich: 2026-06-07 · Korrigiert: 2026-06-20 · Aktualisiert: 2026-07-07 · Aktualisiert: 2026-07-19 · Aktualisiert: 2026-07-31*
 
-**Diese Fassung synchronisiert das Konzept vollständig mit dem aktuellen Implementierungsstand (PROJECT_CONTEXT.md, Projektstatus #13, Notfall-Startdokument, Inkonsistenzen.md — Stand 19.07.2026). Die früheren Fassungen (#3, Stand 07.07.; #2, Stand 26.06.) sowie das Original (2026-06-07) bleiben als historische Dokumente unverändert in den Projektdateien. Maßgeblich bei jedem weiteren Widerspruch ist PROJECT_CONTEXT.md, nicht dieses Konzeptdokument.**
+**Diese Fassung synchronisiert das Konzept vollständig mit dem aktuellen Implementierungsstand (PROJECT_CONTEXT.md, Projektstatus #14, Notfall-Startdokument, Inkonsistenzen.md — Stand 31.07.2026). Die früheren Fassungen (#3, Stand 07.07.; #2, Stand 26.06.) sowie das Original (2026-06-07) bleiben als historische Dokumente unverändert in den Projektdateien. Maßgeblich bei jedem weiteren Widerspruch ist PROJECT_CONTEXT.md, nicht dieses Konzeptdokument.**
 
 # Summary
 
@@ -108,7 +108,7 @@ Tabellennamen und Spaltennamen sind historisch gewachsen, ihre Bezeichnungen sin
 
 # Website Login
 
-Der Login für System erfolgt über die Adresse „/backstage". Diese Adresse ist nirgends verlinkt. Immer mit 2FA über E-Mail. Kein Passkey. Die aktive View ist `resources/views/system/login.blade.php` (gerendert von `SystemLoginController@login`); Login und 2FA laufen über dieselbe Datei, gesteuert per `show_2fa`-Flash-Variable.
+Der Login für System erfolgt über eine Adresse, deren Segment über `.env` konfigurierbar ist (`BACKSTAGE_PATH`, Default weiterhin „backstage" — NEU 30.07., zuvor hartkodiert). Diese Adresse ist nirgends verlinkt. Immer mit 2FA über E-Mail. Kein Passkey. Die aktive View ist `resources/views/system/login.blade.php` (gerendert von `SystemLoginController@login`); Login und 2FA laufen über dieselbe Datei, gesteuert per `show_2fa`-Flash-Variable. Für syst gilt seit 31.07. eine deutlich strengere Passwort-Policy (min. 20 Zeichen + Groß-/Kleinbuchstaben + Ziffer + Sonderzeichen, gegenüber min. 12 Zeichen bei mand), die zusätzlich beim Login selbst durchgesetzt wird — ein syst-Account mit einem korrekten, aber nicht mehr policy-konformen Bestandspasswort wird abgewiesen und kann sein Passwort mangels Self-Service-Reset nur durch einen anderen syst-Admin über die Benutzerverwaltung erneuern lassen.
 
 Login-Modal mit Tabs für anonymen und registrierten Customer: „Kurzzeit-Passwort" (Anon-Passcode-Eingabe) und „Mitglied" (Login für registrierte cust).
 
@@ -146,6 +146,8 @@ Die Website folgt einer strengen MVC-Struktur, wobei die öffentlichen Dateien n
 
 Implementiert: Session-Hijack-Schutz (Middleware `SessionHijackProtection` — IP-Hash + UA-Hash-Vergleich bei jedem Request), Session-Idle-Timeout (Middleware `SessionIdleTimeout`, konfigurierbar je Rolle), Rollenprüfung (Middleware `RequireRole`), Session-Integrität (`SessionIntegrityService`), eigener Session-Driver (`sessiondb`) mit `sess_id` als PK. Zusätzlich Middleware `CheckPolicyVersion` (Datenschutz-Versions-Vergleich, blockiert bei veralteter Zustimmung) und `CheckWelcome` (Willkommensseiten-Gate). Beide Gate-Middlewares schließen jeweils alle Bestätigungsrouten der anderen sowie die Datenschutz-Routen aus (`routeIs('*.policy.*') || routeIs('*.welcome*') || routeIs('*.datenschutz.*')`), um Redirect-Loops zu vermeiden.
 
+**Login-Sicherheit (NEU, 29.–31.07.2026):** Eine einheitliche, IP-basierte Login-Sperre schützt alle drei Login-Ebenen (cust, mand, syst) rollenübergreifend über einen gemeinsamen Zähler (Default: 5 Fehlversuche/5 Minuten, verlängert sich bei fortgesetztem Angriff) — zuvor hatten mand und syst überhaupt keine Drosselung. Ergänzend gibt es dynamische Honeypot-Routen für typische Scanner-Ziele (z. B. `wp-login.php`, `admin`, `phpmyadmin`, `.env`), deren Liste in einer per WinSCP editierbaren Textdatei außerhalb der Versionierung gepflegt wird; jeder Treffer verhängt sofort eine vollständige Sperre über denselben IP-Schlüssel. Sicherheitsrelevante Ereignisse (aktive Sperren, Honeypot-Treffer) werden in einem eigenen, täglich rotierenden Log-Kanal (`login_attacks`, 14 Tage Aufbewahrung) protokolliert, getrennt vom allgemeinen Anwendungs-Log (das ebenfalls auf tägliche Rotation umgestellt wurde).
+
 Die Website kennt (soweit technisch möglich) nur ein Cookie für die Session-Steuerung. Jede Datenbank wird mit einer eigenen Username/Passwort-Kombination gesichert.
 
 # Code-Dateien
@@ -173,6 +175,7 @@ Folgende Features wurden nach dem ursprünglichen Konzept (07.06.) ergänzt und 
 - Upload-Bedingungen-Popup für cust entfernt (10.07.) — für cust nicht relevanter Inhalt, ersetzt durch statischen Hinweis + FAQ-Eintrag; DS-Popup bleibt für cust aktiv, mand unverändert mit beiden Popups
 - Trusted-Device / vollständiger Auto-Login ohne Passwort (10.–18.07., siehe Abschnitt „Website Login")
 - Session-Bugfixes (18.–19.07.): „Sitzung abgelaufen"-Meldungen entfernt, defekter `/system/login`-Redirect auf `/backstage` korrigiert, verwaiste `sessiondb.session`-Zeilen sowie dauerhaft falsch befüllter `user_type` behoben
+- Sicherheits-Härtung Login (29.–31.07., siehe Abschnitt „Sicherheitsstruktur der Website"): einheitliche IP-basierte Login-Sperre für cust/mand/syst, dynamische Honeypot-Routen, eigener Log-Kanal für Login-Angriffe, syst-Login-Pfad über `.env` konfigurierbar, mand-2FA optional deaktivierbar (bisher totes Feld), Passkey-Hinweistexte in editierbare Markdown-Dateien ausgelagert. Zusätzlich, zum Zeitpunkt dieses Doku-Standes noch nicht committet: verschärfte syst-Passwort-Policy (min. 20 Zeichen + Komplexität) inkl. Durchsetzung beim Login selbst
 
 # Ausblick: Phase 7 (nächster Entwicklungsschritt)
 
@@ -191,7 +194,7 @@ Bereits getroffene technische Entscheidungen für Phase 7 (Details siehe PROJECT
 
 # Offene Punkte außerhalb Phase 7
 
-**Nächster Schritt (oberste Priorität, vor allem Übrigen):** Gründlicher, systematischer Test der gesamten Passkey-Funktionalität (Phase 6) — Registrierung, Login, Umbenennen, Löschen, Prompt-/Dismiss-Logik, jeweils für mand UND cust, über Windows/Android/iOS und die relevanten Browser hinweg. Bisher wurde nur punktuell getestet (Windows Hello, Android Chrome/Firefox, cust-Banner, ein Grenzfall). **Ausdrücklich kein reiner iOS-Test** — auch wenn zusätzlich speziell für iOS kein abgeschlossener WebAuthn-Passkey-Test dokumentiert ist (die bisherigen iOS-Tests betrafen Button-Feedback/Long-Tap-Fix und Auto-Login, nicht den Passkey-Flow).
+**Nächster Schritt (oberste Priorität, vor allem Übrigen):** Gründlicher, systematischer Test der gesamten Passkey-Funktionalität (Phase 6) — Registrierung, Login, Umbenennen, Löschen, Prompt-/Dismiss-Logik, jeweils für mand UND cust, über Windows/Android/iOS und die relevanten Browser hinweg. Bisher wurde nur punktuell getestet (Windows Hello, Android Chrome/Firefox, cust-Banner, ein Grenzfall). **Ausdrücklich kein reiner iOS-Test** — auch wenn zusätzlich speziell für iOS kein abgeschlossener WebAuthn-Passkey-Test dokumentiert ist (die bisherigen iOS-Tests betrafen Button-Feedback/Long-Tap-Fix und Auto-Login, nicht den Passkey-Flow). Zwischen dem 19.07.-Stand und heute (31.07.) kam ausschließlich Sicherheits-Härtung des Logins dazwischen (siehe Abschnitt „Sicherheitsstruktur der Website") — am Passkey-Testbedarf hat sich nichts geändert.
 
 Danach:
 - `dirty`-Ausblendung bei zwei verbliebenen Views nachziehen (`system/mandanten/index.blade.php`, `customer/auth/register.blade.php`)
@@ -202,4 +205,4 @@ Danach:
 - Logout-Bestätigungsdialog: „Zurück"-Button ggf. zu „Verlassen ohne Löschen" umbenennen (besprochen, nicht umgesetzt)
 - E-Mail-Footer-Inkonsistenz (Sie-Form trotz Du-Form-Mailtext) in drei Templates vereinheitlichen (niedrige Priorität)
 
-Fotosite V08 — Konzept (aktualisierte Fassung) | Stand 19.07.2026
+Fotosite V08 — Konzept (aktualisierte Fassung) | Stand 31.07.2026
