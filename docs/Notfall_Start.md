@@ -2,7 +2,7 @@
 
 **Notfall-Startdokument**
 
-*Stand: 31. Juli 2026  |  Letzter Git-Tag: honeypot_login_attacks_log_ok*
+*Stand: 01. August 2026  |  Letzter Git-Tag: anon_share_link_shortcode_ok*
 
 **🏁 MEILENSTEIN: Benutzer-/Sicherheitsverwaltung implementiert. Tag user_management_complete_ok ist sicherer Rückfallpunkt und als Startimplementierung für künftige Projekte geeignet (siehe Abschnitt 9). EINSCHRAENKUNG: Die Passkey-Funktionalität (Phase 6) ist technisch implementiert, aber noch NICHT gruendlich getestet — siehe naechster Schritt unten und Abschnitt 7.**
 
@@ -17,6 +17,8 @@
 **⚠  KORREKTUR 19.07.: Der anon-Kurzzeit-Kennwort-Login nutzt KEINE Ausnahme mehr bei regenerate() — CustLoginController::handleAnonLogin() wurde ebenfalls auf regenerate(true) umgestellt. Alle 7 Session-Uebergaenge (cust: Passwort/2FA/Passkey/anon; mand: Passwort/Passkey; syst: 2FA) verhalten sich identisch.**
 
 **⚠  KORREKTUR 19.07. (wichtig): Phase 6 (Passkey) ist NICHT "fertig"/"abgeschlossen", auch wenn fruehere Doku-Stellen das so darstellten. Korrekter Status: Passkey-Funktionalität ist technisch VOLLSTAENDIG IMPLEMENTIERT, aber noch NICHT gruendlich getestet. Der gruendliche Test der GESAMTEN Passkey-Funktionalität (nicht nur iOS!) ist der NAECHSTE SCHRITT fuer den neuen Chat. Siehe Abschnitt 5.2 und Abschnitt 7.**
+
+**⚠  NEU 01.08.: anon-Login jetzt zusaetzlich per teilbarem 7-stelligem Kurzcode-Link moeglich (anon_share_link_shortcode_ok, Commit 15e21bd) — neue Tabelle sessiondb.share_link (code, mand_id, sec_level), Route GET /s/{code} (routes/web.php), praezise Pro-Stufe-Invalidierung in MandantPwListController::update() (Alt/Neu-Vergleich vor dem Speichern). Bisheriger langer, verschluesselter Token-Weg (loginViaShareLink()) vollstaendig ersetzt. Im selben Zug: Datenschutz-Hinweis-Popup fuer anon (beide Zugangswege) aus customer/content.blade.php entfernt — Hinweis kuenftig ueber Content-Seiten selbst geplant (Phase 7, noch offen). Details Abschnitt 5.2g.**
 
 **Neuen Chat starten:**
 
@@ -39,7 +41,7 @@
 | Git-Repo | github.com/fotosite/fotosite (privat) |
 | Aktiver Branch | feature/passkey-infra |
 | Lokaler Pfad | D:\mwa\Projekte\fotosite\Fotosite_V08\claudescode\fotosite |
-| Letzter Git-Tag | honeypot_login_attacks_log_ok (31.07.2026). Meilenstein: user_management_complete_ok (20.06.) |
+| Letzter Git-Tag | anon_share_link_shortcode_ok (01.08.2026). Meilenstein: user_management_complete_ok (20.06.) |
 | Server-Pfad | /var/www/vhosts/u14bc1w8.host159.alfahosting-server.de/fotos.martinwagner.de/ |
 | SSH | PuTTY, User u14bc1w8 |
 | Mail | host159.alfahosting-server.de:587, MAIL_ENCRYPTION=tls |
@@ -124,6 +126,7 @@ npm run build
 | twofa_code | tfa_id | 6-stelliger Code, tfa_purpose (login│pw_change│critical), tfa_expires_at, tfa_used. Login-Cleanup NEU 29.07.: abgelaufene Codes werden bei jedem cust/mand-Login mitbereinigt |
 | cust_invite | invite_id | FUEHREND: mand_id, cust_email, cust_alias, sec_level, token, expires_at, used. Login-Cleanup NEU 29.07.: abgelaufene Einladungen werden bei jedem cust/mand-Login mitbereinigt |
 | trusted_device | td_id | NEU 10.-17.07.: "Geraet als sicher merken" fuer vollstaendigen Auto-Login (mand+cust). user_type, user_id, token_hash (SHA-256, UNIQUE), ua_hash, device_label, last_used_at, expires_at, created_at. Bewusst in sessiondb statt userdb. Login-Cleanup NEU 29.07.: abgelaufene Eintraege werden jetzt zusaetzlich bei jedem cust/mand-Login mitbereinigt (bisher nur bei Logout) |
+| share_link | sl_id | NEU 01.08.: Kurzcode-basiertes anon-Login-Link-System. code (varchar(10), UNIQUE, 7-stellig alphanumerisch), mand_id, sec_level, created_at. UNIQUE-Index auf mand_id+sec_level - pro mand+Stufe ein stabiler Code (firstOrCreate() in MandantPwListController::edit()). Invalidierung nur bei tatsaechlicher Passwort-Aenderung dieser Stufe |
 
 ## fotodb + fotoblobdb (unveraendert seit 16.06.)
 
@@ -164,6 +167,18 @@ npm run build
 **🎯  NAECHSTER SCHRITT (oberste Prioritaet): Gruendlicher Gesamttest der Passkey-Funktionalität. Phase 6 ist technisch implementiert, aber noch nicht systematisch getestet - getestet wurde bisher nur punktuell (Windows Hello, Android Chrome/Firefox, cust-Banner, ein Grenzfall). Der ausstehende Test umfasst Registrierung, Login, Umbenennen, Loeschen, Prompt-/Dismiss-Logik, jeweils fuer mand UND cust, ueber Windows/Android/iOS und die relevanten Browser hinweg - AUSDRUECKLICH KEIN reiner iOS-Test. Details Abschnitt 7. Zwischen dem 19.07.-Stand und heute kam ausschliesslich Sicherheits-Haertung dazwischen (Abschnitt 5.2f) - am Passkey-Testbedarf hat sich nichts geaendert.**
 
 **⚠  Danach weiter OFFEN: (a) dirty-Ausblendung bei system/mandanten/index.blade.php + customer/auth/register.blade.php nachziehen. (b) Regressionstest Android/Windows der globalen Button-Animation. (c) Abnahmetest cust-Bereich (Bloecke 1-6), danach Tag cust_complete_ok. (d) TRUSTED_DEVICE_DAYS-Duplikat in .env bereinigen (Zeile 17 vs. 97). (e) Logout-Button "Zurueck"-Text ggf. ueberarbeiten. (f) syst-Passwort-Policy + Honeypot-Infrastruktur committen (aktuell uncommitted), HONEYPOT_LOCKOUT_MINUTES + LOG_STACK=daily auf Server-.env nachtragen. DANACH Phase 7: mand-Content VOR Cust-UI.**
+
+## 5.2g Aenderungen 01.08.2026 (anon-Login per Kurzcode-Link)
+
+✓  anon-Login per teilbarem Kurzcode-Link (anon_share_link_shortcode_ok, Commit 15e21bd): neue Tabelle sessiondb.share_link (code 7-stellig UNIQUE, mand_id, sec_level, created_at, UNIQUE-Index mand_id+sec_level). MandantPwListController::edit() erzeugt Codes per firstOrCreate() (stabil ueber mehrere Seitenaufrufe, kein neuer Link bei jedem Reload; bei Code-Kollision bis zu 5 Retries, danach Log::error() + Stufe ausgelassen). Neue Route GET /s/{code} (routes/web.php, Name login.shortcode) - geprueft gegen Honeypot-Pfade + BACKSTAGE_PATH, keine Kollision
+
+✓  Praezise Pro-Stufe-Invalidierung: MandantPwListController::update() laedt vor dem Speichern die alte pw_list-Zeile, vergleicht pro Stufe alten Klartext gegen neu eingereichten und loescht share_link NUR fuer tatsaechlich geaenderte Stufen (Erstanlage zaehlt nicht als Aenderung) - Link verhaelt sich damit funktional identisch zum Kurzzeit-Passwort selbst
+
+✓  CustLoginController: alter langer, verschluesselter Token-Weg (loginViaShareLink(), Route customer.login.share) vollstaendig entfernt und durch loginViaShortCode() ersetzt. Gemeinsame Session-Aufbau-Methode buildAnonSession() extrahiert (vorher 2x identischer Code in handleAnonLogin() und loginViaShareLink())
+
+✓  UI (mandant/pwlist.blade.php): Ein-Klick-Icon je Stufe (navigator.share, sonst Clipboard-Fallback mit "✓ Link kopiert"-Bestaetigung), loest das vorherige zweistufige "Login-URL erzeugen"-Verfahren ab
+
+✓  Datenschutz-Hinweis-Popup fuer anon (customer/content.blade.php, beide Zugangswege) entfernt - Hinweis soll kuenftig ueber Content-Seiten selbst erreichbar sein (Phase 7, noch offen). DatenschutzController::hinweisOk(), Route customer.datenschutz.hinweis-ok und Session-Flag _ds_hinweis_gezeigt bleiben unangetastet, aber unerreicht
 
 ## 5.2f Aenderungen 29.-31.07.2026 (Sicherheits-Haertung Login)
 
@@ -390,4 +405,4 @@ Nicht uebertragbar: Foto-/Content-Domaene (Activity Group/Subgroup, Sicherheitss
 
 Vorgehen fuer neues Projekt: Tag user_management_complete_ok auschecken, Domain-Tabellen/Models/Controller (fotodb, FotoDB/*) entfernen, Rollen-/Tabellennamen anpassen, Rest as-is uebernehmen. Details: PROJECT_CONTEXT.md Abschnitt 15.
 
-Fotosite V08 — Notfall-Startdokument  |  Stand 31.07.2026
+Fotosite V08 — Notfall-Startdokument  |  Stand 01.08.2026

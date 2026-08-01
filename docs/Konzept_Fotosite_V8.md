@@ -1,8 +1,8 @@
 **Konzept Fotosite V8 #4 — aktualisierte Fassung**
 
-*Ursprünglich: 2026-06-07 · Korrigiert: 2026-06-20 · Aktualisiert: 2026-07-07 · Aktualisiert: 2026-07-19 · Aktualisiert: 2026-07-31*
+*Ursprünglich: 2026-06-07 · Korrigiert: 2026-06-20 · Aktualisiert: 2026-07-07 · Aktualisiert: 2026-07-19 · Aktualisiert: 2026-07-31 · Aktualisiert: 2026-08-01*
 
-**Diese Fassung synchronisiert das Konzept vollständig mit dem aktuellen Implementierungsstand (PROJECT_CONTEXT.md, Projektstatus #14, Notfall-Startdokument, Inkonsistenzen.md — Stand 31.07.2026). Die früheren Fassungen (#3, Stand 07.07.; #2, Stand 26.06.) sowie das Original (2026-06-07) bleiben als historische Dokumente unverändert in den Projektdateien. Maßgeblich bei jedem weiteren Widerspruch ist PROJECT_CONTEXT.md, nicht dieses Konzeptdokument.**
+**Diese Fassung synchronisiert das Konzept vollständig mit dem aktuellen Implementierungsstand (PROJECT_CONTEXT.md, Projektstatus #14, Notfall-Startdokument, Inkonsistenzen.md — Stand 01.08.2026). Die früheren Fassungen (#3, Stand 07.07.; #2, Stand 26.06.) sowie das Original (2026-06-07) bleiben als historische Dokumente unverändert in den Projektdateien. Maßgeblich bei jedem weiteren Widerspruch ist PROJECT_CONTEXT.md, nicht dieses Konzeptdokument.**
 
 # Summary
 
@@ -106,13 +106,15 @@ Der Passcode dient beim Anon der Zuweisung einer Sicherheitsstufe, die in der Se
 
 Tabellennamen und Spaltennamen sind historisch gewachsen, ihre Bezeichnungen sind nicht immer vollständig konsistent mit ihrem Inhalt. Bei Unklarheit gilt PROJECT_CONTEXT.md als maßgebliche Referenz.
 
+**Anon-Login per teilbarem Kurzcode-Link (NEU, 01.08.2026):** Zusätzlich zur direkten Eingabe eines Kurzzeit-Kennworts kann ein mand für jede aktuell gültige Sicherheitsstufe einen teilbaren 7-stelligen Kurzcode-Link erzeugen (Tabelle `sessiondb.share_link`, ein stabiler Code je mand+Stufe). Der Link führt ohne Kennwort-Eingabe direkt zur passenden Sicherheitsstufe, sofern die zugehörige Kurzzeit-Kennwortliste noch gültig ist. Der Link bleibt exakt so lange gültig wie das Kurzzeit-Kennwort selbst — ändert der mand ein Kennwort, wird nur der Link dieser einen Stufe ungültig, alle anderen Stufen-Links bleiben unberührt.
+
 # Website Login
 
 Der Login für System erfolgt über eine Adresse, deren Segment über `.env` konfigurierbar ist (`BACKSTAGE_PATH`, Default weiterhin „backstage" — NEU 30.07., zuvor hartkodiert). Diese Adresse ist nirgends verlinkt. Immer mit 2FA über E-Mail. Kein Passkey. Die aktive View ist `resources/views/system/login.blade.php` (gerendert von `SystemLoginController@login`); Login und 2FA laufen über dieselbe Datei, gesteuert per `show_2fa`-Flash-Variable. Für syst gilt seit 31.07. eine deutlich strengere Passwort-Policy (min. 20 Zeichen + Groß-/Kleinbuchstaben + Ziffer + Sonderzeichen, gegenüber min. 12 Zeichen bei mand), die zusätzlich beim Login selbst durchgesetzt wird — ein syst-Account mit einem korrekten, aber nicht mehr policy-konformen Bestandspasswort wird abgewiesen und kann sein Passwort mangels Self-Service-Reset nur durch einen anderen syst-Admin über die Benutzerverwaltung erneuern lassen.
 
 Login-Modal mit Tabs für anonymen und registrierten Customer: „Kurzzeit-Passwort" (Anon-Passcode-Eingabe) und „Mitglied" (Login für registrierte cust).
 
-Anon: ohne Kurzzeit-Passwort kein Zugriff auf die Site. Eingabe des Kurzzeit-Passworts erlaubt Zugriff auf eine Sicherheitsstufe und den Content eines Mand. Kein regulärer Login.
+Anon: ohne Kurzzeit-Passwort kein Zugriff auf die Site. Eingabe des Kurzzeit-Passworts erlaubt Zugriff auf eine Sicherheitsstufe und den Content eines Mand. Kein regulärer Login. Alternativ zur Passwort-Eingabe kann anon über einen vom mand geteilten Kurzcode-Link (`/s/{code}`, NEU 01.08.) direkt zur passenden Sicherheitsstufe gelangen, ohne das Kennwort selbst einzugeben — siehe Abschnitt „Passcodes".
 
 Cust-Login: Passwort + optionale 2FA, alternativ Passkey (Priorität).
 
@@ -176,6 +178,7 @@ Folgende Features wurden nach dem ursprünglichen Konzept (07.06.) ergänzt und 
 - Trusted-Device / vollständiger Auto-Login ohne Passwort (10.–18.07., siehe Abschnitt „Website Login")
 - Session-Bugfixes (18.–19.07.): „Sitzung abgelaufen"-Meldungen entfernt, defekter `/system/login`-Redirect auf `/backstage` korrigiert, verwaiste `sessiondb.session`-Zeilen sowie dauerhaft falsch befüllter `user_type` behoben
 - Sicherheits-Härtung Login (29.–31.07., siehe Abschnitt „Sicherheitsstruktur der Website"): einheitliche IP-basierte Login-Sperre für cust/mand/syst, dynamische Honeypot-Routen, eigener Log-Kanal für Login-Angriffe, syst-Login-Pfad über `.env` konfigurierbar, mand-2FA optional deaktivierbar (bisher totes Feld), Passkey-Hinweistexte in editierbare Markdown-Dateien ausgelagert. Zusätzlich, zum Zeitpunkt dieses Doku-Standes noch nicht committet: verschärfte syst-Passwort-Policy (min. 20 Zeichen + Komplexität) inkl. Durchsetzung beim Login selbst
+- anon-Login per teilbarem Kurzcode-Link (01.08., siehe Abschnitt „Passcodes"): 7-stelliger, persistenter Code je mand+Sicherheitsstufe (`sessiondb.share_link`), präzise Pro-Stufe-Invalidierung nur bei tatsächlicher Kennwort-Änderung dieser Stufe; löst den bisherigen langen, verschlüsselten Token-Link ab. Im selben Zug: Datenschutz-Hinweis-Popup für anon (beide Zugangswege) entfernt — künftig über die Content-Seiten selbst geplant (Phase 7, noch offen)
 
 # Ausblick: Phase 7 (nächster Entwicklungsschritt)
 
@@ -205,4 +208,4 @@ Danach:
 - Logout-Bestätigungsdialog: „Zurück"-Button ggf. zu „Verlassen ohne Löschen" umbenennen (besprochen, nicht umgesetzt)
 - E-Mail-Footer-Inkonsistenz (Sie-Form trotz Du-Form-Mailtext) in drei Templates vereinheitlichen (niedrige Priorität)
 
-Fotosite V08 — Konzept (aktualisierte Fassung) | Stand 31.07.2026
+Fotosite V08 — Konzept (aktualisierte Fassung) | Stand 01.08.2026

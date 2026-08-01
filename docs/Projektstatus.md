@@ -122,6 +122,10 @@ Neun Commits (`error_messages_dirty_fix_ok` bis `honeypot_login_attacks_log_ok`)
 
 **Zusätzlich, zum Zeitpunkt dieses Doku-Standes noch UNCOMMITTED:** syst-Passwort-Policy auf `Password::min(20)->mixedCase()->numbers()->symbols()` verschärft (bisher `min:12`) + Hard-Block beim Login bei nicht mehr konformem Bestandspasswort (kein Self-Service-Reset für syst, Notfallverfahren dokumentiert in Notfall_Start.md Abschnitt 6a).
 
+# 4b. Implementierung 01.08.2026 — anon-Login per Kurzcode-Link
+
+Tag `anon_share_link_shortcode_ok` (Commit `15e21bd`): neue Tabelle `sessiondb.share_link` (7-stelliger UNIQUE-Code je `mand_id`+`sec_level`), erzeugt per `firstOrCreate()` in `MandantPwListController::edit()` (Route `GET /s/{code}`, `routes/web.php`). Präzise Pro-Stufe-Invalidierung: `update()` vergleicht vor dem Speichern jede Stufe alt/neu und löscht den Share-Link nur für tatsächlich geänderte Stufen. Bisheriger langer, verschlüsselter Token-Weg (`loginViaShareLink()`) vollständig ersetzt durch `loginViaShortCode()` + gemeinsame `buildAnonSession()`-Methode. Zusätzlich: Datenschutz-Hinweis-Popup für anon (beide Zugangswege) aus `customer/content.blade.php` entfernt — künftig über Content-Seiten selbst geplant (Phase 7, noch offen). Details PROJECT_CONTEXT.md Abschnitt 10f.
+
 # 5. Datenbankstand (19.07.2026)
 
 | **DB** | **Änderungen seit #12** |
@@ -172,8 +176,9 @@ Neun Commits (`error_messages_dirty_fix_ok` bis `honeypot_login_attacks_log_ok`)
 | `mitglied_label_und_inkonsistenz12_ok` | Seitenkopf-Label MITGLIED, Inkonsistenz #12 (passkey.sign_count) |
 | `login_lockout_ip_based_ok` | Einheitliche IP-basierte Login-Sperre (5/5min, cust+mand+syst) |
 | `backstage_path_configurable_ok` | syst-Login-Pfad über `.env` konfigurierbar (BACKSTAGE_PATH) |
-| **`honeypot_login_attacks_log_ok`** | Log-Kanal `login_attacks` + dynamische Honeypot-Routen (aktueller Stand) |
+| `honeypot_login_attacks_log_ok` | Log-Kanal `login_attacks` + dynamische Honeypot-Routen |
+| **`anon_share_link_shortcode_ok`** | anon-Login per teilbarem 7-stelligem Kurzcode-Link (`sessiondb.share_link`), Pro-Stufe-Invalidierung, Datenschutz-Popup für anon entfernt (aktueller Stand) |
 
 Alle früheren Tags siehe Projektstatus #12 / PROJECT_CONTEXT Abschnitt 13. **Noch uncommitted, kein Tag:** syst-Passwort-Policy-Verschärfung (min:20) + Login-Hard-Block, fünf Doku-Dateien dieser Aktualisierung.
 
-Fotosite V08 — Projektstatus #14  |  Stand 31.07.2026
+Fotosite V08 — Projektstatus #14  |  Stand 01.08.2026
