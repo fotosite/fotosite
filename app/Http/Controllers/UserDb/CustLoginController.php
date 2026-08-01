@@ -1,14 +1,29 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustLoginController.php
- * VERSION:     1.16.0
+ * VERSION:     1.18.0
  * AUTOR:       Martin Wagner
- * DATUM:       2026-07-30
+ * DATUM:       2026-08-01
  *
  * ZWECK:       Cust-Login — registrierter Login mit optionaler 2FA,
- *              anonymer Login per Passwort-Sequenz, Passkey-Login, Logout.
+ *              anonymer Login per Passwort-Sequenz oder teilbarem Kurzcode-Link,
+ *              Passkey-Login, Logout.
  *
- * CHANGES:     1.16.0 (2026-07-30) Einheitliche, IP-basierte, rollenübergreifende
+ * CHANGES:     1.18.0 (2026-08-01) loginViaShareLink() (langes, verschlüsseltes
+ *              Token) entfernt und durch loginViaShortCode() ersetzt — löst den
+ *              7-stelligen Kurzcode (sessiondb.share_link.code, erzeugt in
+ *              MandantPwListController::edit()) auf, gültig exakt solange die
+ *              zugehörige pw_list-Zeile des mand gültig ist. Gemeinsamer
+ *              Session-Aufbau von handleAnonLogin() und loginViaShortCode() in
+ *              neue private Methode buildAnonSession() extrahiert (vorher 2x
+ *              identischer Code).
+ *              1.17.0 (2026-07-31) loginViaShareLink() ergänzt — anon-Login per
+ *              verschlüsseltem Link-Token (mand_id|level, erzeugt in
+ *              MandantPwListController::edit()), gültig exakt solange die
+ *              zugehörige pw_list-Zeile des mand gültig ist. Identisches
+ *              Session-Aufbau-Muster wie handleAnonLogin() (kein
+ *              LoginSessionBuilder, kein App::terminating()).
+ *              1.16.0 (2026-07-30) Einheitliche, IP-basierte, rollenübergreifende
  *              Login-Sperre ergänzt (checkLoginThrottle()/recordFailedLoginAttempt()/
  *              clearLoginThrottle() aus app/helpers.php) in handleLogin(),
  *              handleAnonLogin() und verifyTwoFactor() — ersetzt die bisherigen
@@ -52,9 +67,22 @@
  *                                         os, ua_hash
  *              handleAnonLogin() — Validiert Passwort gegen alle aktiven pw_lists;
  *                                  ermittelt Mandant + Sicherheitsstufe; baut anonyme
- *                                  Session ohne cust_id.
+ *                                  Session über buildAnonSession().
  *                                  Reads: sessiondb.pw_list.mand_id, pw1–pw6,
  *                                         valid_from, valid_until
+ *              loginViaShortCode() — Lädt ShareLink per code aus der URL; prüft ob
+ *                                  aktuell eine gültige pw_list-Zeile für diesen
+ *                                  mand existiert; baut bei Erfolg dieselbe anonyme
+ *                                  Session wie handleAnonLogin() über buildAnonSession().
+ *                                  Reads: sessiondb.share_link.mand_id, sec_level, code
+ *                                         sessiondb.pw_list.mand_id, valid_from,
+ *                                         valid_until
+ *              buildAnonSession() — Private Hilfsmethode: gemeinsamer Session-Aufbau
+ *                                  für handleAnonLogin() und loginViaShortCode()
+ *                                  (Session-Regeneration, _user_type=anon, _mand_id,
+ *                                  _sec_level, _last_activity, Redirect zu
+ *                                  customer.content).
+ *                                  Reads: —
  *              showTwoFactor()   — Prüft pending_cust_id in Session;
  *                                  gibt customer.auth.two-factor zurück.
  *                                  Reads: —
@@ -97,6 +125,7 @@
  *              App\Models\UserDb\Passkey::where()->first()
  *              App\Models\UserDb\PasskeyDismissed::where()->exists()
  *              App\Models\SessionDb\PwList::where()->get()
+ *              App\Models\SessionDb\ShareLink::where()->first()
  *              App\Mail\TwoFactorCodeMail
  *              App\Services\SessionDb\TwofaService::generateCode()
  *              App\Services\SessionDb\TwofaService::verifyCode()
@@ -122,6 +151,7 @@
  *              (DELETE bei verwaistem Account ohne cust_pcode-Eintrag)
  *              sessiondb.pw_list.mand_id, pw1, pw2, pw3, pw4, pw5, pw6,
  *              valid_from, valid_until
+ *              sessiondb.share_link.mand_id, sec_level, code
  *              sessiondb.twofa_code.* (via TwofaService)
  *              sessiondb.session.expires_at (DELETE abgelaufene Sessions bei Login & Logout)
  *              sessiondb.session.sess_token (DELETE eigene Session bei Logout)
@@ -134,6 +164,7 @@ use function detectBrowser;
 
 use App\Mail\TwoFactorCodeMail;
 use App\Models\SessionDb\PwList;
+use App\Models\SessionDb\ShareLink;
 use App\Models\UserDb\CustPcode;
 use App\Models\UserDb\CustUser;
 use App\Models\UserDb\MandUser;
@@ -339,6 +370,34 @@ class CustLoginController extends UserDbController
 
         clearLoginThrottle($request);
 
+        return $this->buildAnonSession($request, $mandId, $secLevel);
+    }
+
+    public function loginViaShortCode(Request $request, string $code): RedirectResponse
+    {
+        $shareLink = ShareLink::where('code', $code)->first();
+
+        if (! $shareLink) {
+            abort(404);
+        }
+
+        $valid = PwList::where('mand_id', $shareLink->mand_id)
+            ->where('valid_from', '<=', now())
+            ->where('valid_until', '>=', now())
+            ->exists();
+
+        if (! $valid) {
+            return redirect()->route('customer.login')
+                ->withErrors(['password' => 'Dieser Link ist abgelaufen.'], 'anon')
+                ->with('login_page', 'cust')
+                ->with('cust_tab', 'anon');
+        }
+
+        return $this->buildAnonSession($request, $shareLink->mand_id, $shareLink->sec_level);
+    }
+
+    private function buildAnonSession(Request $request, int $mandId, int $secLevel): RedirectResponse
+    {
         $request->session()->regenerate(true);
         $request->session()->put('_user_type',     'anon');
         $request->session()->put('_mand_id',       $mandId);

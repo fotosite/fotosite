@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/mandant/pwlist.blade.php
-    VERSION: 1.19.1
-    DATE:    2026-06-25
+    VERSION: 1.22.0
+    DATE:    2026-07-31
 
     DESCRIPTION:
       Mandant Passwortliste — pw1–pw6 und Gültigkeitszeitraum bearbeiten.
@@ -12,6 +12,9 @@
     DATA FROM CONTROLLER:
       $pwlist (PwList|null) — vorhandene Passwortliste (pw1–pw6 entschlüsselt)
                                oder null bei Erstanlage
+      $shareLinks (array<int,string>) — Share-Link je Stufe 1–6, nur befüllt
+                               wenn die Liste aktuell gültig ist (valid_from/
+                               valid_until), sonst leeres Array
 
     ROUTES USED:
       GET   mandant.dashboard      — Zurück-Link
@@ -19,6 +22,21 @@
       POST  mandant.pwlist.check   — Passwort systemweit prüfen (JSON)
       POST  mandant.logout         — Abmelden
 
+    CHANGES: 1.22.0 (2026-07-31) Kurze "✓ Link kopiert"-Bestätigung (2s, x-transition)
+             für den Clipboard-Fallback (Windows ohne navigator.share) ergänzt —
+             das Kopieren passierte bisher unsichtbar, ohne Rückmeldung, ob der
+             Klick etwas bewirkt hat. navigator.share-Zweig unverändert (natives
+             Teilen-Menü liefert bereits sichtbares Feedback). copied: false neu
+             im x-data je Block.
+    CHANGES: 1.21.0 (2026-07-31) Zweistufigen Share-Link-Ablauf ("Login-URL
+             erzeugen" → aufklappbares Feld mit separatem Kopieren-/Share-Icon)
+             durch EIN Ein-Klick-Icon pro Stufe ersetzt (navigator.share, sonst
+             Clipboard-Fallback) — der Zwischenschritt war auf Mobilgeräten zu
+             umständlich. showLink aus x-data wieder entfernt (nicht mehr nötig).
+    CHANGES: 1.20.0 (2026-07-31) "Login-URL erzeugen"-Link + Share-Button
+             (Web Share API) je Stufe ergänzt — anon-Login per teilbarem Link,
+             siehe CustLoginController::loginViaShareLink(). Nur sichtbar,
+             wenn $shareLinks[level] existiert (Liste aktuell gültig).
     CHANGES: 1.19.1 (2026-06-25) Android-Touch-Targets vergroessert: Logout-
              Button, Zurueck-Link und Speichern-Button auf min-h-11
              angehoben. Eye/Copy-Icon-Buttons in pw1-pw6 bleiben unveraendert
@@ -158,7 +176,7 @@
                     <div class="grid grid-cols-2 gap-x-6 gap-y-4">
 
                     {{-- pw1 --}}
-                    <div x-data="{ show: false, tooShort: false, isDuplicate: false, isUnavailable: false }">
+                    <div x-data="{ show: false, tooShort: false, isDuplicate: false, isUnavailable: false, copied: false }">
                         <label for="pw1"
                                class="block text-sm font-medium text-gray-700">
                             Passwort Stufe 1
@@ -230,10 +248,34 @@
                            class="text-sm text-red-600 mt-1">
                             ⚠️ Dieses Passwort ist bereits von einem anderen Galerist:in vergeben.
                         </p>
+                        @if(isset($shareLinks[1]))
+                        <div class="mt-2">
+                            <button type="button"
+                                    @click="navigator.share
+                                        ? navigator.share({url: '{{ $shareLinks[1] }}'})
+                                        : navigator.clipboard.writeText('{{ $shareLinks[1] }}').then(() => {
+                                              copied = true;
+                                              setTimeout(() => copied = false, 2000);
+                                          })"
+                                    class="inline-flex items-center gap-1 text-xs text-indigo-600
+                                           hover:text-indigo-800 hover:underline transition-colors select-none">
+                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg"
+                                     fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z"/>
+                                </svg>
+                                Login-Link teilen
+                            </button>
+                            <span x-show="copied" x-transition
+                                  class="text-xs text-green-600 ml-1">
+                                ✓ Link kopiert
+                            </span>
+                        </div>
+                        @endif
                     </div>
 
                     {{-- pw2 --}}
-                    <div x-data="{ show: false, tooShort: false, isDuplicate: false, isUnavailable: false }">
+                    <div x-data="{ show: false, tooShort: false, isDuplicate: false, isUnavailable: false, copied: false }">
                         <label for="pw2"
                                class="block text-sm font-medium text-gray-700">
                             Passwort Stufe 2
@@ -305,10 +347,34 @@
                            class="text-sm text-red-600 mt-1">
                             ⚠️ Dieses Passwort ist bereits von einem anderen Galerist:in vergeben.
                         </p>
+                        @if(isset($shareLinks[2]))
+                        <div class="mt-2">
+                            <button type="button"
+                                    @click="navigator.share
+                                        ? navigator.share({url: '{{ $shareLinks[2] }}'})
+                                        : navigator.clipboard.writeText('{{ $shareLinks[2] }}').then(() => {
+                                              copied = true;
+                                              setTimeout(() => copied = false, 2000);
+                                          })"
+                                    class="inline-flex items-center gap-1 text-xs text-indigo-600
+                                           hover:text-indigo-800 hover:underline transition-colors select-none">
+                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg"
+                                     fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z"/>
+                                </svg>
+                                Login-Link teilen
+                            </button>
+                            <span x-show="copied" x-transition
+                                  class="text-xs text-green-600 ml-1">
+                                ✓ Link kopiert
+                            </span>
+                        </div>
+                        @endif
                     </div>
 
                     {{-- pw3 --}}
-                    <div x-data="{ show: false, tooShort: false, isDuplicate: false, isUnavailable: false }">
+                    <div x-data="{ show: false, tooShort: false, isDuplicate: false, isUnavailable: false, copied: false }">
                         <label for="pw3"
                                class="block text-sm font-medium text-gray-700">
                             Passwort Stufe 3
@@ -380,10 +446,34 @@
                            class="text-sm text-red-600 mt-1">
                             ⚠️ Dieses Passwort ist bereits von einem anderen Galerist:in vergeben.
                         </p>
+                        @if(isset($shareLinks[3]))
+                        <div class="mt-2">
+                            <button type="button"
+                                    @click="navigator.share
+                                        ? navigator.share({url: '{{ $shareLinks[3] }}'})
+                                        : navigator.clipboard.writeText('{{ $shareLinks[3] }}').then(() => {
+                                              copied = true;
+                                              setTimeout(() => copied = false, 2000);
+                                          })"
+                                    class="inline-flex items-center gap-1 text-xs text-indigo-600
+                                           hover:text-indigo-800 hover:underline transition-colors select-none">
+                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg"
+                                     fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z"/>
+                                </svg>
+                                Login-Link teilen
+                            </button>
+                            <span x-show="copied" x-transition
+                                  class="text-xs text-green-600 ml-1">
+                                ✓ Link kopiert
+                            </span>
+                        </div>
+                        @endif
                     </div>
 
                     {{-- pw4 --}}
-                    <div x-data="{ show: false, tooShort: false, isDuplicate: false, isUnavailable: false }">
+                    <div x-data="{ show: false, tooShort: false, isDuplicate: false, isUnavailable: false, copied: false }">
                         <label for="pw4"
                                class="block text-sm font-medium text-gray-700">
                             Passwort Stufe 4
@@ -455,10 +545,34 @@
                            class="text-sm text-red-600 mt-1">
                             ⚠️ Dieses Passwort ist bereits von einem anderen Galerist:in vergeben.
                         </p>
+                        @if(isset($shareLinks[4]))
+                        <div class="mt-2">
+                            <button type="button"
+                                    @click="navigator.share
+                                        ? navigator.share({url: '{{ $shareLinks[4] }}'})
+                                        : navigator.clipboard.writeText('{{ $shareLinks[4] }}').then(() => {
+                                              copied = true;
+                                              setTimeout(() => copied = false, 2000);
+                                          })"
+                                    class="inline-flex items-center gap-1 text-xs text-indigo-600
+                                           hover:text-indigo-800 hover:underline transition-colors select-none">
+                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg"
+                                     fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z"/>
+                                </svg>
+                                Login-Link teilen
+                            </button>
+                            <span x-show="copied" x-transition
+                                  class="text-xs text-green-600 ml-1">
+                                ✓ Link kopiert
+                            </span>
+                        </div>
+                        @endif
                     </div>
 
                     {{-- pw5 --}}
-                    <div x-data="{ show: false, tooShort: false, isDuplicate: false, isUnavailable: false }">
+                    <div x-data="{ show: false, tooShort: false, isDuplicate: false, isUnavailable: false, copied: false }">
                         <label for="pw5"
                                class="block text-sm font-medium text-gray-700">
                             Passwort Stufe 5
@@ -530,10 +644,34 @@
                            class="text-sm text-red-600 mt-1">
                             ⚠️ Dieses Passwort ist bereits von einem anderen Galerist:in vergeben.
                         </p>
+                        @if(isset($shareLinks[5]))
+                        <div class="mt-2">
+                            <button type="button"
+                                    @click="navigator.share
+                                        ? navigator.share({url: '{{ $shareLinks[5] }}'})
+                                        : navigator.clipboard.writeText('{{ $shareLinks[5] }}').then(() => {
+                                              copied = true;
+                                              setTimeout(() => copied = false, 2000);
+                                          })"
+                                    class="inline-flex items-center gap-1 text-xs text-indigo-600
+                                           hover:text-indigo-800 hover:underline transition-colors select-none">
+                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg"
+                                     fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z"/>
+                                </svg>
+                                Login-Link teilen
+                            </button>
+                            <span x-show="copied" x-transition
+                                  class="text-xs text-green-600 ml-1">
+                                ✓ Link kopiert
+                            </span>
+                        </div>
+                        @endif
                     </div>
 
                     {{-- pw6 --}}
-                    <div x-data="{ show: false, tooShort: false, isDuplicate: false, isUnavailable: false }">
+                    <div x-data="{ show: false, tooShort: false, isDuplicate: false, isUnavailable: false, copied: false }">
                         <label for="pw6"
                                class="block text-sm font-medium text-gray-700">
                             Passwort Stufe 6
@@ -605,6 +743,30 @@
                            class="text-sm text-red-600 mt-1">
                             ⚠️ Dieses Passwort ist bereits von einem anderen Galerist:in vergeben.
                         </p>
+                        @if(isset($shareLinks[6]))
+                        <div class="mt-2">
+                            <button type="button"
+                                    @click="navigator.share
+                                        ? navigator.share({url: '{{ $shareLinks[6] }}'})
+                                        : navigator.clipboard.writeText('{{ $shareLinks[6] }}').then(() => {
+                                              copied = true;
+                                              setTimeout(() => copied = false, 2000);
+                                          })"
+                                    class="inline-flex items-center gap-1 text-xs text-indigo-600
+                                           hover:text-indigo-800 hover:underline transition-colors select-none">
+                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg"
+                                     fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z"/>
+                                </svg>
+                                Login-Link teilen
+                            </button>
+                            <span x-show="copied" x-transition
+                                  class="text-xs text-green-600 ml-1">
+                                ✓ Link kopiert
+                            </span>
+                        </div>
+                        @endif
                     </div>
 
                     </div>
