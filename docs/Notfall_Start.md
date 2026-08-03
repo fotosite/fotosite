@@ -2,7 +2,7 @@
 
 **Notfall-Startdokument**
 
-*Stand: 01. August 2026  |  Letzter Git-Tag: anon_share_link_shortcode_ok*
+*Stand: 03. August 2026  |  Letzter Git-Tag: trusted_device_cust_nofactor_fix_ok*
 
 **🏁 MEILENSTEIN: Benutzer-/Sicherheitsverwaltung implementiert. Tag user_management_complete_ok ist sicherer Rückfallpunkt und als Startimplementierung für künftige Projekte geeignet (siehe Abschnitt 9). EINSCHRAENKUNG: Die Passkey-Funktionalität (Phase 6) ist technisch implementiert, aber noch NICHT gruendlich getestet — siehe naechster Schritt unten und Abschnitt 7.**
 
@@ -19,6 +19,8 @@
 **⚠  KORREKTUR 19.07. (wichtig): Phase 6 (Passkey) ist NICHT "fertig"/"abgeschlossen", auch wenn fruehere Doku-Stellen das so darstellten. Korrekter Status: Passkey-Funktionalität ist technisch VOLLSTAENDIG IMPLEMENTIERT, aber noch NICHT gruendlich getestet. Der gruendliche Test der GESAMTEN Passkey-Funktionalität (nicht nur iOS!) ist der NAECHSTE SCHRITT fuer den neuen Chat. Siehe Abschnitt 5.2 und Abschnitt 7.**
 
 **⚠  NEU 01.08.: anon-Login jetzt zusaetzlich per teilbarem 7-stelligem Kurzcode-Link moeglich (anon_share_link_shortcode_ok, Commit 15e21bd) — neue Tabelle sessiondb.share_link (code, mand_id, sec_level), Route GET /s/{code} (routes/web.php), praezise Pro-Stufe-Invalidierung in MandantPwListController::update() (Alt/Neu-Vergleich vor dem Speichern). Bisheriger langer, verschluesselter Token-Weg (loginViaShareLink()) vollstaendig ersetzt. Im selben Zug: Datenschutz-Hinweis-Popup fuer anon (beide Zugangswege) aus customer/content.blade.php entfernt — Hinweis kuenftig ueber Content-Seiten selbst geplant (Phase 7, noch offen). Details Abschnitt 5.2g.**
+
+**⚠  NEU 03.08. (Bugfix): cust-Trusted-Device-Cookie im Nicht-2FA-Login-Pfad wurde bisher NIE ausgestellt — remember_device-Checkbox in CustLoginController::handleLogin() wurde ausgelesen, aber nie ausgewertet (trusted_device_cust_nofactor_fix_ok, Commit ddf5e55). Bei mand war der aequivalente Pfad bereits korrekt (siehe 29.07.-Eintrag oben, mand_2fa_optin_login_fix_ok) — nur cust war betroffen. Fix: neue Methode CustLoginController::issueTrustedDeviceIfRequested(), analog MandantLoginController. Details Abschnitt 5.2h.**
 
 **Neuen Chat starten:**
 
@@ -179,6 +181,10 @@ npm run build
 ✓  UI (mandant/pwlist.blade.php): Ein-Klick-Icon je Stufe (navigator.share, sonst Clipboard-Fallback mit "✓ Link kopiert"-Bestaetigung), loest das vorherige zweistufige "Login-URL erzeugen"-Verfahren ab
 
 ✓  Datenschutz-Hinweis-Popup fuer anon (customer/content.blade.php, beide Zugangswege) entfernt - Hinweis soll kuenftig ueber Content-Seiten selbst erreichbar sein (Phase 7, noch offen). DatenschutzController::hinweisOk(), Route customer.datenschutz.hinweis-ok und Session-Flag _ds_hinweis_gezeigt bleiben unangetastet, aber unerreicht
+
+## 5.2h Bugfix 03.08.2026 (cust: Trusted-Device-Cookie im Nicht-2FA-Pfad)
+
+✓  trusted_device_cust_nofactor_fix_ok (Commit ddf5e55): In CustLoginController::handleLogin() wurde die remember_device-Checkbox im Nicht-2FA-Login-Pfad ausgelesen, aber nie ausgewertet - issueTrustedDeviceCookie() wurde dort nie aufgerufen. Der Trusted-Device-Datensatz entstand bisher nur ueber den 2FA-Pfad (verifyTwoFactor()). Bei mand war der aequivalente Pfad bereits korrekt verdrahtet (issueTrustedDeviceIfRequested(), siehe 5.2f, mand_2fa_optin_login_fix_ok) - nur cust war betroffen. Fix: neue private Methode CustLoginController::issueTrustedDeviceIfRequested() ergaenzt (analog MandantLoginController), im Nicht-2FA-Rueckgabepfad von handleLogin() aufgerufen. verifyTwoFactor() unveraendert, keine doppelte Cookie-Ausstellung moeglich (beide Pfade exklusiv). Getestet mit und ohne 2FA.
 
 ## 5.2f Aenderungen 29.-31.07.2026 (Sicherheits-Haertung Login)
 

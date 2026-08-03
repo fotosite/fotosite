@@ -2,9 +2,9 @@
 
 **Projektstatus #14**
 
-*Stand: 31. Juli 2026*
+*Stand: 03. August 2026*
 
-**Tag: honeypot_login_attacks_log_ok — Sicherheits-Härtung des Logins abgeschlossen: einheitliche IP-basierte Login-Sperre (cust/mand/syst), dynamische Honeypot-Routen + Log-Kanal login_attacks, syst-Login-Pfad über .env konfigurierbar, mand-2FA-Opt-out, Passkey-Hinweistexte ausgelagert. Zusätzlich, noch UNCOMMITTED: syst-Passwort-Policy auf min. 20 Zeichen + Komplexität verschärft, inkl. Login-Hard-Block.**
+**Tag: trusted_device_cust_nofactor_fix_ok — Bugfix: cust-Trusted-Device-Cookie im Nicht-2FA-Login-Pfad wurde bisher nie ausgestellt (remember_device-Checkbox ausgelesen, aber nicht ausgewertet); jetzt analog zum mand-Pfad korrekt verdrahtet. Siehe Abschnitt 4c. Vorheriger Stand (31.07., Tag honeypot_login_attacks_log_ok): Sicherheits-Härtung des Logins abgeschlossen: einheitliche IP-basierte Login-Sperre (cust/mand/syst), dynamische Honeypot-Routen + Log-Kanal login_attacks, syst-Login-Pfad über .env konfigurierbar, mand-2FA-Opt-out, Passkey-Hinweistexte ausgelagert. Zusätzlich, noch UNCOMMITTED: syst-Passwort-Policy auf min. 20 Zeichen + Komplexität verschärft, inkl. Login-Hard-Block.**
 
 **🎯 NÄCHSTER SCHRITT (weiterhin gültig, zuletzt bestätigt 19.07.): Phase 6 (Passkey) wurde in früheren Doku-Ständen fälschlich als „✓ Fertig" geführt. Korrekt: technisch vollständig implementiert, aber noch NICHT gründlich getestet. Ein umfassender Test der gesamten Passkey-Funktionalität (nicht nur iOS-spezifisch) ist der nächste anstehende Schritt und soll im neuen Chat erfolgen — siehe Abschnitt 6. Zwischen dem #13-Stand (19.07.) und heute kam ausschließlich Sicherheits-Härtung dazwischen (Abschnitt 8) — am Passkey-Testbedarf hat sich nichts geändert.**
 
@@ -126,6 +126,10 @@ Neun Commits (`error_messages_dirty_fix_ok` bis `honeypot_login_attacks_log_ok`)
 
 Tag `anon_share_link_shortcode_ok` (Commit `15e21bd`): neue Tabelle `sessiondb.share_link` (7-stelliger UNIQUE-Code je `mand_id`+`sec_level`), erzeugt per `firstOrCreate()` in `MandantPwListController::edit()` (Route `GET /s/{code}`, `routes/web.php`). Präzise Pro-Stufe-Invalidierung: `update()` vergleicht vor dem Speichern jede Stufe alt/neu und löscht den Share-Link nur für tatsächlich geänderte Stufen. Bisheriger langer, verschlüsselter Token-Weg (`loginViaShareLink()`) vollständig ersetzt durch `loginViaShortCode()` + gemeinsame `buildAnonSession()`-Methode. Zusätzlich: Datenschutz-Hinweis-Popup für anon (beide Zugangswege) aus `customer/content.blade.php` entfernt — künftig über Content-Seiten selbst geplant (Phase 7, noch offen). Details PROJECT_CONTEXT.md Abschnitt 10f.
 
+# 4c. Bugfix 03.08.2026 — cust: Trusted-Device-Cookie im Nicht-2FA-Pfad
+
+Tag `trusted_device_cust_nofactor_fix_ok` (Commit `ddf5e55`): In `CustLoginController::handleLogin()` wurde die `remember_device`-Checkbox im Nicht-2FA-Login-Pfad ausgelesen, aber nie ausgewertet — `issueTrustedDeviceCookie()` wurde dort nie aufgerufen. Der Trusted-Device-Datensatz entstand bisher nur über den 2FA-Pfad (`verifyTwoFactor()`). Bei `mand` war der äquivalente Pfad bereits korrekt verdrahtet (`issueTrustedDeviceIfRequested()`, siehe Abschnitt 4a, `mand_2fa_optin_login_fix_ok`) — nur `cust` war betroffen. Fix: neue private Methode `CustLoginController::issueTrustedDeviceIfRequested()` ergänzt (analog `MandantLoginController`), im Nicht-2FA-Rückgabepfad von `handleLogin()` aufgerufen. `verifyTwoFactor()` unverändert, keine doppelte Cookie-Ausstellung möglich (beide Pfade exklusiv). Getestet mit und ohne 2FA. Details PROJECT_CONTEXT.md Abschnitt 10g.
+
 # 5. Datenbankstand (19.07.2026)
 
 | **DB** | **Änderungen seit #12** |
@@ -177,8 +181,9 @@ Tag `anon_share_link_shortcode_ok` (Commit `15e21bd`): neue Tabelle `sessiondb.s
 | `login_lockout_ip_based_ok` | Einheitliche IP-basierte Login-Sperre (5/5min, cust+mand+syst) |
 | `backstage_path_configurable_ok` | syst-Login-Pfad über `.env` konfigurierbar (BACKSTAGE_PATH) |
 | `honeypot_login_attacks_log_ok` | Log-Kanal `login_attacks` + dynamische Honeypot-Routen |
-| **`anon_share_link_shortcode_ok`** | anon-Login per teilbarem 7-stelligem Kurzcode-Link (`sessiondb.share_link`), Pro-Stufe-Invalidierung, Datenschutz-Popup für anon entfernt (aktueller Stand) |
+| `anon_share_link_shortcode_ok` | anon-Login per teilbarem 7-stelligem Kurzcode-Link (`sessiondb.share_link`), Pro-Stufe-Invalidierung, Datenschutz-Popup für anon entfernt |
+| **`trusted_device_cust_nofactor_fix_ok`** | cust: Trusted-Device-Cookie im Nicht-2FA-Login-Pfad nachgezogen (`issueTrustedDeviceIfRequested()`, analog mand) (aktueller Stand) |
 
 Alle früheren Tags siehe Projektstatus #12 / PROJECT_CONTEXT Abschnitt 13. **Noch uncommitted, kein Tag:** syst-Passwort-Policy-Verschärfung (min:20) + Login-Hard-Block, fünf Doku-Dateien dieser Aktualisierung.
 
-Fotosite V08 — Projektstatus #14  |  Stand 01.08.2026
+Fotosite V08 — Projektstatus #14  |  Stand 03.08.2026
