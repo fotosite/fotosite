@@ -319,7 +319,33 @@ class CustLoginController extends UserDbController
 
         clearLoginThrottle($request);
 
-        return $this->loginSessionBuilder->buildForCust($request, $cust, $pcode);
+        $response = $this->loginSessionBuilder->buildForCust($request, $cust, $pcode);
+        $this->issueTrustedDeviceIfRequested($response, $cust, $request, $checkboxChecked);
+
+        return $response;
+    }
+
+    /**
+     * Stellt bei Bedarf das Trusted-Device-Cookie aus und versendet die
+     * Benachrichtigungsmail — gemeinsame Logik für verifyTwoFactor() (2FA-Pfad)
+     * und den Nicht-2FA-Pfad in handleLogin().
+     */
+    private function issueTrustedDeviceIfRequested(
+        RedirectResponse $response,
+        CustUser $cust,
+        Request $request,
+        bool $rememberDevice
+    ): void {
+        if (! $rememberDevice) {
+            return;
+        }
+
+        $response->cookie(issueTrustedDeviceCookie('cust', $cust->cust_id, $request));
+
+        Mail::to($cust->cust_email)->send(new \App\Mail\TrustedDeviceAddedMail(
+            guessDeviceLabel($request->userAgent() ?? ''),
+            $cust->cust_firstname ?? ''
+        ));
     }
 
     public function handleAnonLogin(Request $request): RedirectResponse
