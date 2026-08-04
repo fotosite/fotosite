@@ -331,7 +331,7 @@ class CustLoginController extends UserDbController
      * und den Nicht-2FA-Pfad in handleLogin().
      */
     private function issueTrustedDeviceIfRequested(
-        RedirectResponse $response,
+        RedirectResponse|JsonResponse $response,
         CustUser $cust,
         Request $request,
         bool $rememberDevice
@@ -641,6 +641,16 @@ class CustLoginController extends UserDbController
 
             $userId = (int) $passkey->user_id;
 
+            $cust = CustUser::find($userId);
+            if ($cust === null) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Benutzer nicht gefunden.',
+                ]);
+            }
+
+            $rememberDevice = $request->boolean('remember_device');
+
             // Replay-Schutz: sign_count + last_used_at aktualisieren
             $passkey->update([
                 'sign_count'   => $updatedRecord->counter,
@@ -684,10 +694,14 @@ class CustLoginController extends UserDbController
                 ->where('expires_at', '<', now())
                 ->delete();
 
-            return response()->json([
+            $response = response()->json([
                 'success'  => true,
                 'redirect' => route('customer.content'),
             ]);
+
+            $this->issueTrustedDeviceIfRequested($response, $cust, $request, $rememberDevice);
+
+            return $response;
 
         } catch (Throwable $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()]);

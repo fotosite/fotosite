@@ -263,7 +263,7 @@ class MandantLoginController extends UserDbController
      * und den mand_2fa_opt_in-Bypass in handleLogin() (kein-2FA-Pfad).
      */
     private function issueTrustedDeviceIfRequested(
-        RedirectResponse $response,
+        RedirectResponse|JsonResponse $response,
         MandUser $mand,
         Request $request,
         bool $rememberDevice
@@ -396,6 +396,8 @@ class MandantLoginController extends UserDbController
                 ]);
             }
 
+            $rememberDevice = $request->boolean('remember_device');
+
             // Replay-Schutz: sign_count + last_used_at aktualisieren
             $passkey->update([
                 'sign_count'   => $updatedRecord->counter,
@@ -428,10 +430,14 @@ class MandantLoginController extends UserDbController
                 ->where('expires_at', '<', now())
                 ->delete();
 
-            return response()->json([
+            $response = response()->json([
                 'success'  => true,
                 'redirect' => route('mandant.dashboard'),
             ]);
+
+            $this->issueTrustedDeviceIfRequested($response, $mand, $request, $rememberDevice);
+
+            return $response;
 
         } catch (Throwable $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()]);

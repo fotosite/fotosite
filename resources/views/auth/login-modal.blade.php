@@ -498,6 +498,8 @@
                 const credential = await navigator.credentials.get({ publicKey: options });
 
                 // 3. An Server senden
+                const rememberDevice = document.getElementById('remember_device_cust')?.checked ?? false;
+
                 const res = await fetch('{{ route("customer.login.passkey") }}', {
                     method: 'POST',
                     headers: {
@@ -516,6 +518,7 @@
                                 ? bufferToBase64url(credential.response.userHandle)
                                 : null,
                         },
+                        remember_device: rememberDevice,
                     }),
                 });
 
@@ -559,6 +562,8 @@
                 const credential = await navigator.credentials.get({ publicKey: options });
 
                 // 3. An Server senden
+                const rememberDevice = document.getElementById('remember_device_mand')?.checked ?? false;
+
                 const res = await fetch('{{ route("mandant.login.passkey") }}', {
                     method: 'POST',
                     headers: {
@@ -577,6 +582,7 @@
                                 ? bufferToBase64url(credential.response.userHandle)
                                 : null,
                         },
+                        remember_device: rememberDevice,
                     }),
                 });
 
