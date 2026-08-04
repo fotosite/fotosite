@@ -35,9 +35,9 @@
                 Dieses Gerät ist als sicher gespeichert. Möchtest du dies löschen?
             </p>
             <div class="flex gap-3 justify-end">
-                <button type="button" @click="showConfirm = false"
+                <button type="button" @click="window.close(); showConfirm = false"
                         class="text-sm text-gray-500 hover:text-gray-700 select-none">
-                    Zurück
+                    Fenster schließen
                 </button>
                 <form method="POST" action="{{ $logoutRoute }}">
                     @csrf
