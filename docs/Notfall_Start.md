@@ -2,7 +2,7 @@
 
 **Notfall-Startdokument**
 
-*Stand: 03. August 2026  |  Letzter Git-Tag: trusted_device_cust_nofactor_fix_ok*
+*Stand: 04. August 2026  |  Letzter Git-Tag: logout_dialog_close_window_ok*
 
 **🏁 MEILENSTEIN: Benutzer-/Sicherheitsverwaltung implementiert. Tag user_management_complete_ok ist sicherer Rückfallpunkt und als Startimplementierung für künftige Projekte geeignet (siehe Abschnitt 9). EINSCHRAENKUNG: Die Passkey-Funktionalität (Phase 6) ist technisch implementiert, aber noch NICHT gruendlich getestet — siehe naechster Schritt unten und Abschnitt 7.**
 
@@ -21,6 +21,8 @@
 **⚠  NEU 01.08.: anon-Login jetzt zusaetzlich per teilbarem 7-stelligem Kurzcode-Link moeglich (anon_share_link_shortcode_ok, Commit 15e21bd) — neue Tabelle sessiondb.share_link (code, mand_id, sec_level), Route GET /s/{code} (routes/web.php), praezise Pro-Stufe-Invalidierung in MandantPwListController::update() (Alt/Neu-Vergleich vor dem Speichern). Bisheriger langer, verschluesselter Token-Weg (loginViaShareLink()) vollstaendig ersetzt. Im selben Zug: Datenschutz-Hinweis-Popup fuer anon (beide Zugangswege) aus customer/content.blade.php entfernt — Hinweis kuenftig ueber Content-Seiten selbst geplant (Phase 7, noch offen). Details Abschnitt 5.2g.**
 
 **⚠  NEU 03.08. (Bugfix): cust-Trusted-Device-Cookie im Nicht-2FA-Login-Pfad wurde bisher NIE ausgestellt — remember_device-Checkbox in CustLoginController::handleLogin() wurde ausgelesen, aber nie ausgewertet (trusted_device_cust_nofactor_fix_ok, Commit ddf5e55). Bei mand war der aequivalente Pfad bereits korrekt (siehe 29.07.-Eintrag oben, mand_2fa_optin_login_fix_ok) — nur cust war betroffen. Fix: neue Methode CustLoginController::issueTrustedDeviceIfRequested(), analog MandantLoginController. Details Abschnitt 5.2h.**
+
+**⚠  NEU 04.08. (zwei kleine Fixes): (1) Trusted-Device-Cookie jetzt auch im Passkey-Login-Pfad wirksam (cust+mand) — der Passkey-Button liegt ausserhalb des Passwort-Forms, JS sendete die remember_device-Checkbox bisher nie mit; jetzt per DOM-Read ergaenzt, issueTrustedDeviceIfRequested() in beiden passkeyLogin()-Methoden aufgerufen (Typehint auf RedirectResponse|JsonResponse gelockert). Tag trusted_device_passkey_ok, Commit 268c2b7. (2) Logout-Dialog-Button "Zurueck" zu "Fenster schliessen" umbenannt, zusaetzlicher window.close()-Versuch, Dialog-Fallback bleibt erhalten (loest den seit 09.-19.07. offenen Punkt). Tag logout_dialog_close_window_ok, Commit 859516d. Details Abschnitt 5.2i.**
 
 **Neuen Chat starten:**
 
@@ -43,7 +45,7 @@
 | Git-Repo | github.com/fotosite/fotosite (privat) |
 | Aktiver Branch | feature/passkey-infra |
 | Lokaler Pfad | D:\mwa\Projekte\fotosite\Fotosite_V08\claudescode\fotosite |
-| Letzter Git-Tag | anon_share_link_shortcode_ok (01.08.2026). Meilenstein: user_management_complete_ok (20.06.) |
+| Letzter Git-Tag | logout_dialog_close_window_ok (04.08.2026). Meilenstein: user_management_complete_ok (20.06.) |
 | Server-Pfad | /var/www/vhosts/u14bc1w8.host159.alfahosting-server.de/fotos.martinwagner.de/ |
 | SSH | PuTTY, User u14bc1w8 |
 | Mail | host159.alfahosting-server.de:587, MAIL_ENCRYPTION=tls |
@@ -168,7 +170,13 @@ npm run build
 
 **🎯  NAECHSTER SCHRITT (oberste Prioritaet): Gruendlicher Gesamttest der Passkey-Funktionalität. Phase 6 ist technisch implementiert, aber noch nicht systematisch getestet - getestet wurde bisher nur punktuell (Windows Hello, Android Chrome/Firefox, cust-Banner, ein Grenzfall). Der ausstehende Test umfasst Registrierung, Login, Umbenennen, Loeschen, Prompt-/Dismiss-Logik, jeweils fuer mand UND cust, ueber Windows/Android/iOS und die relevanten Browser hinweg - AUSDRUECKLICH KEIN reiner iOS-Test. Details Abschnitt 7. Zwischen dem 19.07.-Stand und heute kam ausschliesslich Sicherheits-Haertung dazwischen (Abschnitt 5.2f) - am Passkey-Testbedarf hat sich nichts geaendert.**
 
-**⚠  Danach weiter OFFEN: (a) dirty-Ausblendung bei system/mandanten/index.blade.php + customer/auth/register.blade.php nachziehen. (b) Regressionstest Android/Windows der globalen Button-Animation. (c) Abnahmetest cust-Bereich (Bloecke 1-6), danach Tag cust_complete_ok. (d) TRUSTED_DEVICE_DAYS-Duplikat in .env bereinigen (Zeile 17 vs. 97). (e) Logout-Button "Zurueck"-Text ggf. ueberarbeiten. (f) syst-Passwort-Policy + Honeypot-Infrastruktur committen (aktuell uncommitted), HONEYPOT_LOCKOUT_MINUTES + LOG_STACK=daily auf Server-.env nachtragen. DANACH Phase 7: mand-Content VOR Cust-UI.**
+**⚠  Danach weiter OFFEN: (a) dirty-Ausblendung bei system/mandanten/index.blade.php + customer/auth/register.blade.php nachziehen. (b) Regressionstest Android/Windows der globalen Button-Animation. (c) Abnahmetest cust-Bereich (Bloecke 1-6), danach Tag cust_complete_ok. (d) TRUSTED_DEVICE_DAYS-Duplikat in .env bereinigen (Zeile 17 vs. 97). (e) [ERLEDIGT 04.08. — Logout-Button "Zurueck" heisst jetzt "Fenster schliessen", siehe 5.2i]. (f) syst-Passwort-Policy + Honeypot-Infrastruktur committen (aktuell uncommitted), HONEYPOT_LOCKOUT_MINUTES + LOG_STACK=daily auf Server-.env nachtragen. DANACH Phase 7: mand-Content VOR Cust-UI.**
+
+## 5.2i Fixes 04.08.2026 (Passkey-Trusted-Device + Logout-Dialog-Button)
+
+✓  Trusted-Device-Cookie im Passkey-Login-Pfad (trusted_device_passkey_ok, Commit 268c2b7): Checkbox "Geraet merken" wirkte bisher nur im Passwort-Login-Formular - der Passkey-Button liegt ausserhalb dieses <form>, sein fetch()-Request sendete den Checkbox-Zustand nie mit. Fix: JS liest den Checkbox-Zustand jetzt direkt aus dem DOM (document.getElementById('remember_device_cust'/'_mand')?.checked) und sendet ihn als remember_device im Passkey-Fetch-Body mit. CustLoginController::passkeyLogin() und MandantLoginController::passkeyLogin() rufen jetzt issueTrustedDeviceIfRequested() auf; deren Typehint wurde von RedirectResponse auf RedirectResponse|JsonResponse gelockert (beide nutzen Illuminate\Http\ResponseTrait, ->cookie() funktioniert identisch). Getestet cust + mand, Trusted-Device-Datensatz + Mail-Versand (TrustedDeviceAddedMail) bestaetigt
+
+✓  Logout-Dialog-Button "Zurueck" -> "Fenster schliessen" (logout_dialog_close_window_ok, Commit 859516d): Button in logout-button.blade.php ruft jetzt zusaetzlich window.close() auf (@click="window.close(); showConfirm = false") - schlaegt bei nicht per Skript geoeffneten Tabs browserseitig lautlos fehl und dient dann als Aufforderung an den Nutzer. Bisheriges Fallback-Verhalten (Dialog schliessen via showConfirm = false) bleibt erhalten, Alpine-Mechanismus (x-data/x-show/x-cloak/@click.outside) unveraendert. Loest den seit 09.-19.07. offenen Punkt (siehe 5.2e-Notiz unten)
 
 ## 5.2g Aenderungen 01.08.2026 (anon-Login per Kurzcode-Link)
 

@@ -1,10 +1,10 @@
 **Fotosite V08**
 
-**Projektstatus #14**
+**Projektstatus #15**
 
-*Stand: 03. August 2026*
+*Stand: 04. August 2026*
 
-**Tag: trusted_device_cust_nofactor_fix_ok — Bugfix: cust-Trusted-Device-Cookie im Nicht-2FA-Login-Pfad wurde bisher nie ausgestellt (remember_device-Checkbox ausgelesen, aber nicht ausgewertet); jetzt analog zum mand-Pfad korrekt verdrahtet. Siehe Abschnitt 4c. Vorheriger Stand (31.07., Tag honeypot_login_attacks_log_ok): Sicherheits-Härtung des Logins abgeschlossen: einheitliche IP-basierte Login-Sperre (cust/mand/syst), dynamische Honeypot-Routen + Log-Kanal login_attacks, syst-Login-Pfad über .env konfigurierbar, mand-2FA-Opt-out, Passkey-Hinweistexte ausgelagert. Zusätzlich, noch UNCOMMITTED: syst-Passwort-Policy auf min. 20 Zeichen + Komplexität verschärft, inkl. Login-Hard-Block.**
+**Tag: logout_dialog_close_window_ok — Zwei kleine Fixes: (1) Trusted-Device-Cookie jetzt auch im Passkey-Login-Pfad wirksam (cust+mand), Tag trusted_device_passkey_ok, Commit 268c2b7 — siehe Abschnitt 4d. (2) Logout-Dialog-Button „Zurück" zu „Fenster schließen" umbenannt, window.close()-Versuch mit Dialog-Fallback, Commit 859516d — siehe Abschnitt 4d. Vorheriger Stand (03.08., Tag trusted_device_cust_nofactor_fix_ok): Bugfix cust-Trusted-Device-Cookie im Nicht-2FA-Login-Pfad, siehe Abschnitt 4c. Davor (31.07., Tag honeypot_login_attacks_log_ok): Sicherheits-Härtung des Logins abgeschlossen: einheitliche IP-basierte Login-Sperre (cust/mand/syst), dynamische Honeypot-Routen + Log-Kanal login_attacks, syst-Login-Pfad über .env konfigurierbar, mand-2FA-Opt-out, Passkey-Hinweistexte ausgelagert. Zusätzlich, noch UNCOMMITTED: syst-Passwort-Policy auf min. 20 Zeichen + Komplexität verschärft, inkl. Login-Hard-Block.**
 
 **🎯 NÄCHSTER SCHRITT (weiterhin gültig, zuletzt bestätigt 19.07.): Phase 6 (Passkey) wurde in früheren Doku-Ständen fälschlich als „✓ Fertig" geführt. Korrekt: technisch vollständig implementiert, aber noch NICHT gründlich getestet. Ein umfassender Test der gesamten Passkey-Funktionalität (nicht nur iOS-spezifisch) ist der nächste anstehende Schritt und soll im neuen Chat erfolgen — siehe Abschnitt 6. Zwischen dem #13-Stand (19.07.) und heute kam ausschließlich Sicherheits-Härtung dazwischen (Abschnitt 8) — am Passkey-Testbedarf hat sich nichts geändert.**
 
@@ -130,6 +130,12 @@ Tag `anon_share_link_shortcode_ok` (Commit `15e21bd`): neue Tabelle `sessiondb.s
 
 Tag `trusted_device_cust_nofactor_fix_ok` (Commit `ddf5e55`): In `CustLoginController::handleLogin()` wurde die `remember_device`-Checkbox im Nicht-2FA-Login-Pfad ausgelesen, aber nie ausgewertet — `issueTrustedDeviceCookie()` wurde dort nie aufgerufen. Der Trusted-Device-Datensatz entstand bisher nur über den 2FA-Pfad (`verifyTwoFactor()`). Bei `mand` war der äquivalente Pfad bereits korrekt verdrahtet (`issueTrustedDeviceIfRequested()`, siehe Abschnitt 4a, `mand_2fa_optin_login_fix_ok`) — nur `cust` war betroffen. Fix: neue private Methode `CustLoginController::issueTrustedDeviceIfRequested()` ergänzt (analog `MandantLoginController`), im Nicht-2FA-Rückgabepfad von `handleLogin()` aufgerufen. `verifyTwoFactor()` unverändert, keine doppelte Cookie-Ausstellung möglich (beide Pfade exklusiv). Getestet mit und ohne 2FA. Details PROJECT_CONTEXT.md Abschnitt 10g.
 
+# 4d. Fixes 04.08.2026 — Passkey-Trusted-Device + Logout-Dialog-Button
+
+**Trusted-Device-Cookie im Passkey-Login-Pfad (Tag `trusted_device_passkey_ok`, Commit `268c2b7`):** Die Checkbox „Gerät merken" wirkte bisher nur im Passwort-Login-Formular — der Passkey-Button liegt außerhalb dieses `<form>`, sein `fetch()`-Request sendete den Checkbox-Zustand nie mit. Fix: JS liest den Checkbox-Zustand jetzt direkt aus dem DOM (`document.getElementById('remember_device_cust'/'_mand')?.checked`) und sendet ihn als `remember_device` im Passkey-Fetch-Body mit. `CustLoginController::passkeyLogin()` und `MandantLoginController::passkeyLogin()` rufen jetzt `issueTrustedDeviceIfRequested()` auf; deren Typehint wurde von `RedirectResponse` auf `RedirectResponse|JsonResponse` gelockert (beide nutzen `Illuminate\Http\ResponseTrait`, `->cookie()` funktioniert identisch). Getestet cust + mand, Trusted-Device-Datensatz + Mail-Versand (`TrustedDeviceAddedMail`) bestätigt. Details PROJECT_CONTEXT.md Abschnitt 10h.
+
+**Logout-Dialog-Button „Zurück" → „Fenster schließen" (Tag `logout_dialog_close_window_ok`, Commit `859516d`):** Im Trusted-Device-Bestätigungsdialog (`logout-button.blade.php`) ruft der Button jetzt zusätzlich `window.close()` auf (`@click="window.close(); showConfirm = false"`) — schlägt bei nicht per Skript geöffneten Tabs browserseitig lautlos fehl und dient dann als Aufforderung an den Nutzer. Bisheriges Fallback-Verhalten (Dialog schließen via `showConfirm = false`) bleibt erhalten, Alpine-Mechanismus unverändert. Löst den offenen Punkt aus Abschnitt 6 / Inkonsistenzen.md #7 (siehe dortige Anmerkung zur Nummerierung).
+
 # 5. Datenbankstand (19.07.2026)
 
 | **DB** | **Änderungen seit #12** |
@@ -153,7 +159,6 @@ Tag `trusted_device_cust_nofactor_fix_ok` (Commit `ddf5e55`): In `CustLoginContr
 | **Mittel** | Phase 7: Cust-UI | Mandanten-Content-Seite, sec_level-Filter, mand_profile-Anzeige — NACH mand-Content |
 | **Mittel** | SPF/DKIM Mailserver | E-Mail-Änderungsmails landen im Spam; aktuell nur UI-Hinweis |
 | **Mittel** | Passkey-Link in Willkommensseite | Noch nicht umgesetzt |
-| **Mittel** | Logout-Button „Zurück"-Text | Umbenennung zu „Verlassen ohne Löschen" besprochen, nicht umgesetzt |
 | **Mittel** | Trusted-Device-Gültigkeit 1→7 Tage | Aktuell bewusst auf 1 Tag für Testbetrieb |
 | **Niedrig** | E-Mail-Footer Sie-Form | `two-factor-code.blade.php`, `trusted-device-added.blade.php`, `cust-invite.blade.php` — Footer „Bitte antworten Sie..." trotz Du-Form im Mailtext |
 | **Niedrig** | iOS Apple Mail Button-Text markierbar | Akzeptierte Einschränkung, nicht per CSS lösbar |
@@ -182,8 +187,10 @@ Tag `trusted_device_cust_nofactor_fix_ok` (Commit `ddf5e55`): In `CustLoginContr
 | `backstage_path_configurable_ok` | syst-Login-Pfad über `.env` konfigurierbar (BACKSTAGE_PATH) |
 | `honeypot_login_attacks_log_ok` | Log-Kanal `login_attacks` + dynamische Honeypot-Routen |
 | `anon_share_link_shortcode_ok` | anon-Login per teilbarem 7-stelligem Kurzcode-Link (`sessiondb.share_link`), Pro-Stufe-Invalidierung, Datenschutz-Popup für anon entfernt |
-| **`trusted_device_cust_nofactor_fix_ok`** | cust: Trusted-Device-Cookie im Nicht-2FA-Login-Pfad nachgezogen (`issueTrustedDeviceIfRequested()`, analog mand) (aktueller Stand) |
+| `trusted_device_cust_nofactor_fix_ok` | cust: Trusted-Device-Cookie im Nicht-2FA-Login-Pfad nachgezogen (`issueTrustedDeviceIfRequested()`, analog mand) |
+| `trusted_device_passkey_ok` | Trusted-Device-Cookie auch im Passkey-Login-Pfad wirksam (cust+mand), Checkbox-Zustand jetzt per JS aus dem DOM gelesen |
+| **`logout_dialog_close_window_ok`** | Logout-Dialog-Button „Zurück" zu „Fenster schließen", `window.close()`-Versuch mit Dialog-Fallback (aktueller Stand) |
 
-Alle früheren Tags siehe Projektstatus #12 / PROJECT_CONTEXT Abschnitt 13. **Noch uncommitted, kein Tag:** syst-Passwort-Policy-Verschärfung (min:20) + Login-Hard-Block, fünf Doku-Dateien dieser Aktualisierung.
+Alle früheren Tags siehe Projektstatus #12 / PROJECT_CONTEXT Abschnitt 13. **Noch uncommitted, kein Tag:** syst-Passwort-Policy-Verschärfung (min:20) + Login-Hard-Block, Doku-Dateien dieser Aktualisierung.
 
-Fotosite V08 — Projektstatus #14  |  Stand 03.08.2026
+Fotosite V08 — Projektstatus #15  |  Stand 04.08.2026
