@@ -2,9 +2,9 @@
 
 **Projektstatus #15**
 
-*Stand: 04. August 2026*
+*Stand: 26. August 2026*
 
-**Tag: logout_dialog_close_window_ok — Zwei kleine Fixes: (1) Trusted-Device-Cookie jetzt auch im Passkey-Login-Pfad wirksam (cust+mand), Tag trusted_device_passkey_ok, Commit 268c2b7 — siehe Abschnitt 4d. (2) Logout-Dialog-Button „Zurück" zu „Fenster schließen" umbenannt, window.close()-Versuch mit Dialog-Fallback, Commit 859516d — siehe Abschnitt 4d. Vorheriger Stand (03.08., Tag trusted_device_cust_nofactor_fix_ok): Bugfix cust-Trusted-Device-Cookie im Nicht-2FA-Login-Pfad, siehe Abschnitt 4c. Davor (31.07., Tag honeypot_login_attacks_log_ok): Sicherheits-Härtung des Logins abgeschlossen: einheitliche IP-basierte Login-Sperre (cust/mand/syst), dynamische Honeypot-Routen + Log-Kanal login_attacks, syst-Login-Pfad über .env konfigurierbar, mand-2FA-Opt-out, Passkey-Hinweistexte ausgelagert. Zusätzlich, noch UNCOMMITTED: syst-Passwort-Policy auf min. 20 Zeichen + Komplexität verschärft, inkl. Login-Hard-Block.**
+**Tag: pflichtfelder_konfiguration_ok — Konfigurierbare Pflichtfelder für mand/cust (Telefon/Straße+Hausnr./PLZ+Ort/Firma): neue Datei `pflichtfelder.txt` + Helper `istPflichtfeld()`, Registrierung fragt nur Pflichtfelder ab, Konto-Bearbeiten zeigt immer alle Felder dynamisch; begleitende DB-Migration auf echtes NULL statt Platzhalter-String; neue mand-Detailseite je Mitglied + umgebaute Mitgliederliste; syst sieht jetzt zusätzlich mand-Adresse; Pflicht-Sternchen-Bugfix in mandant/konto.blade.php. Commit eef2eed — siehe Abschnitt 4e. Vorheriger Stand (04.08., Tag logout_dialog_close_window_ok): Zwei kleine Fixes: (1) Trusted-Device-Cookie jetzt auch im Passkey-Login-Pfad wirksam (cust+mand), Tag trusted_device_passkey_ok, Commit 268c2b7 — siehe Abschnitt 4d. (2) Logout-Dialog-Button „Zurück" zu „Fenster schließen" umbenannt, window.close()-Versuch mit Dialog-Fallback, Commit 859516d — siehe Abschnitt 4d. Davor (03.08., Tag trusted_device_cust_nofactor_fix_ok): Bugfix cust-Trusted-Device-Cookie im Nicht-2FA-Login-Pfad, siehe Abschnitt 4c. Weiter zurück (31.07., Tag honeypot_login_attacks_log_ok): Sicherheits-Härtung des Logins abgeschlossen: einheitliche IP-basierte Login-Sperre (cust/mand/syst), dynamische Honeypot-Routen + Log-Kanal login_attacks, syst-Login-Pfad über .env konfigurierbar, mand-2FA-Opt-out, Passkey-Hinweistexte ausgelagert. Zusätzlich, weiterhin UNCOMMITTED: syst-Passwort-Policy auf min. 20 Zeichen + Komplexität verschärft, inkl. Login-Hard-Block.**
 
 **🎯 NÄCHSTER SCHRITT (weiterhin gültig, zuletzt bestätigt 19.07.): Phase 6 (Passkey) wurde in früheren Doku-Ständen fälschlich als „✓ Fertig" geführt. Korrekt: technisch vollständig implementiert, aber noch NICHT gründlich getestet. Ein umfassender Test der gesamten Passkey-Funktionalität (nicht nur iOS-spezifisch) ist der nächste anstehende Schritt und soll im neuen Chat erfolgen — siehe Abschnitt 6. Zwischen dem #13-Stand (19.07.) und heute kam ausschließlich Sicherheits-Härtung dazwischen (Abschnitt 8) — am Passkey-Testbedarf hat sich nichts geändert.**
 
@@ -136,6 +136,20 @@ Tag `trusted_device_cust_nofactor_fix_ok` (Commit `ddf5e55`): In `CustLoginContr
 
 **Logout-Dialog-Button „Zurück" → „Fenster schließen" (Tag `logout_dialog_close_window_ok`, Commit `859516d`):** Im Trusted-Device-Bestätigungsdialog (`logout-button.blade.php`) ruft der Button jetzt zusätzlich `window.close()` auf (`@click="window.close(); showConfirm = false"`) — schlägt bei nicht per Skript geöffneten Tabs browserseitig lautlos fehl und dient dann als Aufforderung an den Nutzer. Bisheriges Fallback-Verhalten (Dialog schließen via `showConfirm = false`) bleibt erhalten, Alpine-Mechanismus unverändert. Löst den offenen Punkt aus Abschnitt 6 / Inkonsistenzen.md #7 (siehe dortige Anmerkung zur Nummerierung).
 
+# 4e. Feature 26.08.2026 — Konfigurierbare Pflichtfelder für mand/cust (Telefon/Straße/PLZ+Ort/Firma)
+
+**Pflichtfelder-Konfiguration (Tag `pflichtfelder_konfiguration_ok`, Commit `eef2eed`):** Neue Datei `storage/app/private/pflichtfelder.txt` (nicht versioniert, analog `honeypot_paths.txt`) steuert je Feld `mand` (Pflicht) oder `opt` (optional) über neuen Helper `istPflichtfeld(userType, feldKey)` in `app/helpers.php` — fehlender Eintrag defaultet zu `opt`. Betroffene Felder: Telefon, Straße+Hausnr., PLZ+Ort, Firma (bei cust UND mand). Registrierung (`CustRegisterController`, `SystemMandantController::handleRegister()`) fragt nur Pflichtfelder ab, optionale Felder werden im Formular komplett ausgeblendet. Konto-Bearbeiten (`CustSelfController`, `MandantSelfController::update()`) zeigt immer alle vier Felder, Pflicht-Status (required/Sternchen) dynamisch. Startkonfiguration entspricht dem bisherigen Verhalten (Telefon+Firma optional, Straße+PLZ/Ort Pflicht).
+
+**DB-Migration:** `cust_tel`/`cust_street+nr`/`cust_postcode_city`/`cust_company` sowie die vier mand-Pendants in `userdb` per direktem SQL von `NOT NULL DEFAULT 'nicht vorhanden'` auf `NULL DEFAULT NULL` umgestellt, bestehende Platzhalterwerte per UPDATE auf echtes NULL migriert. Anzeige-Fallback bleibt überall `'nicht vorhanden'` bei NULL — für den Nutzer unverändert. `mand_uname`/`cust_uname` unverändert immer Pflicht.
+
+**Bugfix `mandant/konto.blade.php`:** fehlende rote Pflicht-Sternchen bei `mand_uname`/`mand_firstname`/`mand_lastname`/`mand_street+nr`/`mand_postcode+city` ergänzt (im Gegensatz zu allen anderen Konto-Formularen im Projekt fehlten sie hier).
+
+**syst sieht jetzt zusätzlich mand-Adresse:** `system/mandanten/show.blade.php` + `edit.blade.php` — Straße+Hausnr. und PLZ+Ort als neue dt/dd-Paare ergänzt (vorher nur Telefon/Firma sichtbar), Feldreihenfolge umgestellt auf Benutzername/E-Mail/Vorname/Nachname/Straße/PLZ+Ort/Telefon/Firma.
+
+**Neu für mand — Detailseite je Mitglied:** Neue Route `GET /mandant/kunden/{id}` (`mandant.kunden.show`), neue Methode `MandantCustController::show()` (Sicherheitscheck pcode_id+mand_id, sonst `abort(404)`), neue View `mandant/cust/show.blade.php` (read-only, Stil analog `system/mandanten/show.blade.php`) — zeigt erstmals Telefon/Firma/Adresse eigener Mitglieder (vorher nirgends sichtbar). Mitgliederliste (`mandant/cust/index.blade.php`) umgebaut: E-Mail (Link zur Detailseite, farblich erkennbar ohne Hover) + `cust_uname` in erster Spalte/Zeile statt Alias+E-Mail; Alias-Bearbeitung von festem Input auf Anzeige-Text mit Bearbeiten/Speichern-Toggle-Button umgestellt.
+
+Getestet: cust/mand Registrieren+Bearbeiten, syst-Anzeige, mand-Mitgliederliste (Toggle, Links, Sortierung/Suche) — alles bestätigt erfolgreich. Details PROJECT_CONTEXT.md Abschnitt 10j.
+
 # 5. Datenbankstand (19.07.2026)
 
 | **DB** | **Änderungen seit #12** |
@@ -189,8 +203,9 @@ Tag `trusted_device_cust_nofactor_fix_ok` (Commit `ddf5e55`): In `CustLoginContr
 | `anon_share_link_shortcode_ok` | anon-Login per teilbarem 7-stelligem Kurzcode-Link (`sessiondb.share_link`), Pro-Stufe-Invalidierung, Datenschutz-Popup für anon entfernt |
 | `trusted_device_cust_nofactor_fix_ok` | cust: Trusted-Device-Cookie im Nicht-2FA-Login-Pfad nachgezogen (`issueTrustedDeviceIfRequested()`, analog mand) |
 | `trusted_device_passkey_ok` | Trusted-Device-Cookie auch im Passkey-Login-Pfad wirksam (cust+mand), Checkbox-Zustand jetzt per JS aus dem DOM gelesen |
-| **`logout_dialog_close_window_ok`** | Logout-Dialog-Button „Zurück" zu „Fenster schließen", `window.close()`-Versuch mit Dialog-Fallback (aktueller Stand) |
+| `logout_dialog_close_window_ok` | Logout-Dialog-Button „Zurück" zu „Fenster schließen", `window.close()`-Versuch mit Dialog-Fallback |
+| **`pflichtfelder_konfiguration_ok`** | Konfigurierbare Pflichtfelder mand/cust (Telefon/Straße/PLZ+Ort/Firma) via `pflichtfelder.txt`+`istPflichtfeld()`, DB-Migration auf NULL, neue mand-Detailseite je Mitglied (`mandant.kunden.show`), umgebaute Mitgliederliste, syst-Adress-Sichtbarkeit, Pflicht-Sternchen-Bugfix (aktueller Stand) |
 
 Alle früheren Tags siehe Projektstatus #12 / PROJECT_CONTEXT Abschnitt 13. **Noch uncommitted, kein Tag:** syst-Passwort-Policy-Verschärfung (min:20) + Login-Hard-Block, Doku-Dateien dieser Aktualisierung.
 
-Fotosite V08 — Projektstatus #15  |  Stand 04.08.2026
+Fotosite V08 — Projektstatus #15  |  Stand 26.08.2026

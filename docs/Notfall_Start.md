@@ -2,7 +2,7 @@
 
 **Notfall-Startdokument**
 
-*Stand: 04. August 2026  |  Letzter Git-Tag: logout_dialog_close_window_ok*
+*Stand: 26. August 2026  |  Letzter Git-Tag: pflichtfelder_konfiguration_ok*
 
 **🏁 MEILENSTEIN: Benutzer-/Sicherheitsverwaltung implementiert. Tag user_management_complete_ok ist sicherer Rückfallpunkt und als Startimplementierung für künftige Projekte geeignet (siehe Abschnitt 9). EINSCHRAENKUNG: Die Passkey-Funktionalität (Phase 6) ist technisch implementiert, aber noch NICHT gruendlich getestet — siehe naechster Schritt unten und Abschnitt 7.**
 
@@ -23,6 +23,8 @@
 **⚠  NEU 03.08. (Bugfix): cust-Trusted-Device-Cookie im Nicht-2FA-Login-Pfad wurde bisher NIE ausgestellt — remember_device-Checkbox in CustLoginController::handleLogin() wurde ausgelesen, aber nie ausgewertet (trusted_device_cust_nofactor_fix_ok, Commit ddf5e55). Bei mand war der aequivalente Pfad bereits korrekt (siehe 29.07.-Eintrag oben, mand_2fa_optin_login_fix_ok) — nur cust war betroffen. Fix: neue Methode CustLoginController::issueTrustedDeviceIfRequested(), analog MandantLoginController. Details Abschnitt 5.2h.**
 
 **⚠  NEU 04.08. (zwei kleine Fixes): (1) Trusted-Device-Cookie jetzt auch im Passkey-Login-Pfad wirksam (cust+mand) — der Passkey-Button liegt ausserhalb des Passwort-Forms, JS sendete die remember_device-Checkbox bisher nie mit; jetzt per DOM-Read ergaenzt, issueTrustedDeviceIfRequested() in beiden passkeyLogin()-Methoden aufgerufen (Typehint auf RedirectResponse|JsonResponse gelockert). Tag trusted_device_passkey_ok, Commit 268c2b7. (2) Logout-Dialog-Button "Zurueck" zu "Fenster schliessen" umbenannt, zusaetzlicher window.close()-Versuch, Dialog-Fallback bleibt erhalten (loest den seit 09.-19.07. offenen Punkt). Tag logout_dialog_close_window_ok, Commit 859516d. Details Abschnitt 5.2i.**
+
+**⚠  NEU 26.08.: Konfigurierbare Pflichtfelder fuer mand/cust eingefuehrt (Telefon/Strasse+Hausnr./PLZ+Ort/Firma) — neue Datei storage/app/private/pflichtfelder.txt + Helper istPflichtfeld() (pflichtfelder_konfiguration_ok, Commit eef2eed). Registrierung fragt nur Pflichtfelder ab, Konto-Bearbeiten zeigt immer alle Felder dynamisch. Begleitende DB-Migration: cust_tel/cust_street+nr/cust_postcode_city/cust_company + vier mand-Pendants in userdb auf NULL DEFAULT NULL umgestellt (vorher NOT NULL DEFAULT 'nicht vorhanden'), Anzeige-Fallback unveraendert. Ausserdem: mandant/konto.blade.php Pflicht-Sternchen-Bugfix, syst sieht jetzt zusaetzlich mand-Strasse/PLZ+Ort, neue mand-Detailseite je Mitglied (mandant.kunden.show, zeigt erstmals Telefon/Firma/Adresse eigener Mitglieder) + umgebaute Mitgliederliste. Details Abschnitt 5.2j.**
 
 **Neuen Chat starten:**
 
@@ -171,6 +173,20 @@ npm run build
 **🎯  NAECHSTER SCHRITT (oberste Prioritaet): Gruendlicher Gesamttest der Passkey-Funktionalität. Phase 6 ist technisch implementiert, aber noch nicht systematisch getestet - getestet wurde bisher nur punktuell (Windows Hello, Android Chrome/Firefox, cust-Banner, ein Grenzfall). Der ausstehende Test umfasst Registrierung, Login, Umbenennen, Loeschen, Prompt-/Dismiss-Logik, jeweils fuer mand UND cust, ueber Windows/Android/iOS und die relevanten Browser hinweg - AUSDRUECKLICH KEIN reiner iOS-Test. Details Abschnitt 7. Zwischen dem 19.07.-Stand und heute kam ausschliesslich Sicherheits-Haertung dazwischen (Abschnitt 5.2f) - am Passkey-Testbedarf hat sich nichts geaendert.**
 
 **⚠  Danach weiter OFFEN: (a) dirty-Ausblendung bei system/mandanten/index.blade.php + customer/auth/register.blade.php nachziehen. (b) Regressionstest Android/Windows der globalen Button-Animation. (c) Abnahmetest cust-Bereich (Bloecke 1-6), danach Tag cust_complete_ok. (d) TRUSTED_DEVICE_DAYS-Duplikat in .env bereinigen (Zeile 17 vs. 97). (e) [ERLEDIGT 04.08. — Logout-Button "Zurueck" heisst jetzt "Fenster schliessen", siehe 5.2i]. (f) syst-Passwort-Policy + Honeypot-Infrastruktur committen (aktuell uncommitted), HONEYPOT_LOCKOUT_MINUTES + LOG_STACK=daily auf Server-.env nachtragen. DANACH Phase 7: mand-Content VOR Cust-UI.**
+
+## 5.2j Feature 26.08.2026 (Konfigurierbare Pflichtfelder mand/cust)
+
+✓  Pflichtfelder-Konfiguration (pflichtfelder_konfiguration_ok, Commit eef2eed): neue Datei storage/app/private/pflichtfelder.txt (nicht versioniert, analog honeypot_paths.txt) steuert je Feld mand (Pflicht) oder opt (optional) fuer Telefon/Strasse+Hausnr./PLZOrt/Firma, bei cust UND mand. Neuer Helper istPflichtfeld(userType, feldKey) in app/helpers.php, fehlender Eintrag defaultet zu opt (fail-safe). Registrierung (CustRegisterController, SystemMandantController::handleRegister()) fragt nur Pflichtfelder ab - optionale Felder werden im Formular komplett ausgeblendet. Konto-Bearbeiten (CustSelfController, MandantSelfController::update()) zeigt immer alle vier Felder, Pflicht-Status (required/Sternchen) dynamisch. Startkonfiguration (Telefon+Firma optional, Strasse+PLZOrt Pflicht) bildet das bisherige, vorher fest im Code verdrahtete Verhalten unveraendert ab
+
+✓  DB-Migration: cust_tel/cust_street+nr/cust_postcode_city/cust_company sowie die vier mand-Pendants in userdb per direktem SQL (phpMyAdmin, keine Laravel-Migration) von NOT NULL DEFAULT 'nicht vorhanden' auf NULL DEFAULT NULL umgestellt, bestehende Platzhalterwerte per UPDATE auf echtes NULL migriert. Anzeige-Fallback bleibt ueberall 'nicht vorhanden' bei NULL - fuer den Nutzer unveraendert. mand_uname/cust_uname unveraendert immer Pflicht
+
+✓  Bugfix mandant/konto.blade.php: fehlende rote Pflicht-Sternchen bei mand_uname/mand_firstname/mand_lastname/mand_street+nr/mand_postcode+city ergaenzt (im Gegensatz zu allen anderen Konto-Formularen im Projekt fehlten sie hier)
+
+✓  syst sieht jetzt zusaetzlich mand-Adresse: system/mandanten/show.blade.php + edit.blade.php - Strasse+Hausnr. und PLZ+Ort als neue dt/dd-Paare ergaenzt (vorher nur Telefon/Firma sichtbar), Feldreihenfolge umgestellt auf Benutzername/E-Mail/Vorname/Nachname/Strasse/PLZ+Ort/Telefon/Firma
+
+✓  Neu fuer mand - Detailseite je Mitglied: neue Route GET /mandant/kunden/{id} (mandant.kunden.show, {id} ist pcode_id, konsistent mit kunden.passcode/kunden.destroy), neue Methode MandantCustController::show() (Sicherheitscheck pcode_id+mand_id, sonst abort(404), NIE 403), neue View mandant/cust/show.blade.php (read-only, Stil analog system/mandanten/show.blade.php) - zeigt erstmals Telefon/Firma/Adresse eigener Mitglieder (vorher nirgends in der UI sichtbar). Mitgliederliste (mandant/cust/index.blade.php) umgebaut: E-Mail (Link zur Detailseite, text-indigo-600 underline - auch ohne Hover erkennbar) + cust_uname in erster Spalte/Zeile statt Alias+E-Mail, Alias-Bearbeitung von festem Input auf Anzeige-Text mit Bearbeiten/Speichern-Toggle-Button umgestellt (lokaler Alpine-Scope x-data="{ editing: false }" pro Zeile)
+
+✓  Getestet: cust Registrieren+Bearbeiten, mand Registrieren (per Einladung)+Bearbeiten, syst-Anzeige (show+edit), mand-Mitgliederliste (Alias-Toggle, Detail-Links, Sortierung/Suche weiterhin funktionsfaehig) - alles bestaetigt erfolgreich. Details PROJECT_CONTEXT.md Abschnitt 10j
 
 ## 5.2i Fixes 04.08.2026 (Passkey-Trusted-Device + Logout-Dialog-Button)
 
