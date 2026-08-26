@@ -1,9 +1,9 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustSelfController.php
- * VERSION:     1.6.0
+ * VERSION:     1.7.0
  * AUTOR:       Martin Wagner
- * DATUM:       2026-06-29
+ * DATUM:       2026-08-26
  *
  * ZWECK:       Customer Eigenverwaltung — Kontaktdaten, Passwort, E-Mail-Adresse,
  *              Galerien verwalten, Konto löschen.
@@ -14,10 +14,14 @@
  *              update()            — Validiert und speichert Kontaktdaten. cust_email
  *                                     wird NICHT aus dem Request übernommen (Aenderung
  *                                     läuft über requestEmailChange()/confirmEmailChange()).
- *                                     cust_uname/cust_firstname/cust_lastname/
- *                                     cust_street+nr/cust_postcode_city sind Pflicht;
- *                                     cust_tel/cust_company optional (Fallback
- *                                     'nicht vorhanden').
+ *                                     cust_uname/cust_firstname/cust_lastname bleiben
+ *                                     Pflicht. cust_tel/cust_street+nr/cust_postcode_city/
+ *                                     cust_company per istPflichtfeld('cust', ...) aus
+ *                                     pflichtfelder.txt: Pflicht → required, sonst
+ *                                     nullable (Feld bleibt immer im validate()-Array,
+ *                                     da im Formular immer angezeigt); leeres optionales
+ *                                     Feld wird als null gespeichert (kein Fallback-Text
+ *                                     mehr).
  *                                     Reads:  userdb.cust_user.cust_id
  *                                     Writes: userdb.cust_user.cust_uname, cust_firstname,
  *                                             cust_lastname, cust_tel, cust_street+nr,
@@ -92,7 +96,14 @@
  *              userdb.invite.inv_id, inv_email, inv_token_hash, inv_type,
  *              inv_user_type, inv_user_id, expires_at (email_change-Einträge)
  *
- * CHANGES:     1.6.0 (2026-06-29) updatePassword() — deutschsprachige Fehlermeldungen
+ * CHANGES:     1.7.0 (2026-08-26) update() — validate()-Regeln für cust_tel/
+ *              cust_street+nr/cust_postcode_city/cust_company jetzt dynamisch per
+ *              istPflichtfeld('cust', ...) aus storage/app/private/pflichtfelder.txt
+ *              (required statt fest 'required'/'nullable'); Fallback-Zuweisung
+ *              'nicht vorhanden' bei leerem cust_tel/cust_company entfernt — leere
+ *              optionale Felder werden jetzt als null gespeichert (ConvertEmptyStringsToNull
+ *              wandelt leeren Input bereits vor der Validierung in null um).
+ *              1.6.0 (2026-06-29) updatePassword() — deutschsprachige Fehlermeldungen
  *              für password.confirmed, password.min, current_password ergänzt.
  *              1.5.0 (2026-06-19) saveSettings() von Multi-Checkbox-Form-Submit
  *              (Redirect+Flash) auf AJAX-Einzelspeicherung pro Checkbox umgestellt
@@ -156,18 +167,26 @@ class CustSelfController extends UserDbController
             return redirect()->route('customer.login');
         }
 
-        $validated = $request->validate([
-            'cust_uname'         => ['required', 'string', 'max:255', "unique:userdb.cust_user,cust_uname,{$custId},cust_id"],
-            'cust_firstname'     => ['required', 'string', 'max:255'],
-            'cust_lastname'      => ['required', 'string', 'max:255'],
-            'cust_tel'           => ['nullable', 'string', 'max:255'],
-            'cust_street+nr'     => ['required', 'string', 'max:255'],
-            'cust_postcode_city' => ['required', 'string', 'max:255'],
-            'cust_company'       => ['nullable', 'string', 'max:255'],
-        ]);
+        $rules = [
+            'cust_uname'     => ['required', 'string', 'max:255', "unique:userdb.cust_user,cust_uname,{$custId},cust_id"],
+            'cust_firstname' => ['required', 'string', 'max:255'],
+            'cust_lastname'  => ['required', 'string', 'max:255'],
+        ];
 
-        $validated['cust_tel']     = $validated['cust_tel'] ?? 'nicht vorhanden';
-        $validated['cust_company'] = $validated['cust_company'] ?? 'nicht vorhanden';
+        $pflichtfelder = [
+            'cust_tel'           => 'Telefon',
+            'cust_street+nr'     => 'Strasse',
+            'cust_postcode_city' => 'PLZOrt',
+            'cust_company'       => 'Firma',
+        ];
+
+        foreach ($pflichtfelder as $field => $feldKey) {
+            $rules[$field] = istPflichtfeld('cust', $feldKey)
+                ? ['required', 'string', 'max:255']
+                : ['nullable', 'string', 'max:255'];
+        }
+
+        $validated = $request->validate($rules);
 
         $cust->update($validated);
 

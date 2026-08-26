@@ -103,6 +103,8 @@ Route::middleware(['web', 'role:mand'])->prefix('mandant')->name('mandant.')->gr
         ->name('kunden.invite');
     Route::post('/kunden/einladen',          [MandantCustController::class, 'store'])
         ->name('kunden.store');
+    Route::get('/kunden/{id}',               [MandantCustController::class, 'show'])
+        ->name('kunden.show');
     Route::patch('/kunden/{id}/passcode',    [MandantCustController::class, 'update'])
         ->name('kunden.passcode');
     Route::delete('/kunden/{id}',            [MandantCustController::class, 'destroy'])

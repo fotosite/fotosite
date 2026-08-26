@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/mandant/konto.blade.php
-    VERSION: 1.8.1
-    DATE:    2026-06-25
+    VERSION: 1.9.0
+    DATE:    2026-08-26
 
     DESCRIPTION:
       Mandant Eigenverwaltung — Kontaktdaten bearbeiten. Passwort- und E-Mail-Änderung
@@ -17,7 +17,21 @@
       PATCH mandant.konto.update    — Kontaktdaten speichern
       POST  mandant.logout          — Abmelden
 
-    CHANGES: 1.8.1 (2026-06-25) Android-Touch-Targets vergroessert: Logout-
+    CHANGES: 1.9.0 (2026-08-26) required-Attribut + rotes Pflicht-Sternchen bei
+             mand_tel/mand_street+nr/mand_postcode+city/mand_company jetzt
+             dynamisch per @if(istPflichtfeld('mand', ...)) statt fest verdrahtet
+             — alle 4 Felder bleiben (anders als bei der Registrierung) immer
+             sichtbar. Grauer "(optional)"-Hinweis bei mand_tel/mand_company
+             ebenfalls konditional (@if(! istPflichtfeld(...))), damit er sich
+             nicht mit dem roten Pflicht-Sternchen widerspricht, falls die
+             Konfiguration künftig auf "mand" wechselt. Zusätzlich Bugfix: fehlende
+             rote Pflicht-Sternchen bei
+             mand_uname/mand_firstname/mand_lastname/mand_street+nr/
+             mand_postcode+city ergänzt (diese 5 Felder sind fest 'required',
+             unabhängig von pflichtfelder.txt — Sternchen war hier schlicht nie
+             gesetzt worden, im Gegensatz zu allen anderen Konto-Formularen in
+             diesem Projekt).
+             1.8.1 (2026-06-25) Android-Touch-Targets vergroessert: Logout-
              Button, Zurueck-Link und Submit-Button auf min-h-11 angehoben.
     CHANGES: 1.8.0 (2026-06-19) Lokales dirty-Flag/beforeunload durch
              partials.unsaved-changes-guard ersetzt (Alpine.store('unsavedGuard'));
@@ -135,7 +149,7 @@
                     <div>
                         <label for="mand_uname"
                                class="block text-sm font-medium text-gray-700">
-                            Benutzername
+                            Benutzername <span class="text-red-500">*</span>
                         </label>
                         <input id="mand_uname" name="mand_uname" type="text"
                                value="{{ old('mand_uname', $mand->mand_uname) }}"
@@ -163,15 +177,17 @@
                                       cursor-not-allowed">
                     </div>
 
-                    {{-- mand_tel (optional) --}}
+                    {{-- mand_tel --}}
                     <div>
                         <label for="mand_tel"
                                class="block text-sm font-medium text-gray-700">
                             Telefon
-                            <span class="text-gray-400 font-normal">(optional)</span>
+                            @if(! istPflichtfeld('mand', 'Telefon')) <span class="text-gray-400 font-normal">(optional)</span> @endif
+                            @if(istPflichtfeld('mand', 'Telefon')) <span class="text-red-500">*</span> @endif
                         </label>
                         <input id="mand_tel" name="mand_tel" type="text"
                                value="{{ old('mand_tel', $mand->mand_tel) }}"
+                               @if(istPflichtfeld('mand', 'Telefon')) required @endif
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
                                       focus:border-indigo-500 focus:ring-indigo-500
@@ -187,7 +203,7 @@
                         <div>
                             <label for="mand_firstname"
                                    class="block text-sm font-medium text-gray-700">
-                                Vorname
+                                Vorname <span class="text-red-500">*</span>
                             </label>
                             <input id="mand_firstname" name="mand_firstname" type="text"
                                    value="{{ old('mand_firstname', $mand->mand_firstname) }}"
@@ -204,7 +220,7 @@
                         <div>
                             <label for="mand_lastname"
                                    class="block text-sm font-medium text-gray-700">
-                                Nachname
+                                Nachname <span class="text-red-500">*</span>
                             </label>
                             <input id="mand_lastname" name="mand_lastname" type="text"
                                    value="{{ old('mand_lastname', $mand->mand_lastname) }}"
@@ -225,10 +241,11 @@
                         <label for="mand_street_nr"
                                class="block text-sm font-medium text-gray-700">
                             Straße und Hausnummer
+                            @if(istPflichtfeld('mand', 'Strasse')) <span class="text-red-500">*</span> @endif
                         </label>
                         <input id="mand_street_nr" name="mand_street+nr" type="text"
                                value="{{ old('mand_street+nr', $mand->{'mand_street+nr'}) }}"
-                               required
+                               @if(istPflichtfeld('mand', 'Strasse')) required @endif
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
                                       focus:border-indigo-500 focus:ring-indigo-500
@@ -243,10 +260,11 @@
                         <label for="mand_postcode_city"
                                class="block text-sm font-medium text-gray-700">
                             PLZ und Ort
+                            @if(istPflichtfeld('mand', 'PLZOrt')) <span class="text-red-500">*</span> @endif
                         </label>
                         <input id="mand_postcode_city" name="mand_postcode+city" type="text"
                                value="{{ old('mand_postcode+city', $mand->{'mand_postcode+city'}) }}"
-                               required
+                               @if(istPflichtfeld('mand', 'PLZOrt')) required @endif
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
                                       focus:border-indigo-500 focus:ring-indigo-500
@@ -256,15 +274,17 @@
                         @enderror
                     </div>
 
-                    {{-- mand_company (optional) --}}
+                    {{-- mand_company --}}
                     <div>
                         <label for="mand_company"
                                class="block text-sm font-medium text-gray-700">
                             Firma / Organisation
-                            <span class="text-gray-400 font-normal">(optional)</span>
+                            @if(! istPflichtfeld('mand', 'Firma')) <span class="text-gray-400 font-normal">(optional)</span> @endif
+                            @if(istPflichtfeld('mand', 'Firma')) <span class="text-red-500">*</span> @endif
                         </label>
                         <input id="mand_company" name="mand_company" type="text"
                                value="{{ old('mand_company', $mand->mand_company) }}"
+                               @if(istPflichtfeld('mand', 'Firma')) required @endif
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
                                       focus:border-indigo-500 focus:ring-indigo-500

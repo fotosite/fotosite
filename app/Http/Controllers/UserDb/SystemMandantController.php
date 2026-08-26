@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/SystemMandantController.php
- * VERSION:     1.10.0
+ * VERSION:     1.11.0
  *
  * FUNCTIONS:   index()          — Lists all MandUser records ordered by mand_lastname.
  *                                 Reads: userdb.mand_user.*
@@ -37,7 +37,13 @@
  *                                 Reads: userdb.invite.*
  *              handleRegister() — Creates MandUser from register invite inkl.
  *                                 ds_accepted_at, ds_version, upload_terms_accepted_at,
- *                                 upload_terms_version; deletes invite.
+ *                                 upload_terms_version; deletes invite. mand_tel/
+ *                                 mand_street+nr/mand_postcode+city/mand_company per
+ *                                 istPflichtfeld('mand', ...) aus pflichtfelder.txt:
+ *                                 Pflicht → required im validate()-Array; optional →
+ *                                 Feld komplett aus dem validate()-Array entfernt und
+ *                                 beim Anlegen explizit null gespeichert (statt
+ *                                 'nicht vorhanden').
  *                                 Reads:  userdb.invite.*
  *                                 Writes: userdb.mand_user.*, userdb.invite (DELETE)
  *
@@ -73,7 +79,15 @@
  *              userdb.passkey_dismissed.pd_id, user_type, user_id (DELETE)
  *              sessiondb.cust_invite.invite_id, mand_id (DELETE)
  *
- * CHANGES:     1.10.0 (2026-06-29) handleRegister() — deutschsprachige Fehlermeldungen
+ * CHANGES:     1.11.0 (2026-08-26) handleRegister() — validate()-Regeln für mand_tel/
+ *              mand_street+nr/mand_postcode+city/mand_company jetzt dynamisch per
+ *              istPflichtfeld('mand', ...) aus storage/app/private/pflichtfelder.txt
+ *              abgeleitet; optionale Felder werden komplett aus dem validate()-Array
+ *              entfernt statt als 'nullable' geführt; MandUser::create() liest jetzt
+ *              durchgehend aus $validated statt gemischt aus $request; für nicht
+ *              abgefragte (optionale) Felder wird explizit null statt
+ *              'nicht vorhanden' gespeichert.
+ *              1.10.0 (2026-06-29) handleRegister() — deutschsprachige Fehlermeldungen
  *              für password.confirmed und password.min in bestehendem messages-Array
  *              ergänzt.
  *              1.9.0 (2026-06-29) destroy() — MandAccountDeletedMail an Mandant
@@ -283,18 +297,29 @@ class SystemMandantController extends UserDbController
             abort(404);
         }
 
-        $request->validate([
-            'mand_uname'             => ['required', 'string', 'unique:userdb.mand_user,mand_uname'],
-            'mand_firstname'         => ['required', 'string'],
-            'mand_lastname'          => ['required', 'string'],
-            'mand_street+nr'         => ['required', 'string', 'max:255'],
-            'mand_postcode+city'     => ['required', 'string', 'max:255'],
-            'mand_tel'               => ['nullable', 'string', 'max:255'],
-            'mand_company'           => ['nullable', 'string', 'max:255'],
-            'password'               => ['required', 'min:12', 'confirmed'],
-            'ds_accepted'            => ['accepted'],
-            'upload_terms_accepted'  => ['accepted'],
-        ], [
+        $rules = [
+            'mand_uname'            => ['required', 'string', 'unique:userdb.mand_user,mand_uname'],
+            'mand_firstname'        => ['required', 'string'],
+            'mand_lastname'         => ['required', 'string'],
+            'password'              => ['required', 'min:12', 'confirmed'],
+            'ds_accepted'           => ['accepted'],
+            'upload_terms_accepted' => ['accepted'],
+        ];
+
+        $pflichtfelder = [
+            'mand_tel'           => 'Telefon',
+            'mand_street+nr'     => 'Strasse',
+            'mand_postcode+city' => 'PLZOrt',
+            'mand_company'       => 'Firma',
+        ];
+
+        foreach ($pflichtfelder as $field => $feldKey) {
+            if (istPflichtfeld('mand', $feldKey)) {
+                $rules[$field] = ['required', 'string', 'max:255'];
+            }
+        }
+
+        $validated = $request->validate($rules, [
             'password.confirmed'             => 'Die eingegebenen Passwörter stimmen nicht überein.',
             'password.min'                   => 'Das Passwort erfüllt nicht die Mindestanforderungen.',
             'ds_accepted.accepted'           => 'Um ein Galerist:innen-Konto zu erstellen, musst du der Datenschutzerklärung sowie den Bedingungen für den Upload von Inhalten zustimmen.',
@@ -302,15 +327,15 @@ class SystemMandantController extends UserDbController
         ]);
 
         MandUser::create([
-            'mand_uname'               => $request->mand_uname,
+            'mand_uname'               => $validated['mand_uname'],
             'mand_email'               => $invite->inv_email,
-            'mand_firstname'           => $request->mand_firstname,
-            'mand_lastname'            => $request->mand_lastname,
-            'mand_tel'                 => $request->mand_tel ?? 'nicht vorhanden',
-            'mand_company'             => $request->mand_company ?? 'nicht vorhanden',
-            'mand_pw_hash'             => Hash::make($request->password),
-            'mand_street+nr'           => $request->{'mand_street+nr'},
-            'mand_postcode+city'       => $request->{'mand_postcode+city'},
+            'mand_firstname'           => $validated['mand_firstname'],
+            'mand_lastname'            => $validated['mand_lastname'],
+            'mand_tel'                 => $validated['mand_tel'] ?? null,
+            'mand_company'             => $validated['mand_company'] ?? null,
+            'mand_pw_hash'             => Hash::make($validated['password']),
+            'mand_street+nr'           => $validated['mand_street+nr'] ?? null,
+            'mand_postcode+city'       => $validated['mand_postcode+city'] ?? null,
             'mand_prefstat'            => 0,
             'active'                   => true,
             'has_public_content'       => false,

@@ -1,9 +1,9 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/MandantSelfController.php
- * VERSION:     1.7.0
+ * VERSION:     1.8.0
  * AUTOR:       Martin Wagner
- * DATUM:       2026-06-29
+ * DATUM:       2026-08-26
  *
  * ZWECK:       Mandant Eigenverwaltung — Kontodaten, Passwort und E-Mail-Adresse
  *              bearbeiten.
@@ -14,8 +14,15 @@
  *              update()             — Validiert und speichert Kontaktdaten. mand_email
  *                                      wird NICHT aus dem Request übernommen (Aenderung
  *                                      läuft über requestEmailChange()/
- *                                      confirmEmailChange()). mand_tel/mand_company
- *                                      sind optional, bei leer Fallback 'nicht vorhanden'.
+ *                                      confirmEmailChange()). mand_uname/mand_firstname/
+ *                                      mand_lastname bleiben Pflicht. mand_tel/
+ *                                      mand_street+nr/mand_postcode+city/mand_company
+ *                                      per istPflichtfeld('mand', ...) aus
+ *                                      pflichtfelder.txt: Pflicht → required, sonst
+ *                                      nullable (Feld bleibt immer im validate()-Array,
+ *                                      da im Formular immer angezeigt); leeres
+ *                                      optionales Feld wird als null gespeichert
+ *                                      (kein Fallback-Text mehr).
  *                                      Reads:  userdb.mand_user.mand_id
  *                                      Writes: userdb.mand_user.mand_uname, mand_tel,
  *                                              mand_firstname, mand_lastname,
@@ -61,7 +68,14 @@
  *              userdb.invite.inv_id, inv_email, inv_token_hash, inv_type,
  *              inv_user_type, inv_user_id, expires_at (email_change-Einträge)
  *
- * CHANGES:     1.7.0 (2026-06-29) updatePassword() — deutschsprachige Fehlermeldungen
+ * CHANGES:     1.8.0 (2026-08-26) update() — validate()-Regeln für mand_tel/
+ *              mand_street+nr/mand_postcode+city/mand_company jetzt dynamisch per
+ *              istPflichtfeld('mand', ...) aus storage/app/private/pflichtfelder.txt
+ *              (required statt fest 'required'/'nullable'); Fallback-Zuweisung
+ *              'nicht vorhanden' bei leerem mand_tel/mand_company entfernt — leere
+ *              optionale Felder werden jetzt als null gespeichert (ConvertEmptyStringsToNull
+ *              wandelt leeren Input bereits vor der Validierung in null um).
+ *              1.7.0 (2026-06-29) updatePassword() — deutschsprachige Fehlermeldungen
  *              für password.confirmed, password.min, password.mixed_case,
  *              password.numbers, password.symbols, password.uncompromised,
  *              current_password ergänzt.
@@ -114,20 +128,29 @@ class MandantSelfController extends UserDbController
             return redirect()->route('mandant.login');
         }
 
-        $validated = $request->validate([
-            'mand_uname'         => ['required', 'string', 'max:255', "unique:userdb.mand_user,mand_uname,{$mandId},mand_id"],
-            'mand_tel'           => ['nullable', 'string', 'max:255'],
-            'mand_firstname'     => ['required', 'string', 'max:255'],
-            'mand_lastname'      => ['required', 'string', 'max:255'],
-            'mand_street+nr'     => ['required', 'string', 'max:255'],
-            'mand_postcode+city' => ['required', 'string', 'max:255'],
-            'mand_company'       => ['nullable', 'string', 'max:255'],
-            'mand_2fa_disable'   => ['sometimes', 'boolean'],
-            'mand_cust_2fa'      => ['required', 'integer', 'min:0', 'max:7'],
-        ]);
+        $rules = [
+            'mand_uname'       => ['required', 'string', 'max:255', "unique:userdb.mand_user,mand_uname,{$mandId},mand_id"],
+            'mand_firstname'   => ['required', 'string', 'max:255'],
+            'mand_lastname'    => ['required', 'string', 'max:255'],
+            'mand_2fa_disable' => ['sometimes', 'boolean'],
+            'mand_cust_2fa'    => ['required', 'integer', 'min:0', 'max:7'],
+        ];
 
-        $validated['mand_tel']        = $validated['mand_tel'] ?? 'nicht vorhanden';
-        $validated['mand_company']    = $validated['mand_company'] ?? 'nicht vorhanden';
+        $pflichtfelder = [
+            'mand_tel'           => 'Telefon',
+            'mand_street+nr'     => 'Strasse',
+            'mand_postcode+city' => 'PLZOrt',
+            'mand_company'       => 'Firma',
+        ];
+
+        foreach ($pflichtfelder as $field => $feldKey) {
+            $rules[$field] = istPflichtfeld('mand', $feldKey)
+                ? ['required', 'string', 'max:255']
+                : ['nullable', 'string', 'max:255'];
+        }
+
+        $validated = $request->validate($rules);
+
         $validated['mand_2fa_opt_in'] = ! $request->boolean('mand_2fa_disable');
         $validated['mand_cust_2fa']   = (int) $validated['mand_cust_2fa'];
 

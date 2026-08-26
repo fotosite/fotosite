@@ -1,19 +1,30 @@
 {{--
     FILE:    resources/views/mandant/cust/index.blade.php
-    VERSION: 3.7.7
+    VERSION: 3.9.1
     AUTHOR:  Martin Wagner
-    DATE:    2026-06-25
+    DATE:    2026-08-26
 
     DESCRIPTION:
       Mitgliederliste des eingeloggten Mandanten.
-      Zeigt alle CustPcode-Einträge. Spalte "Mitglied" zeigt cust_alias + E-Mail (grau).
-      Alias und Sicherheitsstufe gemeinsam editierbar (PATCH). Eintrag entfernbar (DELETE).
+      Zeigt alle CustPcode-Einträge. Spalte "Mitglied" zeigt E-Mail (Link zur
+      Detailseite mandant.kunden.show) + cust_uname (grau) — Alias wird separat
+      im Bearbeiten-Bereich angezeigt/editiert. Alias und Sicherheitsstufe
+      gemeinsam editierbar (PATCH). Eintrag entfernbar (DELETE).
+      Alias ist standardmäßig reiner Text mit "Bearbeiten"-Button (type="button");
+      Klick schaltet auf ein Eingabefeld um und der Button wird zu "Speichern"
+      (type="submit", löst das bestehende PATCH-Formular aus) — lokaler
+      x-data="{ editing: false }"-Scope pro Zeile, umschließt Alias-Anzeige/
+      -Eingabe + Button (nicht das ganze <form>; @input/@change/@submit für
+      $store.unsavedGuard bleiben unverändert auf dem <form>).
       sec_level wird über ein kompaktes Custom-Dropdown (Alpine.js) statt eines
       nativen <select> gewählt; Formular-Submit bleibt klassisch (kein AJAX).
-      Mobile-Card (<768px): Alias, E-Mail, sec_level-Dropdown gestapelt,
-      Speichern/Entfernen-Buttons nebeneinander (Speichern-Button per
-      HTML5 form-Attribut an das PATCH-Formular gebunden, Entfernen bleibt
-      eigenes DELETE-Formular).
+      Mobile-Card (<768px): E-Mail (Link), Uname, Alias (Anzeige/Bearbeiten),
+      sec_level-Dropdown gestapelt, Bearbeiten/Speichern- + Entfernen-Buttons
+      nebeneinander (Bearbeiten/Speichern-Button per HTML5 form-Attribut an das
+      PATCH-Formular gebunden, liegt daher außerhalb des <form> — der
+      editing-x-data-Scope sitzt deshalb auf der Karte selbst, als gemeinsamer
+      Vorfahre von Formular-Inhalt und Button; Entfernen bleibt eigenes
+      DELETE-Formular).
       Steuerleiste oberhalb der Liste: client-seitige Sortierung (E-Mail/
       Alias/Sicherheitsstufe, togglende Richtung, Default Alias aufsteigend)
       und Live-Suche (Alias ODER E-Mail, startsWith, case-insensitive) via
@@ -32,6 +43,25 @@
       DELETE /mandant/kunden/{id}                 — Entfernen (route('mandant.kunden.destroy'))
       GET    /mandant/dashboard                   — Dashboard (route('mandant.dashboard'))
 
+    CHANGES: 3.9.1 (2026-08-26) E-Mail-Link (Desktop-Spalte + Mobile Zeile 1)
+             ohne Hover als Link erkennbar gemacht: text-indigo-600 underline
+             statt text-gray-800 (Farbe/Unterstrich nur bei :hover). Desktop:
+             redundantes font-medium text-gray-800 vom umschließenden <div> auf
+             das <a> verschoben.
+    CHANGES: 3.9.0 (2026-08-26) Spalte/Karte "Mitglied" umgebaut: E-Mail (statt
+             Alias) ist jetzt der Link zur Detailseite (mandant.kunden.show),
+             darunter cust_uname statt E-Mail; der separate Mobile-"Details"-Link
+             aus 3.8.0 entfällt dadurch wieder. Alias-Bearbeitung im
+             "Bearbeiten"-Bereich von reinem Input auf Anzeige-Text +
+             Bearbeiten/Speichern-Toggle-Button umgestellt (lokaler
+             x-data="{ editing: false }"-Scope pro Zeile, siehe DESCRIPTION);
+             sec_level-Dropdown und Formular-Handler (CSRF, unsavedGuard)
+             unverändert.
+    CHANGES: 3.8.0 (2026-08-26) Link zur neuen Read-only Detailseite
+             (mandant.kunden.show) ergänzt: Desktop macht den Alias in der
+             "Mitglied"-Spalte klickbar, Mobile ergänzt einen "Details"-Link
+             neben der E-Mail-Anzeige. Bestehende Formulare/CSRF/
+             Sortier-Suchfunktion unverändert.
     CHANGES: 3.7.7 (2026-06-28) iOS Feedback: Mitglieder-einladen-Link zu Button
              umgebaut.
     CHANGES: 3.7.6 (2026-06-25) Android-Touch-Targets vergroessert: Logout-,
@@ -277,9 +307,10 @@
                     @php $custFormId = 'cust-form-'.$cust->pcode_id; @endphp
                     <div class="p-4 space-y-2"
                          data-member-id="{{ $cust->pcode_id }}"
-                         x-show="matches({{ $cust->pcode_id }})">
+                         x-show="matches({{ $cust->pcode_id }})"
+                         x-data="{ editing: false }">
 
-                        {{-- Bearbeiten-Formular: Zeile 1 Alias, Zeile 2 E-Mail, Zeile 3 sec_level --}}
+                        {{-- Bearbeiten-Formular: Zeile 1 E-Mail, Zeile 2 Uname, Zeile 3 Alias, Zeile 4 sec_level --}}
                         <form id="{{ $custFormId }}"
                               method="POST"
                               action="{{ route('mandant.kunden.passcode', $cust->pcode_id) }}"
@@ -290,22 +321,35 @@
                             @csrf
                             @method('PATCH')
 
-                            {{-- Zeile 1: Alias --}}
-                            <input type="text"
-                                   name="cust_alias"
-                                   value="{{ $cust->cust_alias }}"
-                                   required
-                                   placeholder="Alias"
-                                   class="w-full rounded-lg border border-gray-300
-                                          bg-white px-3 h-11 text-sm text-gray-800 shadow-sm
-                                          focus:outline-none focus:ring-2 focus:ring-indigo-400">
-
-                            {{-- Zeile 2: E-Mail (nur Anzeige) --}}
-                            <div class="text-xs text-gray-400 px-1">
-                                {{ $cust->custUser?->cust_email ?? '—' }}
+                            {{-- Zeile 1: E-Mail (Link zur Detailseite) --}}
+                            <div class="text-sm">
+                                <a href="{{ route('mandant.kunden.show', $cust->pcode_id) }}"
+                                   class="font-medium text-indigo-600 underline hover:text-indigo-800">
+                                    {{ $cust->custUser?->cust_email ?? '—' }}
+                                </a>
                             </div>
 
-                            {{-- Zeile 3: sec_level Custom-Dropdown --}}
+                            {{-- Zeile 2: Uname --}}
+                            <div class="text-xs text-gray-400 px-1">
+                                {{ $cust->custUser?->cust_uname ?? '—' }}
+                            </div>
+
+                            {{-- Zeile 3: Alias (Anzeige/Bearbeiten-Toggle) --}}
+                            <div class="flex items-center gap-2">
+                                <span x-show="!editing"
+                                      class="flex-1 text-sm text-gray-800">{{ $cust->cust_alias }}</span>
+                                <input type="text"
+                                       name="cust_alias"
+                                       value="{{ $cust->cust_alias }}"
+                                       required
+                                       placeholder="Alias"
+                                       x-show="editing"
+                                       class="flex-1 rounded-lg border border-gray-300
+                                              bg-white px-3 h-11 text-sm text-gray-800 shadow-sm
+                                              focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                            </div>
+
+                            {{-- Zeile 4: sec_level Custom-Dropdown --}}
                             <div class="relative"
                                  x-data="{ open: false, val: {{ (int)$cust->cust_passcode }} }"
                                  @click.outside="open = false"
@@ -351,14 +395,15 @@
                             </div>
                         </form>
 
-                        {{-- Zeile 4: Speichern + Entfernen nebeneinander --}}
+                        {{-- Zeile 5: Bearbeiten/Speichern + Entfernen nebeneinander --}}
                         <div class="flex gap-2">
-                            <button type="submit"
+                            <button :type="editing ? 'submit' : 'button'"
                                     form="{{ $custFormId }}"
+                                    @click="if (!editing) { editing = true; $event.preventDefault(); }"
+                                    x-text="editing ? 'Speichern' : 'Bearbeiten'"
                                     class="flex-1 h-11 rounded-lg border border-indigo-200
                                            bg-indigo-50 px-4 text-sm font-medium text-indigo-700
                                            hover:bg-indigo-100 transition-colors duration-150">
-                                Speichern
                             </button>
                             <form method="POST"
                                   action="{{ route('mandant.kunden.destroy', $cust->pcode_id) }}"
@@ -407,17 +452,20 @@
                                 data-member-id="{{ $cust->pcode_id }}"
                                 x-show="matches({{ $cust->pcode_id }})">
 
-                                {{-- Mitglied: Alias + E-Mail --}}
+                                {{-- Mitglied: E-Mail + Uname --}}
                                 <td class="px-4 py-3">
-                                    <div class="font-medium text-gray-800">
-                                        {{ $cust->cust_alias ?: '—' }}
+                                    <div>
+                                        <a href="{{ route('mandant.kunden.show', $cust->pcode_id) }}"
+                                           class="font-medium text-indigo-600 underline hover:text-indigo-800">
+                                            {{ $cust->custUser?->cust_email ?? '—' }}
+                                        </a>
                                     </div>
                                     <div class="text-xs text-gray-400 mt-0.5">
-                                        {{ $cust->custUser?->cust_email ?? '—' }}
+                                        {{ $cust->custUser?->cust_uname ?? '—' }}
                                     </div>
                                 </td>
 
-                                {{-- Bearbeiten: Alias-Textfeld + Stufen-Dropdown + Speichern --}}
+                                {{-- Bearbeiten: Alias-Anzeige/Toggle + Stufen-Dropdown + Bearbeiten/Speichern --}}
                                 <td class="px-4 py-3">
                                     <form method="POST"
                                           action="{{ route('mandant.kunden.passcode', $cust->pcode_id) }}"
@@ -428,68 +476,74 @@
                                         @csrf
                                         @method('PATCH')
 
-                                        <input type="text"
-                                               name="cust_alias"
-                                               value="{{ $cust->cust_alias }}"
-                                               required
-                                               placeholder="Alias"
-                                               class="flex-1 min-w-[6rem] rounded-lg border border-gray-300 bg-white
-                                                      px-2 py-1.5 text-xs text-gray-800 shadow-sm
-                                                      focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                        <div x-data="{ editing: false }" class="flex flex-wrap items-center gap-2 flex-1">
+                                            <span x-show="!editing"
+                                                  class="flex-1 min-w-[6rem] text-xs text-gray-800">{{ $cust->cust_alias }}</span>
+                                            <input type="text"
+                                                   name="cust_alias"
+                                                   value="{{ $cust->cust_alias }}"
+                                                   required
+                                                   placeholder="Alias"
+                                                   x-show="editing"
+                                                   class="flex-1 min-w-[6rem] rounded-lg border border-gray-300 bg-white
+                                                          px-2 py-1.5 text-xs text-gray-800 shadow-sm
+                                                          focus:outline-none focus:ring-2 focus:ring-indigo-400">
 
-                                        {{-- Custom-Dropdown sec_level: Trigger zeigt nur die Stufenzahl --}}
-                                        <div class="relative shrink-0"
-                                             x-data="{ open: false, val: {{ (int)$cust->cust_passcode }} }"
-                                             @click.outside="open = false"
-                                             @keydown.escape="open = false">
-                                            <button type="button"
-                                                    @click="open = !open"
-                                                    :aria-expanded="open"
-                                                    aria-haspopup="listbox"
-                                                    class="w-14 min-h-11 inline-flex items-center justify-between gap-1
-                                                           rounded-lg border border-gray-300 bg-white px-2 py-2
-                                                           text-sm font-medium text-gray-800 shadow-sm
-                                                           hover:border-indigo-400 focus:outline-none
-                                                           focus:ring-2 focus:ring-indigo-400">
-                                                <span x-text="val"></span>
-                                                <svg class="inline-block ml-1 w-3 h-3 text-gray-500" fill="none"
-                                                     stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                          d="M19 9l-7 7-7-7"/>
-                                                </svg>
-                                            </button>
-                                            <div x-show="open"
-                                                 x-transition:enter="transition ease-out duration-150"
-                                                 x-transition:enter-start="opacity-0 scale-95"
-                                                 x-transition:enter-end="opacity-100 scale-100"
-                                                 x-transition:leave="transition ease-in duration-75"
-                                                 x-transition:leave-start="opacity-100 scale-100"
-                                                 x-transition:leave-end="opacity-0 scale-95"
-                                                 style="display: none;"
-                                                 role="listbox"
-                                                 class="absolute z-30 mt-1 w-56 rounded-lg border border-gray-200
-                                                        bg-white shadow-lg py-1">
-                                                @foreach($levels as $val => $label)
-                                                    <button type="button"
-                                                            role="option"
-                                                            @click="val = {{ $val }}; open = false; $store.unsavedGuard.markDirty()"
-                                                            :class="val === {{ $val }} ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-700'"
-                                                            class="block w-full text-left px-3 py-1.5 text-xs hover:bg-indigo-50 hover:text-indigo-700">
-                                                        {{ $val }} — {{ $label }}
-                                                    </button>
-                                                @endforeach
+                                            {{-- Custom-Dropdown sec_level: Trigger zeigt nur die Stufenzahl --}}
+                                            <div class="relative shrink-0"
+                                                 x-data="{ open: false, val: {{ (int)$cust->cust_passcode }} }"
+                                                 @click.outside="open = false"
+                                                 @keydown.escape="open = false">
+                                                <button type="button"
+                                                        @click="open = !open"
+                                                        :aria-expanded="open"
+                                                        aria-haspopup="listbox"
+                                                        class="w-14 min-h-11 inline-flex items-center justify-between gap-1
+                                                               rounded-lg border border-gray-300 bg-white px-2 py-2
+                                                               text-sm font-medium text-gray-800 shadow-sm
+                                                               hover:border-indigo-400 focus:outline-none
+                                                               focus:ring-2 focus:ring-indigo-400">
+                                                    <span x-text="val"></span>
+                                                    <svg class="inline-block ml-1 w-3 h-3 text-gray-500" fill="none"
+                                                         stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                              d="M19 9l-7 7-7-7"/>
+                                                    </svg>
+                                                </button>
+                                                <div x-show="open"
+                                                     x-transition:enter="transition ease-out duration-150"
+                                                     x-transition:enter-start="opacity-0 scale-95"
+                                                     x-transition:enter-end="opacity-100 scale-100"
+                                                     x-transition:leave="transition ease-in duration-75"
+                                                     x-transition:leave-start="opacity-100 scale-100"
+                                                     x-transition:leave-end="opacity-0 scale-95"
+                                                     style="display: none;"
+                                                     role="listbox"
+                                                     class="absolute z-30 mt-1 w-56 rounded-lg border border-gray-200
+                                                            bg-white shadow-lg py-1">
+                                                    @foreach($levels as $val => $label)
+                                                        <button type="button"
+                                                                role="option"
+                                                                @click="val = {{ $val }}; open = false; $store.unsavedGuard.markDirty()"
+                                                                :class="val === {{ $val }} ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-700'"
+                                                                class="block w-full text-left px-3 py-1.5 text-xs hover:bg-indigo-50 hover:text-indigo-700">
+                                                            {{ $val }} — {{ $label }}
+                                                        </button>
+                                                    @endforeach
+                                                </div>
+                                                <input type="hidden" name="sec_level" :value="val">
                                             </div>
-                                            <input type="hidden" name="sec_level" :value="val">
-                                        </div>
 
-                                        <button type="submit"
-                                                class="rounded-lg border border-indigo-200
-                                                       bg-indigo-50 px-2.5 min-h-11 py-2 text-sm
-                                                       font-medium text-indigo-700
-                                                       hover:bg-indigo-100
-                                                       transition-colors duration-150">
-                                            Speichern
-                                        </button>
+                                            <button :type="editing ? 'submit' : 'button'"
+                                                    @click="if (!editing) { editing = true; $event.preventDefault(); }"
+                                                    x-text="editing ? 'Speichern' : 'Bearbeiten'"
+                                                    class="rounded-lg border border-indigo-200
+                                                           bg-indigo-50 px-2.5 min-h-11 py-2 text-sm
+                                                           font-medium text-indigo-700
+                                                           hover:bg-indigo-100
+                                                           transition-colors duration-150">
+                                            </button>
+                                        </div>
                                     </form>
                                 </td>
 

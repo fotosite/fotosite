@@ -1,9 +1,9 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustRegisterController.php
- * VERSION:     1.9.0
+ * VERSION:     1.10.0
  * AUTHOR:      Martin Wagner
- * DATE:        2026-06-18
+ * DATE:        2026-08-26
  * PURPOSE:     Mitglieder-Registrierung per Einladungs-Token
  *
  * FUNCTIONS:   show()   — Validiert Token; prüft ob E-Mail bereits in cust_user existiert;
@@ -15,8 +15,12 @@
  *                          existing=0: volle Validierung (inkl. cust_uname, Adressfelder)
  *                                      + CustUser::create() inkl. ds_accepted_at,
  *                                      ds_version (Datenschutz-Checkbox). cust_tel/
- *                                      cust_company optional, bei leer Fallback
- *                                      'nicht vorhanden'.
+ *                                      cust_street+nr/cust_postcode_city/cust_company
+ *                                      per istPflichtfeld('cust', ...) dynamisch aus
+ *                                      pflichtfelder.txt: Pflicht → required im
+ *                                      validate()-Array; optional → Feld komplett aus
+ *                                      dem validate()-Array entfernt und beim Anlegen
+ *                                      explizit null gespeichert (statt 'nicht vorhanden').
  *                          Danach CustPcode erstellen, Einladung als verwendet markieren.
  *                          Reads:  sessiondb.cust_invite.*
  *                                  userdb.cust_user.cust_email
@@ -41,7 +45,15 @@
  *              userdb.cust_pcode.pcode_id, mand_id, cust_id, cust_passcode,
  *              pcode_prefstat
  *
- * CHANGES:     1.9.0 (2026-06-18) store() — Erfolgsmeldung nach Kontoerstellung
+ * CHANGES:     1.10.0 (2026-08-26) store() (existing=0) — validate()-Regeln für
+ *              cust_tel/cust_street+nr/cust_postcode_city/cust_company jetzt
+ *              dynamisch per istPflichtfeld('cust', ...) aus
+ *              storage/app/private/pflichtfelder.txt abgeleitet; optionale Felder
+ *              werden komplett aus dem validate()-Array entfernt statt als
+ *              'nullable' geführt; beim CustUser::create() wird für nicht
+ *              abgefragte (optionale) Felder explizit null statt 'nicht vorhanden'
+ *              gespeichert.
+ *              1.9.0 (2026-06-18) store() — Erfolgsmeldung nach Kontoerstellung
  *              aktualisiert ("Konto erfolgreich angelegt..."). Redirect bewusst auf
  *              route('home') statt route('customer.login') belassen: 'customer.login'
  *              (CustLoginController::showLogin()) erzeugt einen eigenen Redirect zu
@@ -122,19 +134,30 @@ class CustRegisterController extends UserDbController
                     ->withErrors(['token' => 'Einladungslink ungültig oder abgelaufen.']);
             }
         } else {
-            $validated = $request->validate([
-                'cust_uname'         => ['required', 'string', 'max:255', 'unique:userdb.cust_user,cust_uname'],
-                'cust_firstname'     => ['required', 'string', 'max:255'],
-                'cust_lastname'      => ['required', 'string', 'max:255'],
-                'cust_email'         => ['required', 'email', 'max:255'],
-                'cust_tel'           => ['nullable', 'string', 'max:255'],
-                'cust_company'       => ['nullable', 'string', 'max:255'],
-                'cust_street+nr'     => ['required', 'string', 'max:255'],
-                'cust_postcode_city' => ['required', 'string', 'max:255'],
-                'password'           => ['required', 'confirmed',
+            $rules = [
+                'cust_uname'     => ['required', 'string', 'max:255', 'unique:userdb.cust_user,cust_uname'],
+                'cust_firstname' => ['required', 'string', 'max:255'],
+                'cust_lastname'  => ['required', 'string', 'max:255'],
+                'cust_email'     => ['required', 'email', 'max:255'],
+                'password'       => ['required', 'confirmed',
                     Password::min(10)->mixedCase()->numbers()],
-                'ds_accepted'        => ['accepted'],
-            ], [
+                'ds_accepted'    => ['accepted'],
+            ];
+
+            $pflichtfelder = [
+                'cust_tel'           => 'Telefon',
+                'cust_street+nr'     => 'Strasse',
+                'cust_postcode_city' => 'PLZOrt',
+                'cust_company'       => 'Firma',
+            ];
+
+            foreach ($pflichtfelder as $field => $feldKey) {
+                if (istPflichtfeld('cust', $feldKey)) {
+                    $rules[$field] = ['required', 'string', 'max:255'];
+                }
+            }
+
+            $validated = $request->validate($rules, [
                 'ds_accepted.accepted' => 'Um ein Mitglieder-Konto zu erstellen, musst du der Datenschutzerklärung zustimmen.',
             ]);
 
@@ -143,10 +166,10 @@ class CustRegisterController extends UserDbController
                 'cust_firstname'     => $validated['cust_firstname'],
                 'cust_lastname'      => $validated['cust_lastname'],
                 'cust_email'         => $validated['cust_email'],
-                'cust_tel'           => $validated['cust_tel'] ?? 'nicht vorhanden',
-                'cust_company'       => $validated['cust_company'] ?? 'nicht vorhanden',
-                'cust_street+nr'     => $validated['cust_street+nr'],
-                'cust_postcode_city' => $validated['cust_postcode_city'],
+                'cust_tel'           => $validated['cust_tel'] ?? null,
+                'cust_company'       => $validated['cust_company'] ?? null,
+                'cust_street+nr'     => $validated['cust_street+nr'] ?? null,
+                'cust_postcode_city' => $validated['cust_postcode_city'] ?? null,
                 'cust_pw_hash'       => Hash::make($validated['password']),
                 'cust_2fa_opt_in'    => false,
                 'ds_accepted_at'     => now(),

@@ -1,8 +1,8 @@
 {{--
     FILE:    resources/views/customer/auth/register.blade.php
-    VERSION: 1.9.2
+    VERSION: 1.10.0
     AUTHOR:  Martin Wagner
-    DATE:    2026-06-22
+    DATE:    2026-08-26
 
     DESCRIPTION:
       Mitglieder-Registrierungsformular — wird per Einladungs-Token aufgerufen.
@@ -27,6 +27,13 @@
              auf 2FA-Codes und Passwort-Erneuerung).
              1.8.0 (2026-06-22) Begleittext zur E-Mail-Adresse durch Hinweis auf
              Voreinstellung ersetzt (Feld ist read-only).
+             1.10.0 (2026-08-26) Telefon/Firma/Straße+Hausnr./PLZ+Ort jeweils in
+             @if(istPflichtfeld('cust', ...)) gewickelt — bei "opt" wird das Feld
+             komplett nicht gerendert (nur Pflichtfelder werden bei der
+             Registrierung abgefragt, optionale Felder können später über
+             "Konto bearbeiten" nachgetragen werden). Innerhalb des @if ist das
+             Feld per Definition Pflicht, daher "*"-Sternchen + required
+             statt "(optional)"-Hinweis.
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -197,16 +204,17 @@
                     <p class="mt-1 text-sm text-gray-600">Diese E-Mail-Adresse ist eine Voreinstellung, die später geändert werden kann.</p>
                 </div>
 
-                {{-- Telefon (optional) --}}
+                @if(istPflichtfeld('cust', 'Telefon'))
+                {{-- Telefon --}}
                 <div>
                     <label for="cust_tel"
                            class="block text-sm font-medium text-gray-700 mb-1">
-                        Telefon
-                        <span class="text-gray-400 font-normal">(optional)</span>
+                        Telefon <span class="text-red-500">*</span>
                     </label>
                     <input type="text"
                            id="cust_tel" name="cust_tel"
                            value="{{ old('cust_tel') }}"
+                           required
                            class="w-full rounded-lg border px-3 py-2 text-sm text-gray-800 shadow-sm
                                   focus:outline-none focus:ring-2 focus:ring-indigo-400
                                   @error('cust_tel') border-red-400 bg-red-50 @else border-gray-300 @enderror">
@@ -214,17 +222,19 @@
                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
+                @endif
 
-                {{-- Firma / Organisation (optional) --}}
+                @if(istPflichtfeld('cust', 'Firma'))
+                {{-- Firma / Organisation --}}
                 <div>
                     <label for="cust_company"
                            class="block text-sm font-medium text-gray-700 mb-1">
-                        Firma / Organisation
-                        <span class="text-gray-400 font-normal">(optional)</span>
+                        Firma / Organisation <span class="text-red-500">*</span>
                     </label>
                     <input type="text"
                            id="cust_company" name="cust_company"
                            value="{{ old('cust_company') }}"
+                           required
                            class="w-full rounded-lg border px-3 py-2 text-sm text-gray-800 shadow-sm
                                   focus:outline-none focus:ring-2 focus:ring-indigo-400
                                   @error('cust_company') border-red-400 bg-red-50 @else border-gray-300 @enderror">
@@ -232,7 +242,9 @@
                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
+                @endif
 
+                @if(istPflichtfeld('cust', 'Strasse'))
                 {{-- Straße + Nr --}}
                 <div>
                     <label for="cust_street_nr"
@@ -250,7 +262,9 @@
                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
+                @endif
 
+                @if(istPflichtfeld('cust', 'PLZOrt'))
                 {{-- PLZ + Ort --}}
                 <div>
                     <label for="cust_postcode_city"
@@ -268,6 +282,7 @@
                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
+                @endif
 
                 {{-- Passwort --}}
                 <div>

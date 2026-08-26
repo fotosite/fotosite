@@ -1,9 +1,9 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/MandantCustController.php
- * VERSION:     1.8.0
+ * VERSION:     1.9.0
  * AUTHOR:      Martin Wagner
- * DATE:        2026-06-19
+ * DATE:        2026-08-26
  * PURPOSE:     Cust-Verwaltung durch Mandant — Einladen, Alias/Passcode-Verwaltung, Löschen
  *
  * FUNCTIONS:   index()   — Listet Mitglieder des eingeloggten Mandanten
@@ -11,6 +11,13 @@
  *                                  pcode_prefstat, cust_alias
  *                                  userdb.cust_user.cust_id, cust_firstname,
  *                                  cust_lastname, cust_email
+ *              show()    — Read-only Detailseite eines Mitglieds. Sicherheitscheck:
+ *                           CustPcode muss zu $id (pcode_id) UND zum eingeloggten
+ *                           mand_id gehören, sonst abort(404) (kein 403, analog zu
+ *                           update()/destroy()).
+ *                           Reads:  userdb.cust_pcode.pcode_id, mand_id, cust_id,
+ *                                   cust_alias
+ *                                   userdb.cust_user.* (via custUser-Relation)
  *              invite()  — Zeigt Einladungsformular
  *                           Reads: (keine)
  *              store()   — Validiert Formular (inkl. cust_alias), prüft Duplikat,
@@ -55,13 +62,19 @@
  *
  * DB ACCESS:   userdb.mand_user.mand_id, mand_uname
  *              userdb.cust_user.cust_id, cust_firstname, cust_lastname, cust_uname,
- *              cust_email (DELETE)
+ *              cust_email (DELETE), cust_tel, cust_company, cust_street+nr,
+ *              cust_postcode_city (READ, via show())
  *              userdb.cust_pcode.pcode_id, mand_id, cust_id, cust_passcode,
  *              pcode_prefstat, cust_alias
  *              userdb.passkey.pk_id, user_type, user_id (DELETE)
  *              userdb.passkey_dismissed.pd_id, user_type, user_id (DELETE)
  *              sessiondb.cust_invite.invite_id, mand_id, cust_email, cust_alias,
  *              sec_level, token, created_at, expires_at, used
+ *
+ * CHANGES:     1.9.0 (2026-08-26) show() ergänzt — Read-only Detailseite eines
+ *              Mitglieds (analog SystemMandantController::show()); Sicherheitscheck
+ *              per CustPcode::where('pcode_id', $id)->where('mand_id', $mandId),
+ *              sonst abort(404).
  */
 
 namespace App\Http\Controllers\UserDb;
@@ -91,6 +104,22 @@ class MandantCustController extends UserDbController
             ->get();
 
         return view('mandant.cust.index', ['custs' => $custs]);
+    }
+
+    public function show(Request $request, int $id): View
+    {
+        $mandId = (int) $request->session()->get('_mand_id');
+
+        $pcode = CustPcode::where('pcode_id', $id)
+            ->where('mand_id', $mandId)
+            ->with('custUser')
+            ->first();
+
+        if (! $pcode) {
+            abort(404);
+        }
+
+        return view('mandant.cust.show', ['cust' => $pcode]);
     }
 
     public function invite(): View

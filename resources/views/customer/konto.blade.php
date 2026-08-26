@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/customer/konto.blade.php
-    VERSION: 1.6.1
-    DATE:    2026-06-25
+    VERSION: 1.7.0
+    DATE:    2026-08-26
 
     DESCRIPTION:
       Customer Eigenverwaltung — Kontaktdaten bearbeiten. Passwort- und E-Mail-Änderung
@@ -18,7 +18,15 @@
       DELETE customer.konto.delete   — Konto löschen
       POST   customer.logout         — Abmelden
 
-    CHANGES: 1.6.1 (2026-06-25) Android-Touch-Targets vergroessert: Logout-
+    CHANGES: 1.7.0 (2026-08-26) required-Attribut + rotes Pflicht-Sternchen bei
+             cust_tel/cust_street+nr/cust_postcode_city/cust_company jetzt
+             dynamisch per @if(istPflichtfeld('cust', ...)) statt fest verdrahtet
+             — alle 4 Felder bleiben (anders als bei der Registrierung) immer
+             sichtbar. Grauer "(optional)"-Hinweis bei cust_tel/cust_company
+             ebenfalls konditional (@if(! istPflichtfeld(...))), damit er sich
+             nicht mit dem roten Pflicht-Sternchen widerspricht, falls die
+             Konfiguration künftig auf "mand" wechselt.
+             1.6.1 (2026-06-25) Android-Touch-Targets vergroessert: Logout-
              Button, Zurueck-Link sowie beide Submit-Buttons (Speichern/
              Konto löschen) auf min-h-11 angehoben.
     CHANGES: 1.6.0 (2026-06-19) Bugfix Runde 4: @input/@change/@submit auf dem
@@ -215,10 +223,12 @@
                         <label for="cust_tel"
                                class="block text-sm font-medium text-gray-700">
                             Telefon
-                            <span class="text-gray-400 font-normal">(optional)</span>
+                            @if(! istPflichtfeld('cust', 'Telefon')) <span class="text-gray-400 font-normal">(optional)</span> @endif
+                            @if(istPflichtfeld('cust', 'Telefon')) <span class="text-red-500">*</span> @endif
                         </label>
                         <input id="cust_tel" name="cust_tel" type="text"
                                value="{{ old('cust_tel', $cust->cust_tel) }}"
+                               @if(istPflichtfeld('cust', 'Telefon')) required @endif
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
                                       focus:border-indigo-500 focus:ring-indigo-500
@@ -232,11 +242,12 @@
                     <div>
                         <label for="cust_street_nr"
                                class="block text-sm font-medium text-gray-700">
-                            Straße und Hausnummer <span class="text-red-500">*</span>
+                            Straße und Hausnummer
+                            @if(istPflichtfeld('cust', 'Strasse')) <span class="text-red-500">*</span> @endif
                         </label>
                         <input id="cust_street_nr" name="cust_street+nr" type="text"
                                value="{{ old('cust_street+nr', $cust->{'cust_street+nr'}) }}"
-                               required
+                               @if(istPflichtfeld('cust', 'Strasse')) required @endif
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
                                       focus:border-indigo-500 focus:ring-indigo-500
@@ -250,11 +261,12 @@
                     <div>
                         <label for="cust_postcode_city"
                                class="block text-sm font-medium text-gray-700">
-                            PLZ und Ort <span class="text-red-500">*</span>
+                            PLZ und Ort
+                            @if(istPflichtfeld('cust', 'PLZOrt')) <span class="text-red-500">*</span> @endif
                         </label>
                         <input id="cust_postcode_city" name="cust_postcode_city" type="text"
                                value="{{ old('cust_postcode_city', $cust->cust_postcode_city) }}"
-                               required
+                               @if(istPflichtfeld('cust', 'PLZOrt')) required @endif
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
                                       focus:border-indigo-500 focus:ring-indigo-500
@@ -269,10 +281,12 @@
                         <label for="cust_company"
                                class="block text-sm font-medium text-gray-700">
                             Firma / Organisation
-                            <span class="text-gray-400 font-normal">(optional)</span>
+                            @if(! istPflichtfeld('cust', 'Firma')) <span class="text-gray-400 font-normal">(optional)</span> @endif
+                            @if(istPflichtfeld('cust', 'Firma')) <span class="text-red-500">*</span> @endif
                         </label>
                         <input id="cust_company" name="cust_company" type="text"
                                value="{{ old('cust_company', $cust->cust_company) }}"
+                               @if(istPflichtfeld('cust', 'Firma')) required @endif
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
                                       focus:border-indigo-500 focus:ring-indigo-500

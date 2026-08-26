@@ -1,12 +1,15 @@
 <?php
 /**
  * FILE:        app/helpers.php
- * VERSION:     1.6.0
+ * VERSION:     1.7.0
  * AUTHOR:      Martin Wagner
- * DATE:        2026-07-31
+ * DATE:        2026-08-26
  * PURPOSE:     Globale Helper-Funktionen
  *
- * FUNCTIONS:   genitivName()             — Bildet den Genitiv eines Eigennamens (deutsch)
+ * FUNCTIONS:   istPflichtfeld()          — Liest storage/app/private/pflichtfelder.txt und
+ *                                          prueft, ob ein Feld fuer mand/cust als
+ *                                          Pflichtfeld konfiguriert ist (fail-safe: opt)
+ *              genitivName()             — Bildet den Genitiv eines Eigennamens (deutsch)
  *              detectOsPlatform()        — Erkennt die Client-Plattform anhand des User-Agent-Strings
  *              detectBrowser()           — Erkennt den Client-Browser anhand des User-Agent-Strings
  *              trustedDeviceCookieName() — Cookie-Name für Trusted-Device-Feature (cust/mand-Login)
@@ -40,7 +43,13 @@
  * DB ACCESS:   sessiondb.trusted_device (td_id, user_type, user_id, token_hash,
  *              ua_hash, device_label, last_used_at, expires_at, created_at)
  *
- * CHANGES:     1.6.0 (2026-07-31) triggerHoneypotLockout()/registerHoneypotRoutes()
+ * CHANGES:     1.7.0 (2026-08-26) istPflichtfeld() ergaenzt — liest
+ *              storage/app/private/pflichtfelder.txt (Format analog
+ *              honeypot_paths.txt: Key=Value, #-Kommentare, Leerzeilen
+ *              ignoriert), Grundlage fuer konfigurierbare Pflichtfelder bei
+ *              mand/cust Registrierung + Konto-Bearbeiten (Telefon, Strasse,
+ *              PLZOrt, Firma). Fehlt Datei oder Eintrag: false (opt), fail-safe.
+ *              1.6.0 (2026-07-31) triggerHoneypotLockout()/registerHoneypotRoutes()
  *              ergaenzt — dynamische Honeypot-Routen aus honeypot_paths.txt, Treffer
  *              loesen sofortige volle Login-Sperre (gleicher Schluessel wie
  *              checkLoginThrottle()/recordFailedLoginAttempt()) und Log-Eintrag im
@@ -433,5 +442,45 @@ if (! function_exists('registerHoneypotRoutes')) {
                 Route::any($line, [HoneypotController::class, 'handle']);
             }
         }
+    }
+}
+
+if (! function_exists('istPflichtfeld')) {
+    /**
+     * Liest storage/app/private/pflichtfelder.txt und prüft, ob das gegebene
+     * Feld für den gegebenen Nutzertyp als Pflichtfeld konfiguriert ist.
+     * Fehlt die Datei oder der Eintrag: false (optional), fail-safe.
+     *
+     * @param string $userType 'mand' oder 'cust'
+     * @param string $feldKey  'Telefon'|'Strasse'|'PLZOrt'|'Firma'
+     */
+    function istPflichtfeld(string $userType, string $feldKey): bool
+    {
+        $prefix = $userType === 'mand' ? 'M_' : 'C_';
+        $path = storage_path('app/private/pflichtfelder.txt');
+
+        if (! file_exists($path)) {
+            return false;
+        }
+
+        $lines = file($path, FILE_IGNORE_NEW_LINES);
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+
+            if ($line === '' || str_starts_with($line, '#')) {
+                continue;
+            }
+
+            [$key, $value] = array_pad(explode('=', $line, 2), 2, '');
+            $key = trim($key);
+            $value = trim($value);
+
+            if ($key === $prefix . $feldKey) {
+                return $value === 'mand';
+            }
+        }
+
+        return false;
     }
 }

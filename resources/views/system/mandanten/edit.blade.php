@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/system/mandanten/edit.blade.php
-    VERSION: 1.1.1
-    DATE:    2026-06-25
+    VERSION: 1.2.0
+    DATE:    2026-08-26
 
     DESCRIPTION:
       Mandant settings edit — read-only profile card + editable settings card.
@@ -16,7 +16,14 @@
       GET    system.mandanten.show    — back link
       POST   logout                   — Breeze logout
 
-    CHANGES: 1.1.1 (2026-06-25) Android-Touch-Targets vergroessert: Logout-
+    CHANGES: 1.2.0 (2026-08-26) Straße und Hausnummer / PLZ und Ort als neue
+             dt/dd-Paare ergänzt (mand_street+nr, mand_postcode+city); Feld-
+             Reihenfolge im Profildaten-Block auf Benutzername/E-Mail/Vorname/
+             Nachname/Straße/PLZ+Ort/Telefon/Firma umgestellt; alle vier
+             optionalen Felder (Telefon/Firma/Straße/PLZ+Ort) mit
+             ?? 'nicht vorhanden'-Fallback versehen, da sie jetzt echtes NULL
+             enthalten können.
+             1.1.1 (2026-06-25) Android-Touch-Targets vergroessert: Logout-
              Button, Zurueck-Link und Speichern-Button auf min-h-11 angehoben.
 --}}
 <!DOCTYPE html>
@@ -117,12 +124,6 @@
                     </div>
                     <div>
                         <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                            Telefon
-                        </dt>
-                        <dd class="mt-1 text-sm text-gray-800">{{ $mandant->mand_tel }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide">
                             Vorname
                         </dt>
                         <dd class="mt-1 text-sm text-gray-800">{{ $mandant->mand_firstname }}</dd>
@@ -135,9 +136,27 @@
                     </div>
                     <div>
                         <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                            Straße und Hausnummer
+                        </dt>
+                        <dd class="mt-1 text-sm text-gray-800">{{ $mandant->{'mand_street+nr'} ?? 'nicht vorhanden' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                            PLZ und Ort
+                        </dt>
+                        <dd class="mt-1 text-sm text-gray-800">{{ $mandant->{'mand_postcode+city'} ?? 'nicht vorhanden' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                            Telefon
+                        </dt>
+                        <dd class="mt-1 text-sm text-gray-800">{{ $mandant->mand_tel ?? 'nicht vorhanden' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide">
                             Firma
                         </dt>
-                        <dd class="mt-1 text-sm text-gray-800">{{ $mandant->mand_company }}</dd>
+                        <dd class="mt-1 text-sm text-gray-800">{{ $mandant->mand_company ?? 'nicht vorhanden' }}</dd>
                     </div>
                 </dl>
             </div>

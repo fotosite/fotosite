@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/system/mandanten/register.blade.php
-    VERSION: 1.9.1
-    DATE:    2026-06-22
+    VERSION: 1.10.0
+    DATE:    2026-08-26
 
     DESCRIPTION:
       Standalone mandant registration page for invited mandants.
@@ -24,6 +24,13 @@
              Voreinstellung ersetzt (Feld ist read-only).
              1.9.1 (2026-06-29) PW-Hinweistext auf Controller-Anforderung
              korrigiert: "12Z + Regeln" → "Mindestens 12 Zeichen."
+             1.10.0 (2026-08-26) Telefon/Firma/Straße+Hausnr./PLZ+Stadt jeweils in
+             @if(istPflichtfeld('mand', ...)) gewickelt — bei "opt" wird das Feld
+             komplett nicht gerendert (nur Pflichtfelder werden bei der
+             Registrierung abgefragt, optionale Felder können später über
+             "Konto bearbeiten" nachgetragen werden). Innerhalb des @if ist das
+             Feld per Definition Pflicht, daher "*"-Sternchen + required statt
+             "(optional)"-Hinweis.
 --}}
 <!DOCTYPE html>
 <html lang="de">
@@ -140,6 +147,7 @@
                         @enderror
                     </div>
 
+                    @if(istPflichtfeld('mand', 'Strasse'))
                     <div>
                         <label for="mand_street_nr"
                                class="block text-sm font-medium text-gray-700">
@@ -157,7 +165,9 @@
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
+                    @endif
 
+                    @if(istPflichtfeld('mand', 'PLZOrt'))
                     <div>
                         <label for="mand_postcode_city"
                                class="block text-sm font-medium text-gray-700">
@@ -175,15 +185,17 @@
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
+                    @endif
 
+                    @if(istPflichtfeld('mand', 'Telefon'))
                     <div>
                         <label for="mand_tel"
                                class="block text-sm font-medium text-gray-700">
-                            Telefon
-                            <span class="text-gray-400 font-normal">(optional)</span>
+                            Telefon <span class="text-red-500">*</span>
                         </label>
                         <input id="mand_tel" name="mand_tel" type="text"
                                value="{{ old('mand_tel') }}"
+                               required
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
                                       focus:border-gray-500 focus:ring-gray-500
@@ -192,15 +204,17 @@
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
+                    @endif
 
+                    @if(istPflichtfeld('mand', 'Firma'))
                     <div>
                         <label for="mand_company"
                                class="block text-sm font-medium text-gray-700">
-                            Firma / Organisation
-                            <span class="text-gray-400 font-normal">(optional)</span>
+                            Firma / Organisation <span class="text-red-500">*</span>
                         </label>
                         <input id="mand_company" name="mand_company" type="text"
                                value="{{ old('mand_company') }}"
+                               required
                                class="mt-1 block w-full rounded-md border-gray-300
                                       shadow-sm text-sm
                                       focus:border-gray-500 focus:ring-gray-500
@@ -209,6 +223,7 @@
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
+                    @endif
 
                     <div>
                         <label for="password"
