@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustRegisterController.php
- * VERSION:     1.10.0
+ * VERSION:     1.11.0
  * AUTHOR:      Martin Wagner
  * DATE:        2026-08-26
  * PURPOSE:     Mitglieder-Registrierung per Einladungs-Token
@@ -45,7 +45,12 @@
  *              userdb.cust_pcode.pcode_id, mand_id, cust_id, cust_passcode,
  *              pcode_prefstat
  *
- * CHANGES:     1.10.0 (2026-08-26) store() (existing=0) — validate()-Regeln für
+ * CHANGES:     1.11.0 (2026-08-26) store() (existing=0) — ds_version beim
+ *              CustUser::create() liest jetzt PolicyVersion::get('ds_version')
+ *              (userdb.policy_versions, die von CheckPolicyVersion laufend
+ *              geprüfte Referenz) statt config('datenschutz.version') (nur ein
+ *              separater, nicht synchronisierter Startwert).
+ *              1.10.0 (2026-08-26) store() (existing=0) — validate()-Regeln für
  *              cust_tel/cust_street+nr/cust_postcode_city/cust_company jetzt
  *              dynamisch per istPflichtfeld('cust', ...) aus
  *              storage/app/private/pflichtfelder.txt abgeleitet; optionale Felder
@@ -79,6 +84,7 @@ namespace App\Http\Controllers\UserDb;
 use App\Models\SessionDb\CustInvite;
 use App\Models\UserDb\CustPcode;
 use App\Models\UserDb\CustUser;
+use App\Models\UserDb\PolicyVersion;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -173,7 +179,7 @@ class CustRegisterController extends UserDbController
                 'cust_pw_hash'       => Hash::make($validated['password']),
                 'cust_2fa_opt_in'    => false,
                 'ds_accepted_at'     => now(),
-                'ds_version'         => config('datenschutz.version'),
+                'ds_version'         => PolicyVersion::get('ds_version'),
             ]);
         }
 

@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/SystemMandantController.php
- * VERSION:     1.11.0
+ * VERSION:     1.12.0
  *
  * FUNCTIONS:   index()          — Lists all MandUser records ordered by mand_lastname.
  *                                 Reads: userdb.mand_user.*
@@ -79,7 +79,16 @@
  *              userdb.passkey_dismissed.pd_id, user_type, user_id (DELETE)
  *              sessiondb.cust_invite.invite_id, mand_id (DELETE)
  *
- * CHANGES:     1.11.0 (2026-08-26) handleRegister() — validate()-Regeln für mand_tel/
+ * CHANGES:     1.12.0 (2026-08-26) handleRegister() — ds_version/
+ *              upload_terms_version beim MandUser::create() lesen jetzt
+ *              PolicyVersion::get('ds_version') bzw.
+ *              PolicyVersion::get('upload_version') (userdb.policy_versions,
+ *              die von CheckPolicyVersion laufend geprüfte Referenz) statt
+ *              beide fälschlich denselben config('datenschutz.version')-Wert
+ *              (nur ein separater, nicht synchronisierter Startwert) —
+ *              upload_terms_version bekam bisher versehentlich den
+ *              ds_version-Wert.
+ *              1.11.0 (2026-08-26) handleRegister() — validate()-Regeln für mand_tel/
  *              mand_street+nr/mand_postcode+city/mand_company jetzt dynamisch per
  *              istPflichtfeld('mand', ...) aus storage/app/private/pflichtfelder.txt
  *              abgeleitet; optionale Felder werden komplett aus dem validate()-Array
@@ -123,6 +132,7 @@ use App\Models\UserDb\Invite;
 use App\Models\UserDb\MandUser;
 use App\Models\UserDb\Passkey;
 use App\Models\UserDb\PasskeyDismissed;
+use App\Models\UserDb\PolicyVersion;
 use App\Models\UserDb\SystUser;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -342,9 +352,9 @@ class SystemMandantController extends UserDbController
             'mand_cust_2fa'            => false,
             'valid_to'                 => null,
             'ds_accepted_at'           => now(),
-            'ds_version'               => config('datenschutz.version'),
+            'ds_version'               => PolicyVersion::get('ds_version'),
             'upload_terms_accepted_at' => now(),
-            'upload_terms_version'     => config('datenschutz.version'),
+            'upload_terms_version'     => PolicyVersion::get('upload_version'),
         ]);
 
         $invite->delete();
