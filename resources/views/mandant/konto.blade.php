@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/mandant/konto.blade.php
-    VERSION: 1.9.0
+    VERSION: 1.9.2
     DATE:    2026-08-26
 
     DESCRIPTION:
@@ -17,7 +17,15 @@
       PATCH mandant.konto.update    — Kontaktdaten speichern
       POST  mandant.logout          — Abmelden
 
-    CHANGES: 1.9.0 (2026-08-26) required-Attribut + rotes Pflicht-Sternchen bei
+    CHANGES: 1.9.2 (2026-08-26) Neue Amber-Box oberhalb des session('status')-
+             Banners ergänzt, sichtbar bei session('pflichtfeld_hinweis') —
+             wird von der neuen CheckPflichtfelder-Middleware gesetzt, wenn der
+             Nutzer wegen fehlender Pflichtangaben hierher umgeleitet wurde.
+             1.9.1 (2026-08-26) Grauer "(optional)"-Hinweis bei mand_street+nr/
+             mand_postcode+city ergänzt (@if(! istPflichtfeld(...))), analog zu
+             mand_tel/mand_company — bisher hatten diese beiden Felder trotz
+             konditionalem Sternchen keinen "(optional)"-Text.
+             1.9.0 (2026-08-26) required-Attribut + rotes Pflicht-Sternchen bei
              mand_tel/mand_street+nr/mand_postcode+city/mand_company jetzt
              dynamisch per @if(istPflichtfeld('mand', ...)) statt fest verdrahtet
              — alle 4 Felder bleiben (anders als bei der Registrierung) immer
@@ -121,6 +129,15 @@
         {{-- ── Sektion 1: Kontaktdaten ─────────────────────── --}}
 
         {{-- Flash: Kontaktdaten gespeichert --}}
+        @if(session('pflichtfeld_hinweis'))
+            <div class="mb-6 rounded-lg border border-amber-200
+                        bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                Ein oder mehrere Felder sind inzwischen zu zusätzlichen Pflichtfeldern
+                geworden. Bitte fülle die mit einem Stern (*) gekennzeichneten Felder
+                jetzt aus.
+            </div>
+        @endif
+
         @if(session('status'))
             <div class="mb-6 rounded-lg border border-indigo-200
                         bg-indigo-50 px-4 py-3 text-sm text-indigo-700">
@@ -241,6 +258,7 @@
                         <label for="mand_street_nr"
                                class="block text-sm font-medium text-gray-700">
                             Straße und Hausnummer
+                            @if(! istPflichtfeld('mand', 'Strasse')) <span class="text-gray-400 font-normal">(optional)</span> @endif
                             @if(istPflichtfeld('mand', 'Strasse')) <span class="text-red-500">*</span> @endif
                         </label>
                         <input id="mand_street_nr" name="mand_street+nr" type="text"
@@ -260,6 +278,7 @@
                         <label for="mand_postcode_city"
                                class="block text-sm font-medium text-gray-700">
                             PLZ und Ort
+                            @if(! istPflichtfeld('mand', 'PLZOrt')) <span class="text-gray-400 font-normal">(optional)</span> @endif
                             @if(istPflichtfeld('mand', 'PLZOrt')) <span class="text-red-500">*</span> @endif
                         </label>
                         <input id="mand_postcode_city" name="mand_postcode+city" type="text"

@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/CustSelfController.php
- * VERSION:     1.7.0
+ * VERSION:     1.8.0
  * AUTOR:       Martin Wagner
  * DATUM:       2026-08-26
  *
@@ -96,7 +96,18 @@
  *              userdb.invite.inv_id, inv_email, inv_token_hash, inv_type,
  *              inv_user_type, inv_user_id, expires_at (email_change-Einträge)
  *
- * CHANGES:     1.7.0 (2026-08-26) update() — validate()-Regeln für cust_tel/
+ * CHANGES:     1.8.0 (2026-08-26) update() — Cache::forget('pflichtfelder_ok_cust_'
+ *              . $custId) nach dem Speichern ergänzt, damit die neue
+ *              CheckPflichtfelder-Middleware (60s-Cache) den Nutzer nicht bis zu
+ *              60 Sekunden fälschlich weiter sperrt, nachdem fehlende
+ *              Pflichtangaben nachgetragen wurden. Zusätzlich liest update()
+ *              session()->pull('pflichtfeld_redirect_target') aus (von
+ *              CheckPflichtfelder gesetzt, nur für cust); ist ein Zielpfad
+ *              vorhanden, redirect()->to($intended) statt
+ *              redirect()->route('customer.konto') — Nutzer landet nach dem
+ *              Nachtragen fehlender Pflichtangaben wieder auf der Seite, die
+ *              er ursprünglich aufrufen wollte. status-Flash-Text unverändert.
+ *              1.7.0 (2026-08-26) update() — validate()-Regeln für cust_tel/
  *              cust_street+nr/cust_postcode_city/cust_company jetzt dynamisch per
  *              istPflichtfeld('cust', ...) aus storage/app/private/pflichtfelder.txt
  *              (required statt fest 'required'/'nullable'); Fallback-Zuweisung
@@ -135,6 +146,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -189,6 +201,15 @@ class CustSelfController extends UserDbController
         $validated = $request->validate($rules);
 
         $cust->update($validated);
+
+        Cache::forget('pflichtfelder_ok_cust_' . $custId);
+
+        $intended = session()->pull('pflichtfeld_redirect_target');
+
+        if ($intended) {
+            return redirect()->to($intended)
+                ->with('status', 'Kontaktdaten gespeichert.');
+        }
 
         return redirect()->route('customer.konto')
             ->with('status', 'Kontaktdaten gespeichert.');

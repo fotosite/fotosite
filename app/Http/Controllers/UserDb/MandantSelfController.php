@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/MandantSelfController.php
- * VERSION:     1.8.0
+ * VERSION:     1.9.0
  * AUTOR:       Martin Wagner
  * DATUM:       2026-08-26
  *
@@ -68,7 +68,14 @@
  *              userdb.invite.inv_id, inv_email, inv_token_hash, inv_type,
  *              inv_user_type, inv_user_id, expires_at (email_change-Einträge)
  *
- * CHANGES:     1.8.0 (2026-08-26) update() — validate()-Regeln für mand_tel/
+ * CHANGES:     1.9.0 (2026-08-26) update() — Cache::forget('pflichtfelder_ok_mand_'
+ *              . $mandId) nach dem Speichern ergänzt, damit die neue
+ *              CheckPflichtfelder-Middleware (60s-Cache) den Nutzer nicht bis zu
+ *              60 Sekunden fälschlich weiter sperrt, nachdem fehlende
+ *              Pflichtangaben nachgetragen wurden. Kein Pull/bedingter Redirect
+ *              (im Gegensatz zu CustSelfController::update()) — mand landet
+ *              nach dem Speichern bewusst immer auf mandant.konto.
+ *              1.8.0 (2026-08-26) update() — validate()-Regeln für mand_tel/
  *              mand_street+nr/mand_postcode+city/mand_company jetzt dynamisch per
  *              istPflichtfeld('mand', ...) aus storage/app/private/pflichtfelder.txt
  *              (required statt fest 'required'/'nullable'); Fallback-Zuweisung
@@ -96,6 +103,7 @@ use App\Models\UserDb\MandUser;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -157,6 +165,8 @@ class MandantSelfController extends UserDbController
         unset($validated['mand_2fa_disable']);
 
         $mand->update($validated);
+
+        Cache::forget('pflichtfelder_ok_mand_' . $mandId);
 
         return redirect()->route('mandant.konto')
             ->with('status', 'Kontodaten erfolgreich gespeichert.');

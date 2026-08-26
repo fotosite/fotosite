@@ -1,6 +1,6 @@
 {{--
     FILE:    resources/views/customer/konto.blade.php
-    VERSION: 1.7.0
+    VERSION: 1.7.2
     DATE:    2026-08-26
 
     DESCRIPTION:
@@ -18,7 +18,15 @@
       DELETE customer.konto.delete   — Konto löschen
       POST   customer.logout         — Abmelden
 
-    CHANGES: 1.7.0 (2026-08-26) required-Attribut + rotes Pflicht-Sternchen bei
+    CHANGES: 1.7.2 (2026-08-26) Neue Amber-Box oberhalb des session('status')-
+             Banners ergänzt, sichtbar bei session('pflichtfeld_hinweis') —
+             wird von der neuen CheckPflichtfelder-Middleware gesetzt, wenn der
+             Nutzer wegen fehlender Pflichtangaben hierher umgeleitet wurde.
+             1.7.1 (2026-08-26) Grauer "(optional)"-Hinweis bei cust_street+nr/
+             cust_postcode_city ergänzt (@if(! istPflichtfeld(...))), analog zu
+             cust_tel/cust_company — bisher hatten diese beiden Felder trotz
+             konditionalem Sternchen keinen "(optional)"-Text.
+             1.7.0 (2026-08-26) required-Attribut + rotes Pflicht-Sternchen bei
              cust_tel/cust_street+nr/cust_postcode_city/cust_company jetzt
              dynamisch per @if(istPflichtfeld('cust', ...)) statt fest verdrahtet
              — alle 4 Felder bleiben (anders als bei der Registrierung) immer
@@ -121,6 +129,15 @@
         </div>
 
         {{-- ── Card 1: Kontaktdaten ────────────────────────── --}}
+
+        @if(session('pflichtfeld_hinweis'))
+            <div class="mb-6 rounded-lg border border-amber-200
+                        bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                Ein oder mehrere Felder sind inzwischen zu zusätzlichen Pflichtfeldern
+                geworden. Bitte fülle die mit einem Stern (*) gekennzeichneten Felder
+                jetzt aus.
+            </div>
+        @endif
 
         @if(session('status'))
             <div class="mb-6 rounded-lg border border-indigo-200
@@ -243,6 +260,7 @@
                         <label for="cust_street_nr"
                                class="block text-sm font-medium text-gray-700">
                             Straße und Hausnummer
+                            @if(! istPflichtfeld('cust', 'Strasse')) <span class="text-gray-400 font-normal">(optional)</span> @endif
                             @if(istPflichtfeld('cust', 'Strasse')) <span class="text-red-500">*</span> @endif
                         </label>
                         <input id="cust_street_nr" name="cust_street+nr" type="text"
@@ -262,6 +280,7 @@
                         <label for="cust_postcode_city"
                                class="block text-sm font-medium text-gray-700">
                             PLZ und Ort
+                            @if(! istPflichtfeld('cust', 'PLZOrt')) <span class="text-gray-400 font-normal">(optional)</span> @endif
                             @if(istPflichtfeld('cust', 'PLZOrt')) <span class="text-red-500">*</span> @endif
                         </label>
                         <input id="cust_postcode_city" name="cust_postcode_city" type="text"

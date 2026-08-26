@@ -1,17 +1,18 @@
 <?php
 /**
  * FILE:        app/Http/Middleware/CheckWelcome.php
- * VERSION:     1.2.0
+ * VERSION:     1.2.1
  *
  * ZWECK:       Prüft nach dem Login, ob mand/cust die Willkommensseite noch
  *              nicht gesehen hat (show_welcome = 1, Default bei Account-
  *              Erstellung). Falls ja: Redirect auf die blockierende
  *              Willkommensseite (customer.welcome / mandant.welcome).
- *              Läuft NACH CheckPolicyVersion (siehe bootstrap/app.php) —
- *              eine veraltete Datenschutz-/Upload-Policy ist eine rechtliche
- *              Pflichtbestätigung und hat Vorrang vor der reinen
- *              Onboarding-Willkommensseite; ist die Policy aktuell, greift
- *              dieser Check als nächstes.
+ *              Läuft NACH CheckPolicyVersion UND CheckPflichtfelder (siehe
+ *              bootstrap/app.php) — eine veraltete Datenschutz-/Upload-Policy
+ *              sowie fehlende Pflichtangaben (Telefon/Strasse/PLZOrt/Firma)
+ *              haben beide Vorrang vor der reinen Onboarding-Willkommensseite;
+ *              sind Policy und Pflichtfelder in Ordnung, greift dieser Check
+ *              als nächstes.
  *
  * FUNCTIONS:   handle(Request, Closure): Response
  *                  — Bricht sofort ab auf den welcome/.confirm-Routen
@@ -27,7 +28,10 @@
  * DB ACCESS:   userdb.mand_user.mand_id, show_welcome
  *              userdb.cust_user.cust_id, show_welcome
  *
- * CHANGES:     1.1.0 (2026-06-21) Ausschluss um '*.policy.*' erweitert —
+ * CHANGES:     1.2.1 (2026-08-26) Docblock-Kommentar aktualisiert: läuft jetzt
+ *              auch nach dem neuen CheckPflichtfelder (bootstrap/app.php).
+ *              Keine Verhaltensänderung in dieser Datei selbst.
+ *              1.1.0 (2026-06-21) Ausschluss um '*.policy.*' erweitert —
  *              verhindert Redirect-Ping-Pong mit CheckPolicyVersion, wenn
  *              ein Account gleichzeitig show_welcome=1 UND eine veraltete
  *              ds_version/upload_terms_version hat (typisch: frisch
