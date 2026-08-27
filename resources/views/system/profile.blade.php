@@ -176,7 +176,7 @@
                                    class="mt-1 block w-full rounded-md border-gray-300
                                           shadow-sm text-sm
                                           focus:border-gray-500 focus:ring-gray-500">
-                            <p class="mt-1 text-sm text-gray-600">Diese E-Mail-Adresse wird genutzt, um dir Sicherheitscodes bei einem 2-Faktor-Login zu senden. Sie wird auch verwendet, wenn du dein Passwort erneuern musst. Verwende daher eine E-Mail-Adresse, auf die du in solchen Fällen zugreifen kannst, z.B. mit einem E-Mail-Programm auf deinem Handy.</p>
+                            <div class="mt-1 text-sm text-gray-600">{!! uiText('all', 'a_dash_email_aendern_erklaerung') !!}</div>
                         </div>
 
                         <div>

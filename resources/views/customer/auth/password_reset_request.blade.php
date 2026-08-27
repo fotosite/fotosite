@@ -40,10 +40,9 @@
             <h1 class="text-xl font-semibold tracking-tight text-gray-800 mb-2">
                 Passwort zurücksetzen
             </h1>
-            <p class="text-sm text-gray-500 mb-6 leading-relaxed">
-                Gib deine E-Mail-Adresse ein. Falls ein Mitglieds-Konto existiert,
-                senden wir dir einen Link zum Zurücksetzen.
-            </p>
+            <div class="text-sm text-gray-500 mb-6 leading-relaxed">
+                {!! uiText('cust', 'c_log_pw_reset_hinweis') !!}
+            </div>
 
             {{-- Status message --}}
             @if(session('status'))

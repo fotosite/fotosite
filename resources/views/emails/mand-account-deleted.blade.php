@@ -71,8 +71,7 @@
         <div class="body">
             <p>Hallo {{ $mandName }},</p>
 
-            <p>Ihr Galerist:innen-Konto bei Fotogalerie wurde von der
-               Systemadministration gelöscht.</p>
+            {!! uiText('mand', 'm_mail_account_deleted') !!}
         </div>
 
         <div class="footer">

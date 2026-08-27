@@ -41,20 +41,18 @@
                 <h1 class="text-xl font-semibold tracking-tight text-gray-800 mb-2">
                     Datenschutzerklärung aktualisiert
                 </h1>
-                <p class="text-sm text-gray-500 mb-6 leading-relaxed">
-                    Wir haben unsere Datenschutzerklärung aktualisiert. Informiere dich
-                    in deinem Einstellungsbereich.
-                </p>
+                <div class="text-sm text-gray-500 mb-6 leading-relaxed">
+                    {!! uiText('all', 'a_pol_ds_update_hinweis') !!}
+                </div>
                 <button type="button"
                         x-data="{}"
                         @click="window.open('{{ route('customer.datenschutz.erlaeuterung') }}', '_blank')"
                         class="block text-sm text-indigo-600 hover:underline mb-6 select-none">
                     Datenschutzerklärung ansehen →
                 </button>
-                <p class="text-xs text-gray-400 leading-relaxed mb-6">
-                    Die Datenschutz-Erklärung und die Bedingungen für Galerist:innen zum
-                    Upload von Fotos findest du auch in deinem Einstellungen-Fenster.
-                </p>
+                <div class="text-xs text-gray-400 leading-relaxed mb-6">
+                    {!! uiText('cust', 'c_pol_zusatzhinweis') !!}
+                </div>
             {{-- Unerreichbar seit 2026-07: Upload-Popup für cust deaktiviert
                  (siehe CheckPolicyVersion.php). Zweig bleibt als Sicherheitsnetz
                  bestehen, falls _policy_update dennoch auf 'upload' gesetzt wird. --}}
@@ -62,10 +60,9 @@
                 <h1 class="text-xl font-semibold tracking-tight text-gray-800 mb-2">
                     Upload-Bedingungen aktualisiert
                 </h1>
-                <p class="text-sm text-gray-500 mb-6 leading-relaxed">
-                    Wir haben unsere Upload-Bedingungen aktualisiert. Informiere dich
-                    in deinem Einstellungsbereich.
-                </p>
+                <div class="text-sm text-gray-500 mb-6 leading-relaxed">
+                    {!! uiText('all', 'a_pol_upload_update_hinweis') !!}
+                </div>
                 <button type="button"
                         x-data="{}"
                         @click="window.open('{{ route('customer.datenschutz.upload-bedingungen-pdf') }}', '_blank')"

@@ -133,9 +133,7 @@
         @if(session('pflichtfeld_hinweis'))
             <div class="mb-6 rounded-lg border border-amber-200
                         bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                Ein oder mehrere Felder sind inzwischen zu zusätzlichen Pflichtfeldern
-                geworden. Bitte fülle die mit einem Stern (*) gekennzeichneten Felder
-                jetzt aus.
+                {!! uiText('all', 'a_kto_pflichtfeld_hinweis') !!}
             </div>
         @endif
 
@@ -339,12 +337,9 @@
                 Konto löschen
             </h2>
 
-            <p class="text-sm text-red-700 mb-5">
-                Achtung, du bist dabei, dein Konto zu löschen. Wenn dein Mitgliedskonto
-                keinen Galeristen mehr hat, wird dein Fotogalerie-Konto gelöscht, und du
-                hast keinen Zugang mehr. Bekommst du danach eine neue Einladung von einem
-                Galeristen, musst du dann ein neues Benutzerkonto anlegen.
-            </p>
+            <div class="text-sm text-red-700 mb-5">
+                {!! uiText('cust', 'c_kto_konto_loeschen_warnung') !!}
+            </div>
 
             <form method="POST"
                   action="{{ route('customer.konto.delete') }}"

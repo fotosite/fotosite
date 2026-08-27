@@ -331,10 +331,8 @@
                                 <p class="mt-1 text-xs text-red-600" x-show="!dirty">{{ $message }}</p>
                             @enderror
                         </div>
-                        <p class="mt-1 text-sm text-gray-600">Diese E-Mail-Adresse wird genutzt, um Ihnen Sicherheitscodes bei einem 2-Faktor-Login zu senden. Sie wird auch verwendet, wenn Sie Ihr Passwort erneuern müssen. Verwenden Sie daher eine E-Mail-Adresse, auf die Sie in solchen Fällen zugreifen können, z.B. mit einem E-Mail-Programm auf Ihrem Handy.</p>
-                        <p class="mt-2 text-sm text-amber-600">Bitte denken Sie daran, dass E-Mails
-                        wie diese oft im Spam-Ordner landen. Wenn Sie die E-Mail nicht bekommen,
-                        prüfen Sie den Spam-Ordner.</p>
+                        <div class="mt-1 text-sm text-gray-600">{!! uiText('mand', 'm_dash_email_aendern_erklaerung') !!}</div>
+                        <div class="mt-2 text-sm text-amber-600">{!! uiText('mand', 'm_dash_email_spam_hinweis') !!}</div>
                     </div>
                     <div class="mt-5 flex gap-3">
                         <button type="button" @click="emailModalOpen = false"
@@ -368,26 +366,13 @@
                 <h3 class="font-semibold text-gray-800 mb-2">
                     Passkey einrichten
                 </h3>
-                <p class="text-sm text-gray-600 mb-1">
-                    Mit einem Passkey entfällt der 2FA-Schritt beim nächsten Login —
-                    einfach per Fingerabdruck oder Gesichtserkennung anmelden.
-                </p>
-                @if($passkeyOs === 'win')
-                <p class="text-xs text-gray-400 mb-4">
-                    Der Passkey wird lokal gespeichert und ist an dieses
-                    Windows-Konto gebunden.
-                </p>
-                @elseif($passkeyOs === 'ios')
-                <p class="text-xs text-gray-400 mb-4">
-                    Der Passkey wird in Ihrer iCloud Keychain gespeichert und
-                    steht auf allen Ihren Apple-Geräten zur Verfügung.
-                </p>
-                @elseif($passkeyOs === 'andr')
-                <p class="text-xs text-gray-400 mb-4">
-                    Der Passkey wird im Google Passwort-Manager gespeichert und
-                    steht auf allen Android-Geräten mit demselben Google-Konto
-                    zur Verfügung.
-                </p>
+                <div class="text-sm text-gray-600 mb-1">
+                    {!! renderMarkdownVariant(storage_path('app/private/ui-texte/mand/m_dash_passkey_prompt_hinweis.md'), 'INTRO') !!}
+                </div>
+                @if(in_array($passkeyOs, ['win', 'ios', 'andr']))
+                <div class="text-xs text-gray-400 mb-4">
+                    {!! renderMarkdownVariant(storage_path('app/private/ui-texte/mand/m_dash_passkey_prompt_hinweis.md'), strtoupper($passkeyOs)) !!}
+                </div>
                 @endif
                 <div class="flex flex-col gap-2 md:flex-row md:gap-3">
                     <button type="button" @click="window.location='{{ route('mandant.passkeys') }}'"

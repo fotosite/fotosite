@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Services/SessionDb/TwofaService.php
- * VERSION:     1.3.0
+ * VERSION:     1.4.0
  *
  * FUNCTIONS:   generate()       — Creates a 6-digit code for a given user_type + purpose, stores hashed, returns plain
  *              verify()         — Checks code against hash; marks tfa_used = true on success
@@ -20,6 +20,11 @@
  *
  * DB ACCESS:   sessiondb.twofa_code.tfa_id, user_type, user_id, tfa_purpose,
  *              tfa_code_hash, tfa_expires_at, tfa_used, created_at
+ *
+ * CHANGES:     1.4.0 (2026-08-27) Gültigkeitsdauer aus config('twofa.valid_minutes')
+ *              (config/twofa.php, ENV TWOFA_CODE_VALID_MINUTES) statt der
+ *              private Konstante VALID_MINUTES — einheitliche Quelle für
+ *              cust/mand/syst, auch von TwoFactorCodeMail genutzt.
  */
 
 namespace App\Services\SessionDb;
@@ -29,8 +34,7 @@ use Carbon\Carbon;
 
 class TwofaService extends SessionDbService
 {
-    private const CODE_LENGTH   = 6;
-    private const VALID_MINUTES = 2;
+    private const CODE_LENGTH = 6;
 
     /**
      * Generates a new 6-digit code for the given user and purpose, stores it
@@ -48,7 +52,7 @@ class TwofaService extends SessionDbService
             ],
             [
                 'tfa_code_hash'  => password_hash($plain, PASSWORD_BCRYPT),
-                'tfa_expires_at' => Carbon::now()->addMinutes(self::VALID_MINUTES),
+                'tfa_expires_at' => Carbon::now()->addMinutes(config('twofa.valid_minutes')),
                 'tfa_used'       => false,
                 'created_at'     => Carbon::now(),
             ]

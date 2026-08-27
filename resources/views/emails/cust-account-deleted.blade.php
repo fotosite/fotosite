@@ -72,11 +72,7 @@
         <div class="body">
             <p>Hallo {{ $custName }},</p>
 
-            <p>Dein Galerist:in hat seine Galerie geschlossen. Dabei wurde dein
-               Benutzerkonto geloescht.</p>
-
-            <p>Du brauchst eine neue Einladung von einem Galeristen, um wieder
-               Mitglied zu werden.</p>
+            {!! uiText('cust', 'c_mail_account_deleted') !!}
         </div>
 
         <div class="footer">

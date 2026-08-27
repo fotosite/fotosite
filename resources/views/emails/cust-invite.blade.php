@@ -102,10 +102,15 @@
         <div class="body">
             <p>Hallo {{ $custName }},</p>
 
-            <p>Dies ist eine Einladung, die Fotogalerie von {{ $mandFirstnameNom }} anzusehen.<br>
-               {{ genitivName($mandUname) }} Künstlername als Galerist:in lautet {{ $mandUname }}.</p>
+            @php
+                $inviteVars = [
+                    'mandFirstnameNom' => $mandFirstnameNom,
+                    'mandGenitiv'      => genitivName($mandUname),
+                    'mandUname'        => $mandUname,
+                ];
+            @endphp
 
-            <p>Benutze diesen Button, um ein Konto anzulegen:</p>
+            {!! renderMarkdownVariant(storage_path('app/private/ui-texte/cust/c_mail_invite.md'), 'INTRO', $inviteVars) !!}
 
             <a href="{{ $registerUrl }}" class="btn" style="-webkit-user-select: none; user-select: none;">Konto anlegen</a>
 
@@ -113,15 +118,12 @@
                 Oder verwende die URL: {{ $registerUrl }}
             </p>
 
-            <p>Du kannst die Fotogalerie auch ohne Konto besuchen. Wenn du kein Konto anlegen
-               möchtest, frage {{ $mandFirstnameNom }} nach einem Kurzzeit-Passwort.</p>
+            {!! renderMarkdownVariant(storage_path('app/private/ui-texte/cust/c_mail_invite.md'), 'OHNE_KONTO', $inviteVars) !!}
 
-            <p style="font-size:13px; color:#555555; border-left:3px solid #1a1a2e;
+            <div style="font-size:13px; color:#555555; border-left:3px solid #1a1a2e;
                       padding:8px 12px; margin:0 0 20px 0;">
-                <strong>Hinweis:</strong> Bei der Registrierung ist die Zustimmung zur
-                Datenschutzerklärung erforderlich. Diese wird dir während der
-                Registrierung angezeigt.
-            </p>
+                {!! renderMarkdownVariant(storage_path('app/private/ui-texte/cust/c_mail_invite.md'), 'HINWEIS') !!}
+            </div>
         </div>
 
         <div class="footer">

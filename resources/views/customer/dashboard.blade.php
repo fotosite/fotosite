@@ -148,10 +148,9 @@
                     FAQ und Infos
                 </button>
             </div>
-            <p class="mt-3 text-xs text-gray-400 leading-relaxed">
-                Die Bedingungen für den Upload von Fotos durch eine:n Galerist:in
-                findest du in deinem Einstellungen-Fenster und unter „FAQ und Infos".
-            </p>
+            <div class="mt-3 text-xs text-gray-400 leading-relaxed">
+                {!! uiText('cust', 'c_dash_upload_bedingungen_hinweis') !!}
+            </div>
         </div>
 
         {{-- Modal: Passwort ändern --}}
@@ -331,10 +330,8 @@
                                 <p class="mt-1 text-xs text-red-600" x-show="!dirty">{{ $message }}</p>
                             @enderror
                         </div>
-                        <p class="mt-1 text-sm text-gray-600">Diese E-Mail-Adresse wird genutzt, um dir Sicherheitscodes bei einem 2-Faktor-Login zu senden. Sie wird auch verwendet, wenn du dein Passwort erneuern musst. Verwende daher eine E-Mail-Adresse, auf die du in solchen Fällen zugreifen kannst, z.B. mit einem E-Mail-Programm auf deinem Handy.</p>
-                        <p class="mt-2 text-sm text-amber-600">Bitte denk daran, dass E-Mails wie
-                        diese oft im Spam-Ordner landen. Wenn du die E-Mail nicht bekommst,
-                        prüfe den Spam-Ordner.</p>
+                        <div class="mt-1 text-sm text-gray-600">{!! uiText('all', 'a_dash_email_aendern_erklaerung') !!}</div>
+                        <div class="mt-2 text-sm text-amber-600">{!! uiText('cust', 'c_dash_email_spam_hinweis') !!}</div>
                     </div>
                     <div class="mt-5 flex gap-3">
                         <button type="button" @click="emailModalOpen = false"
@@ -369,19 +366,9 @@
                 <p class="text-sm font-medium text-indigo-800">
                     Passkey einrichten — schneller und sicherer anmelden
                 </p>
-                <p class="text-xs text-indigo-600 mt-1">
-                    @if($passkeyOs === 'win')
-                        Der Passkey wird lokal gespeichert und ist an dieses
-                        Windows-Konto gebunden.
-                    @elseif($passkeyOs === 'ios')
-                        Der Passkey wird in Ihrer iCloud Keychain gespeichert —
-                        auf allen Apple-Geräten verfügbar.
-                    @elseif($passkeyOs === 'andr')
-                        Der Passkey wird im Google Passwort-Manager gespeichert —
-                        auf allen Android-Geräten mit demselben Google-Konto
-                        verfügbar.
-                    @endif
-                </p>
+                <div class="text-xs text-indigo-600 mt-1">
+                    {!! renderMarkdownVariant(storage_path('app/private/ui-texte/cust/c_dash_passkey_prompt_hinweis.md'), strtoupper($passkeyOs)) !!}
+                </div>
             </div>
             <div class="flex flex-col gap-2 md:flex-row md:gap-3 w-full md:w-auto">
                 <button type="button"

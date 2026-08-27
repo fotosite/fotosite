@@ -99,19 +99,16 @@
         </div>
 
         <div class="body">
-            <p>Du hast eine Anmeldung bei der Fotogalerie begonnen.
-            Hier ist dein Sicherheitscode:</p>
+            <div>{!! renderMarkdownVariant(storage_path('app/private/ui-texte/all/a_mail_2fa_hinweis.md'), 'INTRO') !!}</div>
 
             <p style="font-size: 32px; font-weight: bold;
                       letter-spacing: 8px; text-align: center;">
                 {{ $code }}
             </p>
 
-            <p>Der Code ist {{ $validMinutes }} Minuten gültig.</p>
+            <div>{!! renderMarkdownVariant(storage_path('app/private/ui-texte/all/a_mail_2fa_hinweis.md'), 'GUELTIGKEIT', ['validMinutes' => $validMinutes]) !!}</div>
 
-            <p>Falls du dich gerade nicht bei der Fotogalerie anmeldest,
-            kannst du diese Email ignorieren. Dein Konto bleibt
-            unverändert.</p>
+            <div>{!! renderMarkdownVariant(storage_path('app/private/ui-texte/all/a_mail_2fa_hinweis.md'), 'ABSCHLUSS') !!}</div>
         </div>
 
         <div class="footer">

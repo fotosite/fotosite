@@ -1,8 +1,8 @@
 <?php
 /**
  * FILE:        app/Mail/TwoFactorCodeMail.php
- * VERSION:     1.1.0
- * DATE:        2026-06-08
+ * VERSION:     1.2.0
+ * DATE:        2026-08-27
  *
  * FUNCTIONS:   __construct()    — Accepts the 6-digit 2FA code and optional recipient name
  *              envelope()       — Sets subject and sender name
@@ -12,6 +12,9 @@
  * CALLS:       (none)
  *
  * DB ACCESS:   (none)
+ *
+ * CHANGES:     1.2.0 (2026-08-27) validMinutes aus config('twofa.valid_minutes')
+ *              statt hartcodierter 2 — gleiche Quelle wie TwofaService.
  */
 
 namespace App\Mail;
@@ -45,7 +48,7 @@ class TwoFactorCodeMail extends Mailable
             with: [
                 'code'          => $this->code,
                 'recipientName' => $this->recipientName,
-                'validMinutes'  => 2,
+                'validMinutes'  => config('twofa.valid_minutes'),
             ],
         );
     }

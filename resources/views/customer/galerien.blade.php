@@ -204,10 +204,12 @@
                  x-data="{
                      pcodeId: {{ $pcodes->first()->pcode_id }},
                      galerienCount: {{ $pcodes->count() }},
+                     msgKontoLoeschen: @js(trim(strip_tags(uiText('cust', 'c_kto_konto_loeschen_warnung')))),
+                     msgGalerieEntfernen: @js(trim(strip_tags(uiText('cust', 'c_kto_galerie_entfernen_warnung')))),
                      confirmAndRemove() {
                          const msg = this.galerienCount === 1
-                             ? 'Achtung, du bist dabei, dein Konto zu löschen. Wenn dein Mitgliedskonto keinen Galeristen mehr hat, wird dein Fotogalerie-Konto gelöscht, und du hast keinen Zugang mehr. Bekommst du danach eine neue Einladung von einem Galeristen, musst du dann ein neues Benutzerkonto anlegen. Fortfahren?'
-                             : 'Achtung, du bist dabei, einen Galeristen aus deiner Liste zu löschen. Damit sperrst du deinen Zugang zu dessen Fotos. Fortfahren?';
+                             ? this.msgKontoLoeschen + ' Fortfahren?'
+                             : this.msgGalerieEntfernen + ' Fortfahren?';
                          if (!window.confirm(msg)) return;
                          this.$refs.removeForm.action = '/customer/galerien/' + this.pcodeId;
                          this.$refs.removeForm.submit();

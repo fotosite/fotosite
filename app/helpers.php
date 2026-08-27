@@ -1,9 +1,9 @@
 <?php
 /**
  * FILE:        app/helpers.php
- * VERSION:     1.7.0
+ * VERSION:     1.8.0
  * AUTHOR:      Martin Wagner
- * DATE:        2026-08-26
+ * DATE:        2026-08-27
  * PURPOSE:     Globale Helper-Funktionen
  *
  * FUNCTIONS:   istPflichtfeld()          — Liest storage/app/private/pflichtfelder.txt und
@@ -20,6 +20,14 @@
  *              renderMarkdownVariant()   — Extrahiert genau EINEN Tag-Block aus einer
  *                                          Markdown-Datei (<!--TAG-->...<!--/TAG-->) und
  *                                          rendert ihn per CommonMarkConverter zu HTML
+ *              uiText()                  — Liest storage/app/private/ui-texte/{bereich}/{name}.md,
+ *                                          rendert per CommonMarkConverter zu HTML. Genereller
+ *                                          Helper für ausgelagerte UI-Textblöcke (Blade- +
+ *                                          Mail-Views), analog willkommen_*.md. Auffälliger
+ *                                          roter Platzhalter statt stillem Fail bei fehlender Datei.
+ *                                          Optionaler $vars-Parameter ersetzt {{key}}-Platzhalter
+ *                                          im Markdown-Rohtext vor der Konvertierung (str_replace,
+ *                                          kein Blade-Parsing) — für Variablen mitten im Satz.
  *              loginThrottleKey()        — Gemeinsamer IP-Rate-Limit-Schlüssel für alle
  *                                          Login-Ebenen (cust, mand, syst)
  *              checkLoginThrottle()      — Prüft aktive Login-Sperre für die IP, verlängert
@@ -43,7 +51,15 @@
  * DB ACCESS:   sessiondb.trusted_device (td_id, user_type, user_id, token_hash,
  *              ua_hash, device_label, last_used_at, expires_at, created_at)
  *
- * CHANGES:     1.7.0 (2026-08-26) istPflichtfeld() ergaenzt — liest
+ * CHANGES:     1.8.0 (2026-08-27) uiText() ergaenzt — genereller Helper zur
+ *              Auslagerung einzelner UI-Textblöcke (Blade- + Mail-Views) nach
+ *              storage/app/private/ui-texte/{all,cust,mand,syst}/*.md, analog
+ *              WelcomeScreenController::renderMarkdown() (willkommen_*.md),
+ *              aber mit rotem Platzhalter statt abort(404) bei fehlender Datei.
+ *              Optionaler $vars-Parameter für {{key}}-Platzhalter (str_replace
+ *              vor Markdown-Konvertierung), für Variablen mitten im Satz in
+ *              E-Mail-Bodies (Code, Name, Frist).
+ *              1.7.0 (2026-08-26) istPflichtfeld() ergaenzt — liest
  *              storage/app/private/pflichtfelder.txt (Format analog
  *              honeypot_paths.txt: Key=Value, #-Kommentare, Leerzeilen
  *              ignoriert), Grundlage fuer konfigurierbare Pflichtfelder bei
@@ -261,8 +277,13 @@ if (! function_exists('renderMarkdownVariant')) {
      * Dateien mit 'allgemein' im Pfad, sonst 'UNKNOWN' — zusätzlich
      * Log::warning() mit Dateiname und gesuchtem Tag (kein harter Fehler,
      * da reiner Anzeige-Text).
+     *
+     * $vars ersetzt {{key}}-Platzhalter im extrahierten Block (str_replace,
+     * kein Blade-Parsing), analog uiText().
+     *
+     * @param array<string, string> $vars Platzhalter-Ersetzungen, Schlüssel ohne Klammern
      */
-    function renderMarkdownVariant(string $filePath, string $tag): string
+    function renderMarkdownVariant(string $filePath, string $tag, array $vars = []): string
     {
         if (! file_exists($filePath)) {
             Log::warning('renderMarkdownVariant: Datei nicht gefunden.', [
@@ -295,9 +316,51 @@ if (! function_exists('renderMarkdownVariant')) {
             $block = $extractTag($fallbackTag) ?? '';
         }
 
+        foreach ($vars as $key => $value) {
+            $block = str_replace('{{' . $key . '}}', $value, $block);
+        }
+
         $converter = new CommonMarkConverter();
 
         return $converter->convert($block)->getContent();
+    }
+}
+
+if (! function_exists('uiText')) {
+    /**
+     * Liest storage/app/private/ui-texte/{bereich}/{dateiname}.md und
+     * rendert sie per CommonMarkConverter zu HTML (gleiches Verfahren wie
+     * WelcomeScreenController::renderMarkdown() für willkommen_*.md).
+     * Fehlt die Datei, wird KEIN stiller Fail erzeugt, sondern ein
+     * auffälliger, rot markierter Platzhalter zurückgegeben, damit ein
+     * Tippfehler im Dateinamen sofort im Frontend auffällt.
+     *
+     * $vars ersetzt {{key}}-Platzhalter im Markdown-Rohtext (reines
+     * str_replace, VOR der Markdown-Konvertierung, kein Blade-Parsing) —
+     * erlaubt Variablen mitten im Satz in ansonsten frei editierbaren
+     * Texten (z.B. E-Mail-Bodies mit Sicherheitscode/Name/Frist).
+     *
+     * @param string $bereich   'all'|'cust'|'mand'|'syst'
+     * @param string $dateiname Ohne .md-Endung
+     * @param array<string, string> $vars Platzhalter-Ersetzungen, Schlüssel ohne Klammern
+     */
+    function uiText(string $bereich, string $dateiname, array $vars = []): string
+    {
+        $path = storage_path("app/private/ui-texte/{$bereich}/{$dateiname}.md");
+
+        if (! file_exists($path)) {
+            return "<p style=\"color:red\">[FEHLENDER UI-TEXT: {$bereich}/{$dateiname}.md]</p>";
+        }
+
+        $content = file_get_contents($path);
+
+        foreach ($vars as $key => $value) {
+            $content = str_replace('{{' . $key . '}}', $value, $content);
+        }
+
+        $converter = new CommonMarkConverter();
+
+        return $converter->convert($content)->getContent();
     }
 }
 

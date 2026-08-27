@@ -40,10 +40,9 @@
             </div>
         @endif
 
-        <p class="text-sm text-gray-600 mb-5">
-            Bitte geben Sie den 6-stelligen Code ein, den wir an Ihre
-            E-Mail-Adresse gesendet haben. Der Code ist 2 Minuten gültig.
-        </p>
+        <div class="text-sm text-gray-600 mb-5">
+            {!! uiText('all', 'a_log_2fa_hinweis', ['validMinutes' => config('twofa.valid_minutes')]) !!}
+        </div>
 
         <form method="POST"
               action="{{ route('customer.login.2fa.verify') }}"

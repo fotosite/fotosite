@@ -92,9 +92,9 @@
         <div class="body">
             <p>Hallo{{ $firstname ? ' ' . $firstname : '' }},</p>
 
-            <p>Du hast eine Änderung deiner E-Mail-Adresse angefordert.</p>
+            {!! renderMarkdownVariant(storage_path('app/private/ui-texte/all/a_mail_email_change.md'), 'INTRO') !!}
 
-            <p>Bestätigungslink (24 Stunden gültig):</p>
+            {!! renderMarkdownVariant(storage_path('app/private/ui-texte/all/a_mail_email_change.md'), 'LINK_INFO') !!}
 
             <a href="{{ $confirmUrl }}" class="btn" style="-webkit-user-select: none; user-select: none;">E-Mail-Adresse bestätigen</a>
 
@@ -102,7 +102,7 @@
                 Oder verwende die URL: {{ $confirmUrl }}
             </p>
 
-            <p class="note">Falls du diese Änderung nicht angefordert hast, ignoriere diese Mail.</p>
+            <div class="note">{!! renderMarkdownVariant(storage_path('app/private/ui-texte/all/a_mail_email_change.md'), 'HINWEIS') !!}</div>
         </div>
 
         <div class="footer">

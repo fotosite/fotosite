@@ -118,9 +118,7 @@
                 @endif
             </p>
 
-            <p>Ein neues Gerät wurde für deinen Account als vertrauenswürdig
-            markiert. Bei zukünftigen Logins auf diesem Gerät wird kein
-            Sicherheitscode mehr angefordert.</p>
+            <div>{!! renderMarkdownVariant(storage_path('app/private/ui-texte/all/a_mail_trusted_device_hinweis.md'), 'INTRO') !!}</div>
 
             <div class="device-box">
                 <div class="device-label">Gerät</div>
@@ -129,8 +127,7 @@
             </div>
 
             <div class="warning">
-                Warst du das nicht? Ändere umgehend dein Passwort — das
-                widerruft automatisch alle vertrauenswürdigen Geräte.
+                {!! renderMarkdownVariant(storage_path('app/private/ui-texte/all/a_mail_trusted_device_hinweis.md'), 'WARNUNG') !!}
             </div>
         </div>
 

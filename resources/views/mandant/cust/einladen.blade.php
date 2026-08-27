@@ -128,17 +128,9 @@
                               text-gray-800 shadow-sm
                               focus:outline-none focus:ring-2 focus:ring-indigo-400
                               @error('cust_alias') border-red-400 bg-red-50 @else border-gray-300 @enderror">
-                <p class="text-xs text-gray-500 mt-1">
-                    Dieser Name wird in der Einladungsmail verwendet.
-                    Du kannst ihn später in der Mitglieder-Administration
-                    wieder ändern, um z.B. bei gleichen Vornamen besser
-                    den Überblick zu behalten. Mitgliedern wird der von dir
-                    gewählte Name nur in der Einladungsmail gezeigt. Nach
-                    der Registrierung haben Mitglieder keinen Zugriff auf
-                    die von dir vergebenen Namen. Wir empfehlen trotzdem,
-                    Leute, für die du hässliche Namen verwenden würdest,
-                    gar nicht erst einzuladen.
-                </p>
+                <div class="text-xs text-gray-500 mt-1">
+                    {!! uiText('mand', 'm_invite_alias_erklaerung') !!}
+                </div>
                 @error('cust_alias')
                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                 @enderror

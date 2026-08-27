@@ -71,9 +71,9 @@
                   autocomplete="off">
                 @csrf
 
-                <p class="text-sm text-gray-600 mb-5">
-                    Ein Code wurde an Ihre hinterlegte E-Mail-Adresse gesendet.
-                </p>
+                <div class="text-sm text-gray-600 mb-5">
+                    {!! uiText('all', 'a_log_2fa_hinweis', ['validMinutes' => config('twofa.valid_minutes')]) !!}
+                </div>
 
                 <div>
                     <label for="code"

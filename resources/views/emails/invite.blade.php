@@ -92,20 +92,17 @@
         </div>
 
         <div class="body">
+            @php
+                $inviteMdPath = match(true) {
+                    $type !== 'register' => storage_path('app/private/ui-texte/all/a_mail_invite_pw_reset.md'),
+                    $userType === 'mand' => storage_path('app/private/ui-texte/mand/m_mail_invite_register.md'),
+                    $userType === 'cust' => storage_path('app/private/ui-texte/cust/c_mail_invite_register.md'),
+                    default              => storage_path('app/private/ui-texte/syst/s_mail_invite_register.md'),
+                };
+            @endphp
+
             @if($type === 'register')
-                @if($userType === 'mand')
-                    <p>Du wurdest eingeladen, einen Galerist:innen-Account für die Fotogalerie
-                       anzulegen. Klicke auf den folgenden Button — er ist 24 Stunden
-                       gültig:</p>
-                @elseif($userType === 'cust')
-                    <p>Sie wurden eingeladen, einen Mitglieder-Account für Fotogalerie
-                       anzulegen. Klicken Sie auf den folgenden Link — er ist 24 Stunden
-                       gültig:</p>
-                @else
-                    <p>Sie wurden eingeladen, einen System-Account für Fotogalerie
-                       anzulegen. Klicken Sie auf den folgenden Link — er ist 24 Stunden
-                       gültig:</p>
-                @endif
+                {!! renderMarkdownVariant($inviteMdPath, 'INTRO') !!}
 
                 <a href="{{ $inviteUrl }}" class="btn" style="-webkit-user-select: none; user-select: none;">Link zum Account erstellen</a>
 
@@ -113,32 +110,20 @@
                 <p style="word-break:break-all; font-size:12px; color:#666666;">
                     Oder verwende die URL: {{ $inviteUrl }}
                 </p>
-                <p style="font-size:13px; color:#555555; border-left:3px solid #1a1a2e;
+                <div style="font-size:13px; color:#555555; border-left:3px solid #1a1a2e;
                           padding:8px 12px; margin:0 0 20px 0; border-radius:0 4px 4px 0;">
-                    <strong>Hinweis:</strong> Bei der Registrierung sind die Zustimmung
-                    zur Datenschutzerklärung sowie zu den Bedingungen für den Upload
-                    von Daten erforderlich. Beide Dokumente werden dir während der
-                    Registrierung angezeigt.
-                </p>
+                    {!! renderMarkdownVariant($inviteMdPath, 'HINWEIS') !!}
+                </div>
                 @elseif($userType === 'cust')
-                <p style="font-size:13px; color:#555555; border-left:3px solid #1a1a2e;
+                <div style="font-size:13px; color:#555555; border-left:3px solid #1a1a2e;
                           padding:8px 12px; margin:0 0 20px 0; border-radius:0 4px 4px 0;">
-                    <strong>Hinweis:</strong> Bei der Registrierung ist die Zustimmung
-                    zur Datenschutzerklärung erforderlich. Diese wird Ihnen während der
-                    Registrierung angezeigt.
-                </p>
+                    {!! renderMarkdownVariant($inviteMdPath, 'HINWEIS') !!}
+                </div>
                 @endif
 
-                @if($userType === 'mand')
-                <p class="note">Falls du diese Einladung nicht erwartet hast,
-                   kannst du diese E-Mail ignorieren.</p>
-                @else
-                <p class="note">Falls Sie diese Einladung nicht erwartet haben,
-                   können Sie diese E-Mail ignorieren.</p>
-                @endif
+                <div class="note">{!! renderMarkdownVariant($inviteMdPath, 'FOOTER_NOTE') !!}</div>
             @else
-                <p>Sie haben Ihr Passwort vergessen? Kein Problem: mit
-                diesem Link können Sie ein neues Passwort festlegen:</p>
+                {!! renderMarkdownVariant($inviteMdPath, 'INTRO') !!}
 
                 <a href="{{ $inviteUrl }}" class="btn" style="-webkit-user-select: none; user-select: none;">Passwort ändern</a>
 
@@ -146,8 +131,7 @@
                     Oder verwende die URL: {{ $inviteUrl }}
                 </p>
 
-                <p>Falls dies nicht von Ihnen veranlasst war, können Sie
-                diese Email ignorieren. Ihr Konto bleibt dann unverändert.</p>
+                {!! renderMarkdownVariant($inviteMdPath, 'FOOTER_NOTE') !!}
             @endif
         </div>
 

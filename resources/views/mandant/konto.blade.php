@@ -132,9 +132,7 @@
         @if(session('pflichtfeld_hinweis'))
             <div class="mb-6 rounded-lg border border-amber-200
                         bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                Ein oder mehrere Felder sind inzwischen zu zusätzlichen Pflichtfeldern
-                geworden. Bitte fülle die mit einem Stern (*) gekennzeichneten Felder
-                jetzt aus.
+                {!! uiText('all', 'a_kto_pflichtfeld_hinweis') !!}
             </div>
         @endif
 
