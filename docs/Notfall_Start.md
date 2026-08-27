@@ -2,7 +2,7 @@
 
 **Notfall-Startdokument**
 
-*Stand: 26. August 2026  |  Letzter Git-Tag: pflichtfelder_konfiguration_ok*
+*Stand: 27. August 2026  |  Letzter Git-Tag: ui_texte_ausgelagert_ok*
 
 **🏁 MEILENSTEIN: Benutzer-/Sicherheitsverwaltung implementiert. Tag user_management_complete_ok ist sicherer Rückfallpunkt und als Startimplementierung für künftige Projekte geeignet (siehe Abschnitt 9). EINSCHRAENKUNG: Die Passkey-Funktionalität (Phase 6) ist technisch implementiert, aber noch NICHT gruendlich getestet — siehe naechster Schritt unten und Abschnitt 7.**
 
@@ -26,6 +26,10 @@
 
 **⚠  NEU 26.08.: Konfigurierbare Pflichtfelder fuer mand/cust eingefuehrt (Telefon/Strasse+Hausnr./PLZ+Ort/Firma) — neue Datei storage/app/private/pflichtfelder.txt + Helper istPflichtfeld() (pflichtfelder_konfiguration_ok, Commit eef2eed). Registrierung fragt nur Pflichtfelder ab, Konto-Bearbeiten zeigt immer alle Felder dynamisch. Begleitende DB-Migration: cust_tel/cust_street+nr/cust_postcode_city/cust_company + vier mand-Pendants in userdb auf NULL DEFAULT NULL umgestellt (vorher NOT NULL DEFAULT 'nicht vorhanden'), Anzeige-Fallback unveraendert. Ausserdem: mandant/konto.blade.php Pflicht-Sternchen-Bugfix, syst sieht jetzt zusaetzlich mand-Strasse/PLZ+Ort, neue mand-Detailseite je Mitglied (mandant.kunden.show, zeigt erstmals Telefon/Firma/Adresse eigener Mitglieder) + umgebaute Mitgliederliste. Details Abschnitt 5.2j.**
 
+**⚠  NEU 26.08. (2 weitere Aenderungen am selben Tag): (1) Pflichtfelder-Erzwingung nach Login — neue Middleware CheckPflichtfelder erzwingt jetzt aktiv nachtraeglich zur Pflicht gewordene, aber noch leere Felder (Redirect zur Konto-Seite mit Amber-Hinweisbox, 60s-Cache), Tag pflichtfelder_erzwingung_ok, Commit 16e81f3. (2) Bugfix Policy-Version bei Registrierung — ds_version/upload_terms_version lasen bisher einen statischen Config-Wert statt der tatsaechlich aktuellen policy_versions-Version, wodurch das "Policy geaendert"-Popup faelschlich direkt nach der Registrierung erschien, Tag registration_policy_version_fix_ok, Commit 83c738e. Details Abschnitt 5.2k/5.2l.**
+
+**⚠  NEU 27.08.: UI-/E-Mail-Texte nach editierbaren Markdown-Dateien ausgelagert (28 Textstellen, storage/app/private/ui-texte/{all,cust,mand,syst}/*.md, nicht versioniert) — neuer Helper uiText(), renderMarkdownVariant() um Platzhalter-Mechanismus erweitert. 2FA-Code-Gueltigkeitsdauer war an zwei Stellen hartcodiert, jetzt zentral in config/twofa.php (TWOFA_CODE_VALID_MINUTES). Tag ui_texte_ausgelagert_ok, Commit 2dbeb37. ZUSAETZLICH, .env-only (nicht versioniert): Mail-Konfiguration auf echtes Postfach umgestellt (vorheriges MAIL_SCHEME=starttls von Symfony Mailer 8.x NICHT unterstuetzt, verursachte 500er bei jedem Mailversand) — siehe aktualisierten Steckbrief Abschnitt 1. BACKSTAGE_PATH jetzt erstmals explizit in der Server-.env gesetzt (individueller Pfad statt Code-Default 'backstage') — WICHTIG: fruehere Referenzen auf "/backstage" in diesem Dokument sind ab sofort veraltet, siehe Steckbrief Abschnitt 1 fuer den Hinweis zum aktuellen Wert. Details Abschnitt 5.2m.**
+
 **Neuen Chat starten:**
 
 - Neuen Chat im Projekt "Fotosite V08" in Claude.ai öffnen
@@ -47,10 +51,11 @@
 | Git-Repo | github.com/fotosite/fotosite (privat) |
 | Aktiver Branch | feature/passkey-infra |
 | Lokaler Pfad | D:\mwa\Projekte\fotosite\Fotosite_V08\claudescode\fotosite |
-| Letzter Git-Tag | logout_dialog_close_window_ok (04.08.2026). Meilenstein: user_management_complete_ok (20.06.) |
+| Letzter Git-Tag | ui_texte_ausgelagert_ok (27.08.2026). Meilenstein: user_management_complete_ok (20.06.) |
 | Server-Pfad | /var/www/vhosts/u14bc1w8.host159.alfahosting-server.de/fotos.martinwagner.de/ |
 | SSH | PuTTY, User u14bc1w8 |
-| Mail | host159.alfahosting-server.de:587, MAIL_ENCRYPTION=tls |
+| Mail | host159.alfahosting-server.de:465, MAIL_SCHEME=smtps (SSL/TLS), Postfach noreply@martinwagner.de bei Alfahosting. Passwort NICHT in diesem Dokument — liegt in der Server-.env (MAIL_PASSWORD) und/oder im Alfahosting-Postfach-Admin. **Korrektur 27.08.:** vorherige Angabe (Port 587, tls) war veraltet/falsch — tatsaechlich stand in .env bis dahin ein lokaler Mailcatcher (127.0.0.1:1025, MAIL_SCHEME=starttls), der zudem von der installierten Symfony-Mailer-Version nicht unterstuetzt wurde (500er bei jedem Mailversand) |
+| syst-Login-Pfad (BACKSTAGE_PATH) | `eltorcal/camshaft` — seit 27.08. explizit in der Server-.env gesetzt (individueller Pfad statt Code-Default `backstage`). Aufruf: https://fotos.martinwagner.de/eltorcal/camshaft |
 
 | **Rolle** | **UI-Begriff** | **Bereich** | **Login** |
 | --- | --- | --- | --- |
@@ -173,6 +178,32 @@ npm run build
 **🎯  NAECHSTER SCHRITT (oberste Prioritaet): Gruendlicher Gesamttest der Passkey-Funktionalität. Phase 6 ist technisch implementiert, aber noch nicht systematisch getestet - getestet wurde bisher nur punktuell (Windows Hello, Android Chrome/Firefox, cust-Banner, ein Grenzfall). Der ausstehende Test umfasst Registrierung, Login, Umbenennen, Loeschen, Prompt-/Dismiss-Logik, jeweils fuer mand UND cust, ueber Windows/Android/iOS und die relevanten Browser hinweg - AUSDRUECKLICH KEIN reiner iOS-Test. Details Abschnitt 7. Zwischen dem 19.07.-Stand und heute kam ausschliesslich Sicherheits-Haertung dazwischen (Abschnitt 5.2f) - am Passkey-Testbedarf hat sich nichts geaendert.**
 
 **⚠  Danach weiter OFFEN: (a) dirty-Ausblendung bei system/mandanten/index.blade.php + customer/auth/register.blade.php nachziehen. (b) Regressionstest Android/Windows der globalen Button-Animation. (c) Abnahmetest cust-Bereich (Bloecke 1-6), danach Tag cust_complete_ok. (d) TRUSTED_DEVICE_DAYS-Duplikat in .env bereinigen (Zeile 17 vs. 97). (e) [ERLEDIGT 04.08. — Logout-Button "Zurueck" heisst jetzt "Fenster schliessen", siehe 5.2i]. (f) syst-Passwort-Policy + Honeypot-Infrastruktur committen (aktuell uncommitted), HONEYPOT_LOCKOUT_MINUTES + LOG_STACK=daily auf Server-.env nachtragen. DANACH Phase 7: mand-Content VOR Cust-UI.**
+
+## 5.2m Feature 27.08.2026 (UI-/E-Mail-Texte ausgelagert + 2FA-Gueltigkeitsdauer konfigurierbar)
+
+✓  Neuer Helper uiText(bereich, dateiname, vars) in app/helpers.php: liest storage/app/private/ui-texte/{all,cust,mand,syst}/*.md (nicht versioniert, analog honeypot_paths.txt/pflichtfelder.txt), rendert per CommonMarkConverter zu HTML. Fehlt eine Datei: kein stiller Fail, sondern roter Platzhalter [FEHLENDER UI-TEXT: ...] im Frontend. 28 Textstellen ausgelagert: Login-/2FA-Hinweise, Konto-Loeschen-/Galerie-entfernen-Warnungen, Upload-Bedingungen-Hinweis, E-Mail-aendern-Erklaerung, Spam-Hinweis, Passkey-Prompts, Alias-Erklaerung, Pflichtfeld-Nachtrag-Hinweis, Policy-Update-Hinweise, 7 E-Mail-Bodies. Wortgleiche Duplikate (auch ueber cust/mand/syst hinweg) auf je eine gemeinsame Datei konsolidiert
+
+✓  renderMarkdownVariant() (bestehender Tag-Varianten-Mechanismus, z.B. Passkey-OS-Hinweise) um denselben {{key}}-Platzhalter-Mechanismus erweitert wie uiText() (str_replace vor Markdown-Konvertierung) — fuer Variablen mitten im Satz (E-Mail-Bodies mit Code/Name/Frist). Alle 28 Dateien vorruebergehend mit rotem [DEV]-Marker als Test-Fortschrittsanzeige versehen, wird nach Verifikation je Anzeigestelle wieder entfernt
+
+✓  2FA-Code-Gueltigkeitsdauer zentralisiert: war bisher an ZWEI Stellen hartcodiert (TwofaService::VALID_MINUTES=2 UND separat TwoFactorCodeMail 'validMinutes'=>2, DRY-Verstoss) und in den drei Rollen-Hinweistexten uneinheitlich (nur cust nannte die Dauer, syst-Text war noch gar nicht ausgelagert). Neue config/twofa.php ('valid_minutes' => env('TWOFA_CODE_VALID_MINUTES', 2)), TwofaService::VALID_MINUTES entfernt, TwoFactorCodeMail liest jetzt ebenfalls config('twofa.valid_minutes'). Alle drei Rollen nutzen jetzt denselben Text (all/a_log_2fa_hinweis.md) mit dynamischem {{validMinutes}}
+
+⚠  ZUSAETZLICH, .env-only (nicht versioniert, kein Tag, aber operational relevant): (1) Mail-Konfiguration auf echtes Postfach umgestellt — MAIL_SCHEME=starttls wurde von der installierten Symfony-Mailer-Version (8.0.8) nicht unterstuetzt und verursachte 500er-Fehler bei jedem Mailversand (2FA-Login etc.), zudem zeigte .env auf einen lokalen 127.0.0.1:1025-Mailcatcher statt echtem SMTP. Neues Postfach noreply@martinwagner.de bei Alfahosting, jetzt MAIL_SCHEME=smtps, MAIL_HOST=host159.alfahosting-server.de, MAIL_PORT=465. Getestet cust/mand/syst — siehe aktualisierten Steckbrief Abschnitt 1. (2) BACKSTAGE_PATH erstmals explizit gesetzt (individueller Pfad statt Code-Default backstage) — Sicherheitsgewinn, da der syst-Login-Pfad nicht mehr aus dem Code ableitbar ist. **WICHTIG:** der tatsaechliche neue Pfad ist in diesem Chat nicht bekannt (nur lokale .env geprueft) — muss im Steckbrief Abschnitt 1 nachgetragen werden, sonst ist der syst-Login im Notfall nicht auffindbar
+
+Tag ui_texte_ausgelagert_ok, Commit 2dbeb37. Details PROJECT_CONTEXT.md Abschnitt 10m.
+
+## 5.2l Bugfix 26.08.2026 (Policy-Version bei Registrierung)
+
+✓  registration_policy_version_fix_ok (Commit 83c738e): CustRegisterController::store() und SystemMandantController::handleRegister() setzten ds_version/upload_terms_version bisher auf den statischen Config-Wert config('datenschutz.version') ('1.0') statt auf die tatsaechlich aktuelle, von CheckPolicyVersion geprueften Version aus userdb.policy_versions — dadurch erschien bei jeder Neuregistrierung sofort beim ersten Login das "Policy geaendert"-Popup, obwohl der Nutzer gerade erst zugestimmt hatte. Zusaetzlich bekam mand upload_terms_version bisher faelschlich den ds_version-Wert. Fix: beide Felder lesen jetzt PolicyVersion::get('ds_version') bzw. PolicyVersion::get('upload_version')
+
+Details PROJECT_CONTEXT.md Abschnitt 10l.
+
+## 5.2k Feature 26.08.2026 (Pflichtfelder-Erzwingung nach Login)
+
+✓  pflichtfelder_erzwingung_ok (Commit 16e81f3): neue Middleware CheckPflichtfelder (bootstrap/app.php, zwischen CheckPolicyVersion und CheckWelcome) prueft bei jedem cust/mand-Request per istPflichtfeld(), ob ein aktuell als Pflicht konfiguriertes Feld (Telefon/Strasse/PLZ+Ort/Firma) NULL ist. Trifft das zu: Redirect zur Konto-Seite mit withErrors() (Feldmarkierung wie bei fehlgeschlagener Validierung) + Amber-Hinweisbox. Ausnahmen: Konto-Seite/Speichern-Route, Logout, Datenschutz-Routen. Ergebnis 60s pro User gecacht (Cache::forget() beim Speichern). mand bleibt nach dem Speichern auf der Konto-Seite; cust wird zur urspruenglich angeforderten Seite zurueckgeleitet (Session-Key pflichtfeld_redirect_target, nur fuer cust gesetzt)
+
+✓  Zusaetzlich: grauer "(optional)"-Hinweis bei Strasse/PLZ+Ort ergaenzt (hatten bisher nur das bedingte Sternchen, siehe 5.2j)
+
+Details PROJECT_CONTEXT.md Abschnitt 10k.
 
 ## 5.2j Feature 26.08.2026 (Konfigurierbare Pflichtfelder mand/cust)
 
@@ -345,7 +376,7 @@ npm run build
 | BIGINT ohne UNSIGNED bricht FK-Constraints | Alle FK-Spalten: BIGINT UNSIGNED NOT NULL |
 | _last_activity im JSON-Payload, nicht DB-Spalte | Nur session()->put(), kein SQL-UPDATE |
 | laragear/webauthn: nur Laravel 10/11 | web-auth/webauthn-lib 5.3.5 direkt verwenden |
-| MAIL_ENCRYPTION=starttls nicht unterstuetzt | MAIL_ENCRYPTION=tls, Port 587 |
+| MAIL_SCHEME=starttls von Symfony Mailer 8.x nicht unterstuetzt (500er bei jedem Mailversand) | **Korrektur 27.08.:** MAIL_SCHEME=smtps, Port 465 (SSL/TLS) — die fruehere Zeile in diesem Dokument (tls, Port 587) war ebenfalls veraltet/nie tatsaechlich aktiv; .env stand bis 27.08. faelschlich auf einem lokalen 127.0.0.1:1025-Mailcatcher |
 | Alfahosting: mod_security-Block-Annahme war falsch | Echte Ursache war abort(403) im Controller; /ds/ bleibt |
 | TrimStrings trimmt 'password' NICHT (Vendor-$except: password, current_password, password_confirmation) | pw1-pw6 werden getrimmt (Feldname nicht exempt) -> Anon-Login muss eingegebenes password explizit trimmen, sonst Leerzeichen-Mismatch. Standard-Logins (Hash::check) brauchen kein trim |
 | overflow-hidden schneidet absolut positionierte Alpine-Dropdowns ab | Kein overflow-hidden-Vorfahr bei Custom-Dropdowns/Poppern; overflow-visible. rounded-xl funktioniert ohne overflow-hidden. Diagnose: Konsole _x_dataStack[0].open + getComputedStyle-Walk |

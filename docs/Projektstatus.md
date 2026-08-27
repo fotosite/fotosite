@@ -1,10 +1,10 @@
 **Fotosite V08**
 
-**Projektstatus #15**
+**Projektstatus #16**
 
-*Stand: 26. August 2026*
+*Stand: 27. August 2026*
 
-**Tag: pflichtfelder_konfiguration_ok — Konfigurierbare Pflichtfelder für mand/cust (Telefon/Straße+Hausnr./PLZ+Ort/Firma): neue Datei `pflichtfelder.txt` + Helper `istPflichtfeld()`, Registrierung fragt nur Pflichtfelder ab, Konto-Bearbeiten zeigt immer alle Felder dynamisch; begleitende DB-Migration auf echtes NULL statt Platzhalter-String; neue mand-Detailseite je Mitglied + umgebaute Mitgliederliste; syst sieht jetzt zusätzlich mand-Adresse; Pflicht-Sternchen-Bugfix in mandant/konto.blade.php. Commit eef2eed — siehe Abschnitt 4e. Vorheriger Stand (04.08., Tag logout_dialog_close_window_ok): Zwei kleine Fixes: (1) Trusted-Device-Cookie jetzt auch im Passkey-Login-Pfad wirksam (cust+mand), Tag trusted_device_passkey_ok, Commit 268c2b7 — siehe Abschnitt 4d. (2) Logout-Dialog-Button „Zurück" zu „Fenster schließen" umbenannt, window.close()-Versuch mit Dialog-Fallback, Commit 859516d — siehe Abschnitt 4d. Davor (03.08., Tag trusted_device_cust_nofactor_fix_ok): Bugfix cust-Trusted-Device-Cookie im Nicht-2FA-Login-Pfad, siehe Abschnitt 4c. Weiter zurück (31.07., Tag honeypot_login_attacks_log_ok): Sicherheits-Härtung des Logins abgeschlossen: einheitliche IP-basierte Login-Sperre (cust/mand/syst), dynamische Honeypot-Routen + Log-Kanal login_attacks, syst-Login-Pfad über .env konfigurierbar, mand-2FA-Opt-out, Passkey-Hinweistexte ausgelagert. Zusätzlich, weiterhin UNCOMMITTED: syst-Passwort-Policy auf min. 20 Zeichen + Komplexität verschärft, inkl. Login-Hard-Block.**
+**Tag: ui_texte_ausgelagert_ok — 28 UI-/E-Mail-Textstellen (Login-/2FA-Hinweise, Konto-Löschen-/Galerie-entfernen-Warnungen, Upload-Bedingungen, E-Mail-ändern-Erklärung, Spam-Hinweis, Passkey-Prompts, Alias-Erklärung, Pflichtfeld-Nachtrag-Hinweis, Policy-Update-Hinweise, 7 E-Mail-Bodies) nach editierbaren Markdown-Dateien (`storage/app/private/ui-texte/{all,cust,mand,syst}/*.md`, nicht versioniert) ausgelagert — neuer Helper `uiText()`, `renderMarkdownVariant()` um `$vars`-Platzhalter-Mechanismus erweitert. Zusätzlich 2FA-Code-Gültigkeitsdauer zentralisiert (war an zwei Stellen hartcodiert) über neue `config/twofa.php`. Plus zwei `.env`-only-Korrekturen: Mail-Konfiguration auf echtes Postfach (smtps/Alfahosting) umgestellt (vorheriges `starttls` von Symfony Mailer 8.x nicht unterstützt, verursachte 500er bei jedem Mailversand), `BACKSTAGE_PATH` erstmals explizit gesetzt. Commit 2dbeb37 — siehe Abschnitt 4h. Vorheriger Stand (26.08., Tag registration_policy_version_fix_ok): Bugfix — `ds_version`/`upload_terms_version` bei Registrierung lasen bisher einen statischen Config-Wert statt der tatsächlich aktuellen `policy_versions`-Version, wodurch das „Policy geändert"-Popup fälschlich direkt nach der Registrierung erschien. Commit 83c738e — siehe Abschnitt 4g. Davor (26.08., Tag pflichtfelder_erzwingung_ok): neue Middleware `CheckPflichtfelder` erzwingt nachträglich zur Pflicht gewordene, aber noch leere Felder nach dem Login (Redirect zur Konto-Seite mit Amber-Hinweisbox, 60s-Cache); grauer „(optional)"-Hinweis bei Straße/PLZ+Ort ergänzt. Commit 16e81f3 — siehe Abschnitt 4f. Weiter zurück (26.08., Tag pflichtfelder_konfiguration_ok): Konfigurierbare Pflichtfelder für mand/cust (Telefon/Straße+Hausnr./PLZ+Ort/Firma): neue Datei `pflichtfelder.txt` + Helper `istPflichtfeld()`, Registrierung fragt nur Pflichtfelder ab, Konto-Bearbeiten zeigt immer alle Felder dynamisch; begleitende DB-Migration auf echtes NULL statt Platzhalter-String; neue mand-Detailseite je Mitglied + umgebaute Mitgliederliste; syst sieht jetzt zusätzlich mand-Adresse; Pflicht-Sternchen-Bugfix in mandant/konto.blade.php. Commit eef2eed — siehe Abschnitt 4e. Noch weiter zurück (04.08., Tag logout_dialog_close_window_ok): Zwei kleine Fixes: (1) Trusted-Device-Cookie jetzt auch im Passkey-Login-Pfad wirksam (cust+mand), Tag trusted_device_passkey_ok, Commit 268c2b7 — siehe Abschnitt 4d. (2) Logout-Dialog-Button „Zurück" zu „Fenster schließen" umbenannt, window.close()-Versuch mit Dialog-Fallback, Commit 859516d — siehe Abschnitt 4d. Davor (03.08., Tag trusted_device_cust_nofactor_fix_ok): Bugfix cust-Trusted-Device-Cookie im Nicht-2FA-Login-Pfad, siehe Abschnitt 4c. Weiter zurück (31.07., Tag honeypot_login_attacks_log_ok): Sicherheits-Härtung des Logins abgeschlossen: einheitliche IP-basierte Login-Sperre (cust/mand/syst), dynamische Honeypot-Routen + Log-Kanal login_attacks, syst-Login-Pfad über .env konfigurierbar, mand-2FA-Opt-out, Passkey-Hinweistexte ausgelagert. Zusätzlich, weiterhin UNCOMMITTED: syst-Passwort-Policy auf min. 20 Zeichen + Komplexität verschärft, inkl. Login-Hard-Block.**
 
 **🎯 NÄCHSTER SCHRITT (weiterhin gültig, zuletzt bestätigt 19.07.): Phase 6 (Passkey) wurde in früheren Doku-Ständen fälschlich als „✓ Fertig" geführt. Korrekt: technisch vollständig implementiert, aber noch NICHT gründlich getestet. Ein umfassender Test der gesamten Passkey-Funktionalität (nicht nur iOS-spezifisch) ist der nächste anstehende Schritt und soll im neuen Chat erfolgen — siehe Abschnitt 6. Zwischen dem #13-Stand (19.07.) und heute kam ausschließlich Sicherheits-Härtung dazwischen (Abschnitt 8) — am Passkey-Testbedarf hat sich nichts geändert.**
 
@@ -150,6 +150,32 @@ Tag `trusted_device_cust_nofactor_fix_ok` (Commit `ddf5e55`): In `CustLoginContr
 
 Getestet: cust/mand Registrieren+Bearbeiten, syst-Anzeige, mand-Mitgliederliste (Toggle, Links, Sortierung/Suche) — alles bestätigt erfolgreich. Details PROJECT_CONTEXT.md Abschnitt 10j.
 
+# 4f. Feature 26.08.2026 — Pflichtfelder-Erzwingung nach Login
+
+**Tag `pflichtfelder_erzwingung_ok`, Commit `16e81f3`:** Neue Middleware `CheckPflichtfelder` (`bootstrap/app.php`, zwischen `CheckPolicyVersion` und `CheckWelcome`) prüft bei jedem cust/mand-Request per `istPflichtfeld()`, ob ein aktuell als Pflicht konfiguriertes Feld (Telefon/Straße/PLZ+Ort/Firma) `NULL` ist. Trifft das zu: Redirect zur Konto-Seite mit `withErrors()` (Feldmarkierung wie bei fehlgeschlagener Validierung) + Amber-Hinweisbox. Ausnahmen: Konto-Seite/Speichern-Route, Logout, Datenschutz-Routen. Ergebnis 60s pro User gecacht (`Cache::forget()` beim Speichern). mand bleibt nach dem Speichern auf der Konto-Seite; cust wird zur ursprünglich angeforderten Seite zurückgeleitet (Session-Key `pflichtfeld_redirect_target`, nur für cust gesetzt).
+
+Zusätzlich: grauer „(optional)"-Hinweis bei Straße/PLZ+Ort ergänzt (hatten bisher nur das bedingte Sternchen, siehe Abschnitt 4e).
+
+Details PROJECT_CONTEXT.md Abschnitt 10k.
+
+# 4g. Bugfix 26.08.2026 — Policy-Version bei Registrierung
+
+**Tag `registration_policy_version_fix_ok`, Commit `83c738e`:** `CustRegisterController::store()` und `SystemMandantController::handleRegister()` setzten `ds_version`/`upload_terms_version` bisher auf den statischen Config-Wert `config('datenschutz.version')` (`'1.0'`) statt auf die tatsächlich aktuelle, von `CheckPolicyVersion` geprüfte Version aus `userdb.policy_versions` — dadurch erschien bei jeder Neuregistrierung sofort beim ersten Login das „Policy geändert"-Popup, obwohl der Nutzer gerade erst zugestimmt hatte. Zusätzlich bekam mand `upload_terms_version` bisher fälschlich den `ds_version`-Wert. Fix: beide Felder lesen jetzt `PolicyVersion::get('ds_version')` bzw. `PolicyVersion::get('upload_version')`.
+
+Details PROJECT_CONTEXT.md Abschnitt 10l.
+
+# 4h. Feature 27.08.2026 — UI-/E-Mail-Texte ausgelagert + 2FA-Gültigkeitsdauer konfigurierbar
+
+**Tag `ui_texte_ausgelagert_ok`, Commit `2dbeb37`:** Neuer Helper `uiText(bereich, dateiname, vars)` (`app/helpers.php`) liest `storage/app/private/ui-texte/{all,cust,mand,syst}/*.md` (nicht versioniert, analog `honeypot_paths.txt`/`pflichtfelder.txt`) und rendert per `CommonMarkConverter` zu HTML — 28 Textstellen ausgelagert (Login-/2FA-Hinweise, Konto-Löschen-/Galerie-entfernen-Warnungen, Upload-Bedingungen-Hinweis, E-Mail-ändern-Erklärung, Spam-Hinweis, Passkey-Prompts, Alias-Erklärung, Pflichtfeld-Nachtrag-Hinweis, Policy-Update-Hinweise, 7 E-Mail-Bodies), wortgleiche Duplikate (auch über cust/mand/syst hinweg) auf je eine gemeinsame Datei konsolidiert. `renderMarkdownVariant()` (bestehender Tag-Varianten-Mechanismus, z.B. Passkey-OS-Hinweise) um denselben `{{key}}`-Platzhalter-Mechanismus erweitert, für Variablen mitten im Satz (E-Mail-Bodies mit Code/Name/Frist). Alle Dateien vorübergehend mit rotem `[DEV]`-Marker als Test-Fortschrittsanzeige versehen.
+
+**2FA-Gültigkeitsdauer zentralisiert:** war an zwei Stellen hartcodiert (`TwofaService::VALID_MINUTES=2`, `TwoFactorCodeMail` `'validMinutes'=>2`, DRY-Verstoß) und in den drei Rollen-Hinweistexten uneinheitlich (nur cust nannte die Dauer, syst-Text war noch gar nicht ausgelagert). Neue `config/twofa.php` + `TWOFA_CODE_VALID_MINUTES` in `.env` zentralisieren das; alle drei Rollen nutzen jetzt denselben Text (`all/a_log_2fa_hinweis.md`) mit dynamischem `{{validMinutes}}`.
+
+**Zusätzlich, `.env`-only (nicht versioniert, kein Tag):**
+1. Mail-Konfiguration auf echtes Postfach umgestellt — `MAIL_SCHEME=starttls` wurde von der installierten Symfony-Mailer-Version (8.0.8) nicht unterstützt und verursachte 500er-Fehler bei jedem Mailversand; zeigte zudem auf einen lokalen `127.0.0.1:1025`-Mailcatcher. Neues Postfach `noreply@martinwagner.de` bei Alfahosting, jetzt `MAIL_SCHEME=smtps`, `MAIL_HOST=host159.alfahosting-server.de`, `MAIL_PORT=465`. Getestet cust/mand/syst.
+2. `BACKSTAGE_PATH` erstmals explizit gesetzt (individueller Pfad statt Code-Default `backstage`) — Sicherheitsgewinn, da der syst-Login-Pfad nicht mehr aus dem Code ableitbar ist. Frühere Referenzen auf „/backstage" sind ab sofort als Default-Pfad zu lesen.
+
+Details PROJECT_CONTEXT.md Abschnitt 10m.
+
 # 5. Datenbankstand (19.07.2026)
 
 | **DB** | **Änderungen seit #12** |
@@ -204,8 +230,11 @@ Getestet: cust/mand Registrieren+Bearbeiten, syst-Anzeige, mand-Mitgliederliste 
 | `trusted_device_cust_nofactor_fix_ok` | cust: Trusted-Device-Cookie im Nicht-2FA-Login-Pfad nachgezogen (`issueTrustedDeviceIfRequested()`, analog mand) |
 | `trusted_device_passkey_ok` | Trusted-Device-Cookie auch im Passkey-Login-Pfad wirksam (cust+mand), Checkbox-Zustand jetzt per JS aus dem DOM gelesen |
 | `logout_dialog_close_window_ok` | Logout-Dialog-Button „Zurück" zu „Fenster schließen", `window.close()`-Versuch mit Dialog-Fallback |
-| **`pflichtfelder_konfiguration_ok`** | Konfigurierbare Pflichtfelder mand/cust (Telefon/Straße/PLZ+Ort/Firma) via `pflichtfelder.txt`+`istPflichtfeld()`, DB-Migration auf NULL, neue mand-Detailseite je Mitglied (`mandant.kunden.show`), umgebaute Mitgliederliste, syst-Adress-Sichtbarkeit, Pflicht-Sternchen-Bugfix (aktueller Stand) |
+| `pflichtfelder_konfiguration_ok` | Konfigurierbare Pflichtfelder mand/cust (Telefon/Straße/PLZ+Ort/Firma) via `pflichtfelder.txt`+`istPflichtfeld()`, DB-Migration auf NULL, neue mand-Detailseite je Mitglied (`mandant.kunden.show`), umgebaute Mitgliederliste, syst-Adress-Sichtbarkeit, Pflicht-Sternchen-Bugfix |
+| `pflichtfelder_erzwingung_ok` | Neue Middleware `CheckPflichtfelder` erzwingt fehlende, neu zur Pflicht gewordene Felder nach Login; „(optional)"-Hinweis bei Straße/PLZ+Ort ergänzt |
+| `registration_policy_version_fix_ok` | Bugfix: `ds_version`/`upload_terms_version` bei Registrierung lesen jetzt `PolicyVersion::get()` statt statischem Config-Wert |
+| **`ui_texte_ausgelagert_ok`** | 28 UI-/E-Mail-Textstellen nach editierbaren Markdown-Dateien ausgelagert (`uiText()`, `storage/app/private/ui-texte/`), 2FA-Gültigkeitsdauer über `config/twofa.php` zentralisiert, `.env`-only: Mail-Konfiguration korrigiert (smtps/Alfahosting) + `BACKSTAGE_PATH` gesetzt (aktueller Stand) |
 
 Alle früheren Tags siehe Projektstatus #12 / PROJECT_CONTEXT Abschnitt 13. **Noch uncommitted, kein Tag:** syst-Passwort-Policy-Verschärfung (min:20) + Login-Hard-Block, Doku-Dateien dieser Aktualisierung.
 
-Fotosite V08 — Projektstatus #15  |  Stand 26.08.2026
+Fotosite V08 — Projektstatus #16  |  Stand 27.08.2026
