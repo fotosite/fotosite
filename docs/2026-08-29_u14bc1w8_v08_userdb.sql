@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Erstellungszeit: 19. Jul 2026 um 11:19
+-- Erstellungszeit: 27. Aug 2026 um 19:43
 -- Server-Version: 10.11.10-MariaDB-cll-lve
 -- PHP-Version: 8.3.11
 
@@ -61,11 +61,18 @@ CREATE TABLE `cust_pcode` (
 --
 
 INSERT INTO `cust_pcode` (`pcode_id`, `mand_id`, `cust_id`, `cust_passcode`, `cust_alias`, `pcode_prefstat`, `mand_sort_date`, `cust_mailrequest`) VALUES
-(32, 6, 26, '3', 'Nachtbar', 1, '2026-06-21', 0),
-(45, 30, 33, '3', 'Nk', 1, '2026-06-25', 0),
-(48, 28, 34, '1', 'Wdd', 1, '2026-06-27', 0),
-(49, 28, 35, '5', 'Hint', 1, '2026-06-27', 0),
-(51, 16, 37, '4', 'New', 1, '2026-07-09', 0);
+(53, 35, 39, '1', 'foto3_S#3', 1, '2026-07-19', 0),
+(54, 35, 40, '4', 'foto7_S#4', 1, '2026-07-19', 0),
+(55, 35, 41, '2', 'foto8_S#2', 1, '2026-07-19', 0),
+(56, 36, 42, '4', 'foto5_S#4', 1, '2026-07-19', 0),
+(58, 36, 40, '2', 'foto7_S#2', 1, '2026-07-19', 0),
+(59, 36, 41, '3', 'foto8_S#3', 1, '2026-07-19', 0),
+(60, 35, 44, '4', 'foto1', 1, '2026-07-20', 0),
+(64, 28, 48, '2', 'newkid9@web.de', 1, '2026-07-30', 0),
+(65, 28, 49, '2', 'bfex', 1, '2026-08-26', 0),
+(66, 36, 50, '2', 'F6-Alias1', 1, '2026-08-26', 0),
+(68, 41, 50, '2', 'Foto Sechs', 1, '2026-08-26', 0),
+(69, 28, 52, '2', 'hntr2@mail.de', 1, '2026-08-26', 0);
 
 -- --------------------------------------------------------
 
@@ -77,12 +84,12 @@ CREATE TABLE `cust_user` (
   `cust_id` bigint(20) UNSIGNED NOT NULL,
   `cust_uname` varchar(255) DEFAULT NULL,
   `cust_email` varchar(255) NOT NULL,
-  `cust_tel` varchar(255) NOT NULL DEFAULT 'nicht vorhanden',
+  `cust_tel` varchar(255) DEFAULT NULL,
   `cust_firstname` varchar(255) NOT NULL,
   `cust_lastname` varchar(255) NOT NULL,
-  `cust_street+nr` varchar(255) NOT NULL DEFAULT 'nicht vorhanden',
-  `cust_postcode_city` varchar(255) NOT NULL DEFAULT 'nicht vorhanden',
-  `cust_company` varchar(255) NOT NULL DEFAULT 'nicht vorhanden',
+  `cust_street+nr` varchar(255) DEFAULT NULL,
+  `cust_postcode_city` varchar(255) DEFAULT NULL,
+  `cust_company` varchar(255) DEFAULT NULL,
   `cust_pw_hash` varchar(255) NOT NULL,
   `cust_2fa_opt_in` tinyint(1) NOT NULL DEFAULT 0,
   `ds_accepted_at` datetime DEFAULT NULL,
@@ -97,9 +104,15 @@ CREATE TABLE `cust_user` (
 --
 
 INSERT INTO `cust_user` (`cust_id`, `cust_uname`, `cust_email`, `cust_tel`, `cust_firstname`, `cust_lastname`, `cust_street+nr`, `cust_postcode_city`, `cust_company`, `cust_pw_hash`, `cust_2fa_opt_in`, `ds_accepted_at`, `ds_version`, `upload_terms_accepted_at`, `upload_terms_version`, `show_welcome`) VALUES
-(34, 'Wdf', 'ich-bin-wieder-da@bin-wieder-da.de', 'nicht vorhanden', 'H', 'H', 'J', 'J', 'nicht vorhanden', '$2y$12$siV7I1mBn02XkBKa0RziHe4KG5LA2qXWtUW6cQCIFE6fFBtY8ZaXm', 0, '2026-07-17 09:46:26', '3.9', '2026-06-29 16:23:36', '2.5', 0),
-(35, 'Hint', 'hntr2@mail.de', 'nicht vorhanden', 'Haber', 'H', 'Vh', 'Hh', 'nicht vorhanden', '$2y$12$S5Mk25wKSysK/h6guJ5Zs.UPo00a42wuGlZsi5arufv77RXcCYT1K', 0, '2026-07-17 07:42:46', '3.9', '2026-06-29 15:59:23', '2.5', 0),
-(37, 'Nm', 'newkid9@web.de', 'nicht vorhanden', 'Mm', 'Mm', 'Mm', 'Nk', 'nicht vorhanden', '$2y$12$11e/.CCmmyqgzHZYZ1iePuKlX8j9oex4gxU8/UwdKqXwedkxR41Qu', 0, '2026-07-10 12:30:30', '3.9', '2026-07-10 11:57:40', '2.8', 0);
+(39, 'Foto3', 'foto3@keemail.me', '64645464654', 'Foto3', 'Foto3', NULL, 'dfsafa', 'xxxx', '$2y$12$Yy/ViJ88X.UQu8N9n4b0nujoAiZ5qbhfnmB52zWBVMu1poXLznWsu', 0, '2026-07-22 14:38:14', '3.9', NULL, NULL, 0),
+(40, 'foto7', 'foto7@keemail.me', NULL, 'vfoto7', 'ffff', 'straße', 'stadt', NULL, '$2y$12$h144UB/vc.X5VSxThJV/x.mQM9aa3rZSRxQq9BWQ438fjPWvw3q3m', 0, '2026-07-30 11:55:11', '3.9', NULL, NULL, 0),
+(41, 'foto8', 'foto8@keemail.me', NULL, 'foto8', 'foto8', 'foto8', 'foto8', NULL, '$2y$12$2QUn6nIYiZxT40SsU0AFAuN0fCs1IxNx5k1CasRoeNk7IfnKSkHtq', 0, '2026-07-29 18:31:31', '3.9', NULL, NULL, 1),
+(42, 'foto5', 'foto5@keemail.me', NULL, 'foto5', 'foto5', NULL, NULL, NULL, '$2y$12$KSsTlr3runGpYhPZ.6E8P.nkide7eSksqBCHGRsOQinm50PhNLd0S', 0, '2026-08-26 14:44:08', '3.9', NULL, NULL, 0),
+(44, 'ftot1_cust', 'foto1@keemail.me', NULL, 'ftot1_cust', 'ftot1_cust', 'ftot1_cust', 'ftot1_cust', NULL, '$2y$12$JVQP5vegubhSE1dRePHcfuW7GgzQOAUtkU/4/gAyuHcffEAtVsuOy', 0, '2026-07-20 12:21:45', '3.9', NULL, NULL, 0),
+(48, 'newkid9@web.de', 'newkid9@web.de', NULL, 'newkid9@web.de', 'newkid9@web.de', 'newkid9@web.de', 'newkid9@web.de', NULL, '$2y$12$emuoZaDLgMd9xh1ApfHWWOkzgjZVrBTV0cMkHM6kS0c4CMfZgY/g6', 0, '2026-07-30 06:01:54', '3.9', NULL, NULL, 0),
+(49, 'bfex', 'harburg_bergfex@alpenjodel.de', NULL, 'bb', 'Fex', 'Paul-Sorge-Str.', 'Hamburg', NULL, '$2y$12$aXHX0.QsPoWpgv14Bf3GbO8h3LYabg/rwc52rQRciJqwoAwXCYMEq', 0, '2026-08-26 10:30:55', '3.9', NULL, NULL, 0),
+(50, 'Foto6', 'foto6@keemail.me', NULL, 'FF', 'Sechs', 'fdagaad', 'dfgaag', NULL, '$2y$12$sXHRhkOP/tz1Wi9yQrO6Iul35ivWLIJUyYLzQ5QHiyv7lJ6.HXTDy', 0, '2026-08-26 15:07:29', '3.9', NULL, NULL, 0),
+(52, 'hntr2@mail.de', 'hntr2@mail.de', '13213121', 'hntr', 'Zwei', NULL, NULL, 'jkljkjlkj', '$2y$12$xYkyBKWkkKiII5L3erhiI.mX8Fm0CnDga4p0GRWAbiWLwc2ipjjgi', 0, '2026-08-26 17:19:23', '3.9', NULL, NULL, 0);
 
 -- --------------------------------------------------------
 
@@ -120,36 +133,6 @@ CREATE TABLE `invite` (
   `expires_at` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
---
--- Daten für Tabelle `invite`
---
-
-INSERT INTO `invite` (`inv_id`, `inv_email`, `inv_token_hash`, `inv_type`, `inv_user_type`, `inv_user_id`, `inv_mand_id`, `is_primary`, `created_at`, `expires_at`) VALUES
-(4, 'cristalblue@mail.de', '0d05148dcf696d5dd88f28b840c642e36b9c923f7cbace95fdedd5c636587a8f', 'register', 'mand', NULL, NULL, 0, '2026-05-12 15:36:20', '2026-05-13 15:36:20'),
-(15, 'wer-hat@die-genossen.de', 'b0e34114988a6a43331df7cdcd884ea0ca70b018e922c3615a47eedbb50440d0', 'register', 'mand', NULL, NULL, 0, '2026-05-29 17:10:31', '2026-05-30 17:10:31'),
-(16, 'newkid9@web.de', '29254cb3df8a602055520f44b79d618ac80ec1a36f38097a05a7608de70e460f', 'register', 'mand', NULL, NULL, 0, '2026-05-30 06:20:33', '2026-05-31 06:20:33'),
-(22, 'x519@kommespaeter.de', '5e9bc5c7546bd0f9ddb499f2c0f10509fb09dbcc59986b8c0b7e3f220d0e52d0', 'register', 'mand', NULL, NULL, 0, '2026-06-10 07:50:45', '2026-06-11 07:50:45'),
-(27, 'schanzer3@web.de', '6b8ec8b0deb3c912415b669c379e98c68666753b95fb72c326a0b08738e541eb', 'pw_reset', 'mand', 6, NULL, 0, '2026-06-12 14:16:08', '2026-06-13 14:16:08'),
-(32, 'donkey-shot@web.de', '7a83253a582954bd68f2f103c13c9e95d47efdfba9263096ea7b4936bbe3b136', 'pw_reset', 'mand', 16, NULL, 0, '2026-06-13 08:55:11', '2026-06-14 08:55:11'),
-(36, 'subumaster@web.de', '426f7b8e5c97e36e02f0e4ca27f7a1a875880a583f47fdd81079304af072d0f2', 'pw_reset', 'cust', 21, NULL, 0, '2026-06-14 17:51:42', '2026-06-15 17:51:42'),
-(39, 'neandertal.man@web.de', '4de4c3c7c86bef596dfb25a2b495e9d13ec1db432db83d8a591dad6175358f29', 'register', 'mand', NULL, NULL, 0, '2026-06-17 10:20:17', '2026-06-18 10:20:17'),
-(41, 'neandertal.man@web.de', '81c0ac61a868b5eec2738333f86a3e6151f489a38f9c348d28e970c8b036dcef', 'register', 'mand', NULL, NULL, 0, '2026-06-17 10:59:03', '2026-06-18 10:59:03'),
-(42, 'neandertal.man@web.de', 'f6c6a165b52937e0d8ff2b1083f6838a5d6cb8478335b66e8d6c9c48b6334976', 'register', 'mand', NULL, NULL, 0, '2026-06-17 11:49:28', '2026-06-18 11:49:28'),
-(43, 'neandertal.man@web.de', 'd37a45173eb0acda7c54d3898a880444797f5a02d57e83c9799de30d97a525be', 'register', 'mand', NULL, NULL, 0, '2026-06-17 11:57:45', '2026-06-18 11:57:45'),
-(44, 'x519@quantentunnel.de', 'd78053090f29584f703fd9c45914a24f4af7f421faa033bc0305d5a62f4b6e26', 'register', 'mand', NULL, NULL, 0, '2026-06-17 11:59:14', '2026-06-18 11:59:14'),
-(58, 'hntr2@mail.de', 'f297c7e7ab414bcbae34a43b27148fde16a59b5f500997769a3dc151840e9171', 'pw_reset', 'cust', 15, NULL, 0, '2026-06-18 17:27:19', '2026-06-19 17:27:19'),
-(62, 'subumaster@web.de', '972485088644e06095a73d80656587f9ef2925aa00ac3007482930d3d5fcbc42', 'pw_reset', 'cust', 21, NULL, 0, '2026-06-19 09:06:57', '2026-06-20 09:06:57'),
-(63, 'moonshine_gf@web.de', '87dba12580608615f4b86914884b2f5b71b0c8ce1e97934b45ad74b3dc29ca82', 'pw_reset', 'mand', 17, NULL, 0, '2026-06-19 09:10:53', '2026-06-20 09:10:53'),
-(90, 'cristalblue@mail.de', '59f9c00c48806d017ffcce66a269fb7b771cc0dad37f5100bcfb1f7387cabf76', 'register', 'mand', NULL, NULL, 0, '2026-06-23 18:51:08', '2026-06-24 18:51:08'),
-(102, 'harburg_bergfex@alpenjodel.de', 'a88e1bacfa9426d99f269b2c95b444e7c31aac87e4df34447f206c63610aeab7', 'pw_reset', 'syst', 7, NULL, 0, '2026-06-28 08:20:45', '2026-06-29 08:20:45'),
-(103, 'schanzer3@web.de', 'ad6f505bbc1427b11d7b98fe8c85ead9ea88394b3dd27778aea913844a45dece', 'register', 'syst', NULL, NULL, 0, '2026-06-29 10:54:51', '2026-06-30 10:54:51'),
-(104, 'cristalblue@mail.de', 'f924f827e1e85871588d6fd7e2065919f3eb271bbb489e9d4ce6903d558594af', 'register', 'mand', NULL, NULL, 0, '2026-06-29 11:00:31', '2026-06-30 11:00:31'),
-(105, 'harburg_bergfex@alpenjodel.de', 'ef4f94d619a4211e5e52bcf633d44c0bd0719648412876b8319483a90e10fcdc', 'pw_reset', 'syst', 7, NULL, 0, '2026-06-29 11:04:57', '2026-06-30 11:04:57'),
-(110, 'hntr4@mail.de', '1e1bf717cb8b97786937a3f03a89189ed980a6673a23a2dae6017d5ad8230f0d', 'register', 'syst', NULL, NULL, 0, '2026-06-29 13:40:08', '2026-06-30 13:40:08'),
-(111, 'hntr4@mail.de', '5f62b88c241e28c3c2de2e396c42427d20285a58bd3e5eecbe109b09465afd38', 'register', 'syst', NULL, NULL, 0, '2026-06-29 13:40:09', '2026-06-30 13:40:09'),
-(112, 'ich-bin-wieder-da@bin-wieder-da.de', 'd5ad01ad09c5f8e887f1edb294951852ac9d345b7b7cb4b8d63a4fed827a3c02', 'pw_reset', 'cust', 34, NULL, 0, '2026-06-29 16:24:25', '2026-06-30 16:24:25'),
-(113, 'donkey-shot@web.de', 'fa8fe4a0ebe64bc686cada442c691fef87137ea591561a96dbb604c6dde5b3bf', 'pw_reset', 'mand', 16, NULL, 0, '2026-06-29 16:26:56', '2026-06-30 16:26:56');
-
 -- --------------------------------------------------------
 
 --
@@ -160,12 +143,12 @@ CREATE TABLE `mand_user` (
   `mand_id` bigint(20) UNSIGNED NOT NULL,
   `mand_uname` varchar(255) DEFAULT NULL,
   `mand_email` varchar(255) NOT NULL,
-  `mand_tel` varchar(255) NOT NULL DEFAULT 'nicht vorhanden',
+  `mand_tel` varchar(255) DEFAULT NULL,
   `mand_firstname` varchar(255) NOT NULL,
   `mand_lastname` varchar(255) NOT NULL,
-  `mand_street+nr` varchar(255) NOT NULL DEFAULT 'nicht vorhanden',
-  `mand_postcode+city` varchar(255) NOT NULL DEFAULT 'nicht vorhanden',
-  `mand_company` varchar(255) NOT NULL DEFAULT 'nicht vorhanden',
+  `mand_street+nr` varchar(255) DEFAULT NULL,
+  `mand_postcode+city` varchar(255) DEFAULT NULL,
+  `mand_company` varchar(255) DEFAULT NULL,
   `mand_pw_hash` varchar(255) NOT NULL,
   `mand_prefstat` bigint(20) NOT NULL DEFAULT 0 COMMENT 'kann später verwendet werden, füt Zugriff auf sec_level 6 / DB-Speicherung\r\n',
   `has_public_content` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'public = systemweit public, Mitglieder können freigegebene Inhalte anderer Mand auch ohne expilzite Zuordnung sehen',
@@ -185,11 +168,14 @@ CREATE TABLE `mand_user` (
 --
 
 INSERT INTO `mand_user` (`mand_id`, `mand_uname`, `mand_email`, `mand_tel`, `mand_firstname`, `mand_lastname`, `mand_street+nr`, `mand_postcode+city`, `mand_company`, `mand_pw_hash`, `mand_prefstat`, `has_public_content`, `active`, `valid_to`, `mand_cust_2fa`, `mand_2fa_opt_in`, `ds_accepted_at`, `ds_version`, `upload_terms_accepted_at`, `upload_terms_version`, `show_welcome`) VALUES
-(16, 'Pinz', 'donkey-shot@web.de', 'kk', 'Peterx', 'Hinz', 'asdSD', 'sada', 'klköl', '$2y$12$4.7X13no4bE7uUlLnZ5Y2e065yt9pG/kaRMP59FH9zn.wfLtpfZfG', 0, 0, 1, NULL, 1, 1, '2026-07-17 08:02:08', '3.9', '2026-07-17 08:02:14', '3.1', 0),
-(17, 'moonshine', 'moonshine_gf@web.de', 'adsfghjkjghsf', 'moon', 'shine', '', '', 'sfhdgjkf', '$2y$12$tDd9gIE0Y/dZOAIz1FkYn.L4yMBWU9XZ9BIC5S4hOhyNoegIm7z4K', 0, 0, 1, NULL, 0, 1, '2026-06-17 09:54:56', '1.0', '2026-06-17 09:54:56', '1.0', 1),
-(28, 'Newb', 'newkid9@web.de', 'nicht vorhanden', 'Newb', 'Newb', 'Newb', 'Newb', 'nicht vorhanden', '$2y$12$GbanfntfyWMsGkXmD1odPO894atLm5x1Cj7sTaE1XgRpdnoOb1W6q', 0, 0, 1, NULL, 4, 0, '2026-07-10 12:31:18', '3.9', '2026-07-10 12:19:18', '3.1', 0),
-(30, 'Ade', 'anderelbe@unterderbruecke.de', 'nicht vorhanden', 'Ade', 'Ade', 'Ade', 'Ade', 'nicht vorhanden', '$2y$12$2X2QNrLGmZvj0EmxTRXJ0.jX3EnlPMuLezloKqQGzIA5DU6lJd.2G', 0, 0, 1, NULL, 0, 1, '2026-06-25 16:51:16', '2.9', '2026-06-25 16:51:30', '2.2', 0),
-(31, 'Hnt', 'hntr4@mail.de', 'nicht vorhanden', 'Hnt', 'Hnt', 'Hnt', 'Hnt', 'nicht vorhanden', '$2y$12$e3kQF0wB1cP8VEpzzfGa8.sFlYri.EM0MYzyOOtTfZbWixkX3uuLm', 0, 0, 1, NULL, 0, 1, '2026-06-29 15:24:20', '3.1', '2026-06-29 15:24:25', '2.5', 0);
+(28, 'Newb', 'newkid9@web.de', '132135', 'Newb', 'Newb', 'Newb', 'Newb', NULL, '$2y$12$YG3oCr6G6l4N9l0pLtrImOfbkBa2brZAmWGkMfPrnMLH6hsixb/iu', 0, 0, 1, NULL, 4, 0, '2026-07-10 12:31:18', '3.9', '2026-07-10 12:19:18', '3.1', 0),
+(35, 'foto1', 'foto1@keemail.me', NULL, 'foto1', 'foto1', 'foto1', 'foto1', NULL, '$2y$12$GRZtNVVvOTnchwx6OLhfxeWdYGKIOwYIQrnz/87H6AjPIxBA2jNk2', 0, 0, 1, NULL, 3, 0, '2026-07-19 15:26:13', '3.9', '2026-07-19 15:26:16', '3.1', 0),
+(36, 'foto4', 'foto4@keemail.me', NULL, 'foto4', 'foto4', 'foto4', 'foto4', NULL, '$2y$12$wjHmz6p/XvediNWy418OeeDjBTz7FhX9qTmW4wuphjNc5BGyQVQGi', 0, 0, 1, NULL, 0, 1, '2026-07-19 15:35:55', '3.9', '2026-07-19 15:35:57', '3.1', 0),
+(38, 'schanzer3@web.de', 'schanzer3@web.de', '13231235564', 'mailto:schanzer3@web.de', 'mailto:schanzer3@web.de', NULL, NULL, NULL, '$2y$12$.8gr1z85IfYoELNK44pBQeOIKiRey4BXtZDtAwI0VjdNFVUTtDfw2', 0, 0, 1, NULL, 0, 0, '2026-07-30 06:27:59', '3.9', '2026-07-30 06:28:01', '3.1', 0),
+(39, 'FotoZwei', 'foto2@keemail.me', NULL, 'foto', 'Zwei', 'Hamburg', 'Hamburg', NULL, '$2y$12$szA0sYH.Cyrpbm5nMEAnr.45pyU0IFqrL2Lhl4Jt2zPvvCZbav.BC', 0, 0, 1, NULL, 0, 1, '2026-08-26 10:39:40', '3.9', '2026-08-26 10:39:43', '3.1', 0),
+(40, 'HeinPee', 'cristalblue@mail.de', NULL, 'Heiner', 'Petersen', 'jjjj', 'jjjj', NULL, '$2y$12$ER9.SwY1pSdI..mqZoStvu3BIKdzZcyY6wNuQeB.kz8YmPJiVWUCS', 0, 0, 1, NULL, 0, 1, '2026-08-26 11:04:36', '3.9', '2026-08-26 11:04:40', '3.1', 0),
+(41, 'Hunter4', 'hntr4@mail.de', '1474525', 'Hunt', 'Ervier', NULL, NULL, NULL, '$2y$12$kaWHfmFks7ze9ZuzolEEDeN5Ey9G8LR.KxdG/ww30uxxJ1oohMABu', 0, 0, 1, NULL, 0, 1, '2026-08-26 15:00:43', '3.9', '2026-08-26 15:00:45', '3.1', 0),
+(42, 'Don Key', 'donkey-shot@web.de', '165494651', 'donkey', 'shot', NULL, NULL, NULL, '$2y$12$jbS3RK5/TqUFPQjCZrLjxuLkk2Us2F3FnxYBSIYzL8VR1LSHi2dKG', 0, 0, 1, NULL, 0, 1, '2026-08-26 17:23:06', '3.9', '2026-08-26 17:23:06', '3.1', 0);
 
 -- --------------------------------------------------------
 
@@ -208,6 +194,15 @@ CREATE TABLE `passkey` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `last_used_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+
+--
+-- Daten für Tabelle `passkey`
+--
+
+INSERT INTO `passkey` (`pk_id`, `user_type`, `user_id`, `credential_id`, `public_key`, `sign_count`, `device_name`, `created_at`, `last_used_at`) VALUES
+(76, 'cust', 39, 'OjJ0hoGoBraS9w9-Qy8UmCJMebsQ6jKk2oJK1XCHqMU', '{\"publicKeyCredentialId\":\"OjJ0hoGoBraS9w9-Qy8UmCJMebsQ6jKk2oJK1XCHqMU\",\"type\":\"public-key\",\"transports\":[],\"attestationType\":\"none\",\"trustPath\":[],\"aaguid\":\"00000000-0000-0000-0000-000000000000\",\"credentialPublicKey\":\"pAEDAzkBACBZAQDP1PdqtGer9KTo_Q7nIs7EnfDHUoomw7F-kkp_hPyMigmxbRU8CfSveUXP_ZA0wYYMn0Sc-1XDl92i7PdPyea2zoUIspc9s9KCrh70GDxJFgSrv2PalgClzVuRioasGw_ahUpJWvFWIhlYjtvYDoVua16m4xM1vrMdByaM3oYkw6mSIfRqtuNTVOjRyFeqikPTkKurCqzYK4_xaaz65F6we9HbOPdYFlT6JSfUTcOSwWJYgOS6d1vmP_c9qsiVrsUXLpuX4KrDHNfNDIy7zQMF0booW4SvH8-eB1BjO8-hQnd-K2rfmjOJ2NfUNb7JcJLjZyt3qasOFXhfGD6gcg6xIUMBAAE\",\"userHandle\":\"WTNWemREb3pPUQ\",\"counter\":0,\"backupEligible\":false,\"backupStatus\":false,\"uvInitialized\":true}', 5, 'W-C-oA_cust', '2026-08-04 13:47:50', '2026-08-04 14:30:23'),
+(77, 'mand', 35, 'Zw3iJPVUMNEk955k2gGC0e30pNzVtCaDsbwkD8ZvN1c', '{\"publicKeyCredentialId\":\"Zw3iJPVUMNEk955k2gGC0e30pNzVtCaDsbwkD8ZvN1c\",\"type\":\"public-key\",\"transports\":[],\"attestationType\":\"none\",\"trustPath\":[],\"aaguid\":\"00000000-0000-0000-0000-000000000000\",\"credentialPublicKey\":\"pAEDAzkBACBZAQC_LKo7Att46A2vXgFEMbcbm4lUChbnuuYoeCn6Kr2PgaK4jufqlNLO3eC16fj70l4kFTm9CKgtA1yYAlozikJXqKij334KTXiywQZhnIsj9nuXk32uBVo96QscUGCwQXqp6q-GfJz2KjjTNvEtpU0oh_-XuN67IxwQg9YdjOsthmJT1M6rPJNpdX8eaeMLSz8yU4O7fUrqMnEi7pjh3Vj2crnvla6dLiXeWKEG4vUkUN7TsvmSNJoXdR9QFgqTJ1dFwP4t0q3pklnwfPVEqVN9IJp1zGoLiIL7G2RBtRXzYqtdQw9WSs8OgXlTNw5cGsaRGuoavLbbXKTeCm-e_v21IUMBAAE\",\"userHandle\":\"YldGdVpEb3pOUQ\",\"counter\":0,\"backupEligible\":false,\"backupStatus\":false,\"uvInitialized\":true}', 6, 'W-C-oA-mand', '2026-08-04 13:52:12', '2026-08-04 14:23:25'),
+(78, 'cust', 39, '9MCvORT2X5-Z0zfkObqs6Q', '{\"publicKeyCredentialId\":\"9MCvORT2X5-Z0zfkObqs6Q\",\"type\":\"public-key\",\"transports\":[],\"attestationType\":\"none\",\"trustPath\":[],\"aaguid\":\"ea9b8d66-4d01-1d21-3ce4-b6b48cb575d4\",\"credentialPublicKey\":\"pQECAyYgASFYIDjjajTkWvcFK1MTMyjcveupc5eOzI9JUVbxHC0Iw3FbIlggAQoe1ZmWdZrN6tPXLFNymn0g63tpDF3LMHmb9Bz63co\",\"userHandle\":\"WTNWemREb3pPUQ\",\"counter\":0,\"backupEligible\":true,\"backupStatus\":true,\"uvInitialized\":true}', 0, 'A.c.oa', '2026-08-04 13:58:38', '2026-08-04 14:04:21');
 
 -- --------------------------------------------------------
 
@@ -229,7 +224,7 @@ CREATE TABLE `passkey_dismissed` (
 --
 
 INSERT INTO `passkey_dismissed` (`pd_id`, `user_type`, `user_id`, `os`, `ua_hash`, `created_at`) VALUES
-(9, 'mand', 28, 'ios', '48da1af908be076363e16c00999867b2c05b0261ae4e010e737f12eae1e71aff', '2026-06-27 17:13:37');
+(22, 'cust', 39, 'win', '6235d36597d64fc0e0c3883911a8fb2f9451d0254ab3379d980f5a3426585d87', '2026-08-02 17:05:49');
 
 -- --------------------------------------------------------
 
@@ -276,10 +271,11 @@ CREATE TABLE `syst_user` (
 --
 
 INSERT INTO `syst_user` (`syst_id`, `syst_uname`, `syst_email`, `syst_tel`, `syst_firstname`, `syst_lastname`, `syst_street+nr`, `syst_pcode+city`, `syst_company`, `syst_pw_hash`, `is_primary`) VALUES
-(1, 'Martins System', 'frank.euring@mail.de', '+49 162 560 21 02', 'Martin', 'System', '-', '-', '-', '$2y$12$lyU7U/Hw7Pe6h5Dtexcm2O7p3eZXQPAFXHyLSmbLpXYYWK/fSb95K', 1),
-(7, 'bergfex', 'harburg_bergfex@alpenjodel.de', 'Yde3#4rfc0987', 'bergfex', 'bergfex', '', '', '', '$2y$12$swwAPkjCiVK/0Zfm7QdqUOceWfzWQixZ5itTCls7plkaubrSYtPYW', 1),
-(11, 'subuz', 'anderelbe@unterderbruecke.de', 'subuz', 'subuz', 'subuz', '', '', '', '$2y$12$gitV2Y0ni32PqO3/s51iCuiowJ7lDEdn/DwCdlIZZZHQPG2Vxd.AO', 0),
-(12, 'Newnew', 'newkid9@web.de', '7tzji', 'Newnew', 'Newnewc', '', '', '', '$2y$12$mU33sxavqhWlFuGTJfhj3uWsWJms88NrPE/pBX4nnLg.5y4smpI0q', 0);
+(1, 'Martins System', 'frank.euring@mail.de', '+49 162 560 21 02', 'Martin', 'System', '-', '-', '-', '$2y$12$JEb8dkHeFfcoPiZXiAmbMeHsr0ZccO8GcoCS6fmqqTqW.f1AUwtkK', 1),
+(7, 'bergfex', 'harburg_bergfex@alpenjodel.de', 'Yde3#4rfc0987', 'bergfex', 'bergfex', '', '', '', '$2y$12$V8n6qqSLI7IcnNlUGzNAnOXCEPfChV1d274sQaF2Ql8NBm6bUtUv6', 1),
+(11, 'subuz', 'anderelbe@unterderbruecke.de', 'subuz', 'subuz', 'subuz', '', '', '', '$2y$12$cmu0uwXOmb/GQGoqklBiSOYZ7rU4lF9LsB704huCVNyd0gfTKMMRG', 0),
+(12, 'Newnew', 'newkid9@web.de', '7tzji', 'Newnew', 'Newnewc', '', '', '', '$2y$12$UmlAM77aVS0wYRQH9m5KZ.yO3nPqyYJk6VnPgnyRjOfBt3k82ATIa', 0),
+(18, 'foto5', 'foto5@keemail.me', 'foto5', 'foto5', 'foto5', '', '', '', '$2y$12$hnpbxD/qyGHP6Y2520zgs.y3KciRuocs2ThwOSH7LaSYTZ2LFvEVG', 0);
 
 --
 -- Indizes der exportierten Tabellen
@@ -371,43 +367,43 @@ ALTER TABLE `cust_invite`
 -- AUTO_INCREMENT für Tabelle `cust_pcode`
 --
 ALTER TABLE `cust_pcode`
-  MODIFY `pcode_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
+  MODIFY `pcode_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=70;
 
 --
 -- AUTO_INCREMENT für Tabelle `cust_user`
 --
 ALTER TABLE `cust_user`
-  MODIFY `cust_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+  MODIFY `cust_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
 
 --
 -- AUTO_INCREMENT für Tabelle `invite`
 --
 ALTER TABLE `invite`
-  MODIFY `inv_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=120;
+  MODIFY `inv_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=999920;
 
 --
 -- AUTO_INCREMENT für Tabelle `mand_user`
 --
 ALTER TABLE `mand_user`
-  MODIFY `mand_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+  MODIFY `mand_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
 
 --
 -- AUTO_INCREMENT für Tabelle `passkey`
 --
 ALTER TABLE `passkey`
-  MODIFY `pk_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `pk_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=79;
 
 --
 -- AUTO_INCREMENT für Tabelle `passkey_dismissed`
 --
 ALTER TABLE `passkey_dismissed`
-  MODIFY `pd_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `pd_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT für Tabelle `syst_user`
 --
 ALTER TABLE `syst_user`
-  MODIFY `syst_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `syst_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

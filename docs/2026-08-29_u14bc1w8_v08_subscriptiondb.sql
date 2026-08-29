@@ -47,7 +47,7 @@ CREATE TABLE `ledger_entry` (
   `le_id` bigint(20) UNSIGNED NOT NULL,
   `sr_id` bigint(20) UNSIGNED NOT NULL,
   `sb_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `entry_type` enum('FO','GG','ZE','ZG','ZA') NOT NULL,
+  `entry_type` enum('FO','GG','ZE','ZG','LS') NOT NULL,
   `context_le_id` bigint(20) UNSIGNED DEFAULT NULL,
   `money_amount` decimal(10,2) DEFAULT NULL,
   `amount` decimal(10,2) DEFAULT NULL,
