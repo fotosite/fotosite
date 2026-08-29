@@ -2,7 +2,7 @@
 
 **Notfall-Startdokument**
 
-*Stand: 27. August 2026  |  Letzter Git-Tag: ui_texte_ausgelagert_ok*
+*Stand: 29. August 2026  |  Letzter Git-Tag: ui_texte_ausgelagert_ok (29.08.-Ergänzung unten uncommitted)*
 
 **🏁 MEILENSTEIN: Benutzer-/Sicherheitsverwaltung implementiert. Tag user_management_complete_ok ist sicherer Rückfallpunkt und als Startimplementierung für künftige Projekte geeignet (siehe Abschnitt 9). EINSCHRAENKUNG: Die Passkey-Funktionalität (Phase 6) ist technisch implementiert, aber noch NICHT gruendlich getestet — siehe naechster Schritt unten und Abschnitt 7.**
 
@@ -30,6 +30,8 @@
 
 **⚠  NEU 27.08.: UI-/E-Mail-Texte nach editierbaren Markdown-Dateien ausgelagert (28 Textstellen, storage/app/private/ui-texte/{all,cust,mand,syst}/*.md, nicht versioniert) — neuer Helper uiText(), renderMarkdownVariant() um Platzhalter-Mechanismus erweitert. 2FA-Code-Gueltigkeitsdauer war an zwei Stellen hartcodiert, jetzt zentral in config/twofa.php (TWOFA_CODE_VALID_MINUTES). Tag ui_texte_ausgelagert_ok, Commit 2dbeb37. ZUSAETZLICH, .env-only (nicht versioniert): Mail-Konfiguration auf echtes Postfach umgestellt (vorheriges MAIL_SCHEME=starttls von Symfony Mailer 8.x NICHT unterstuetzt, verursachte 500er bei jedem Mailversand) — siehe aktualisierten Steckbrief Abschnitt 1. BACKSTAGE_PATH jetzt erstmals explizit in der Server-.env gesetzt (individueller Pfad statt Code-Default 'backstage') — WICHTIG: fruehere Referenzen auf "/backstage" in diesem Dokument sind ab sofort veraltet, siehe Steckbrief Abschnitt 1 fuer den Hinweis zum aktuellen Wert. Details Abschnitt 5.2m.**
 
+**⚠  NEU 28.–29.08.: Fünfte Datenbank subscriptiondb vorbereitet (Grundlage für ein späteres Abrechnungssystem für mand+cust, noch keine Anwendungslogik) — DDL für 5 Tabellen ausgeführt (subscriber, plan, subscription, ledger_entry, invoice), Connection subscriptiondb + Base-Model SubscriptionDbModel angelegt, Demo-Datensatz eingespielt (Subscriber 30118, 3 Verträge). ACHTUNG: DB-Passwort aktuell schwach (Testphase) — vor Produktivnutzung ersetzen. Trigger für Journal-Unveränderbarkeit noch NICHT gesetzt. Noch UNCOMMITTED, kein Tag. Details Abschnitt 5.2n, vollständiges Konzept: docs/Konzept_Abrechnungssystem.md.**
+
 **Neuen Chat starten:**
 
 - Neuen Chat im Projekt "Fotosite V08" in Claude.ai öffnen
@@ -45,7 +47,7 @@
 | Projektname | Fotosite V08 |
 | Art | Multi-Tenant-Fotogalerie (Hobbyprojekt, Einzelentwickler Martin Wagner / Willy) |
 | Framework | Laravel 13 / PHP 8.5 / Blade / Alpine.js / Tailwind CSS |
-| Datenbank | MariaDB - 4 separate DBs (userdb, sessiondb, fotodb, fotoblobdb) |
+| Datenbank | MariaDB - 5 separate DBs (userdb, sessiondb, fotodb, fotoblobdb, subscriptiondb). subscriptiondb NEU 28.–29.08. — Abrechnungssystem-Vorbereitung, noch keine Anwendungslogik. **⚠ Aktuell schwaches Passwort (Testphase) — vor produktiver Nutzung ersetzen** (siehe Abschnitt 5.2n) |
 | Passkeys | web-auth/webauthn-lib 5.3.5 (direkt - NICHT laragear, NICHT laravel/passkeys) |
 | Deployment | FTP (WinSCP) auf Alfahosting - fotos.martinwagner.de |
 | Git-Repo | github.com/fotosite/fotosite (privat) |
@@ -178,6 +180,24 @@ npm run build
 **🎯  NAECHSTER SCHRITT (oberste Prioritaet): Gruendlicher Gesamttest der Passkey-Funktionalität. Phase 6 ist technisch implementiert, aber noch nicht systematisch getestet - getestet wurde bisher nur punktuell (Windows Hello, Android Chrome/Firefox, cust-Banner, ein Grenzfall). Der ausstehende Test umfasst Registrierung, Login, Umbenennen, Loeschen, Prompt-/Dismiss-Logik, jeweils fuer mand UND cust, ueber Windows/Android/iOS und die relevanten Browser hinweg - AUSDRUECKLICH KEIN reiner iOS-Test. Details Abschnitt 7. Zwischen dem 19.07.-Stand und heute kam ausschliesslich Sicherheits-Haertung dazwischen (Abschnitt 5.2f) - am Passkey-Testbedarf hat sich nichts geaendert.**
 
 **⚠  Danach weiter OFFEN: (a) dirty-Ausblendung bei system/mandanten/index.blade.php + customer/auth/register.blade.php nachziehen. (b) Regressionstest Android/Windows der globalen Button-Animation. (c) Abnahmetest cust-Bereich (Bloecke 1-6), danach Tag cust_complete_ok. (d) TRUSTED_DEVICE_DAYS-Duplikat in .env bereinigen (Zeile 17 vs. 97). (e) [ERLEDIGT 04.08. — Logout-Button "Zurueck" heisst jetzt "Fenster schliessen", siehe 5.2i]. (f) syst-Passwort-Policy + Honeypot-Infrastruktur committen (aktuell uncommitted), HONEYPOT_LOCKOUT_MINUTES + LOG_STACK=daily auf Server-.env nachtragen. DANACH Phase 7: mand-Content VOR Cust-UI.**
+
+## 5.2n Vorbereitung 28.–29.08.2026 (Fünfte Datenbank subscriptiondb — Abrechnungssystem-Grundlage)
+
+✓  Neue Datenbank u14bc1w8_v08_subscriptiondb angelegt, DB-User eingerichtet, Connection subscriptiondb in config/database.php (.env + .env.example ergaenzt), Base-Model App\Models\SubscriptionDb\SubscriptionDbModel (minimal, analog den vier bestehenden Base-Models: nur $connection). Verbindungstest erfolgreich
+
+✓  Fuenf Tabellen per DDL angelegt (inkl. FK-Constraints — bewusste Ausnahme vom Projektstandard, siehe unten): subscriber (Vertragspartner, ueberdauert geloeschte Accounts), plan (versionierte Tarife), subscription (Vertrag je Nutzer, ein Subscriber kann mehrere Vertraege zahlen), ledger_entry (unveraenderliches Buchungsjournal, fuenf Buchungsarten FO/GG/ZE/ZG/ZA, getrennte Spalten fuer Geldkonto und Vertragssaldo), invoice (Rechnung als Momentaufnahme je Vertrag). Kein Eingriff in bestehende Tabellen — Verknuepfung zu mand_user/cust_user ausschliesslich logisch ueber user_type+user_id, analog passkey/trusted_device
+
+✓  Illustrierender Demo-Datensatz eingespielt: Subscriber 30118 mit drei Vertraegen (115, 170, 205), entspricht exakt dem Buchungsbeispiel aus Konzept-Abschnitt 4.2
+
+⚠  Trigger fuer die Unveraenderbarkeit des Journals (BEFORE UPDATE/DELETE auf ledger_entry) NOCH NICHT gesetzt
+
+⚠  WICHTIG: subscriptiondb wurde mit einem SCHWACHEN Passwort angelegt (Testphase, urspruenglich leere Datenbank) — vor jeder produktiven Nutzung durch ein starkes, zufaelliges Passwort ersetzen. Gehoert auf die Liste der Punkte fuer die Produktivsetzung
+
+✓  Anwendungslogik bewusst NICHT implementiert — Konzept-Abschnitt 4 beschreibt Buchungsablaeufe (Umlage, FIFO-Ausgleich, Erstattung) als Erweiterungsoption fuer eine moegliche spaetere kommerzielle Nutzung, keine Tabellen-Models/Controller/Views vorhanden
+
+⚠  Nebenbei behoben: die bereits ausgefuehrte DDL hatte entry_type faelschlich mit 'LS' statt 'ZA' (Zahlungsausgang) angelegt (Bug, kein bewusster Namenswechsel) — korrigiert per ALTER TABLE+UPDATE, siehe Inkonsistenzen.md
+
+Vollstaendiges Konzept: docs/Konzept_Abrechnungssystem.md. Noch UNCOMMITTED, kein Tag. Details PROJECT_CONTEXT.md Abschnitt 10n.
 
 ## 5.2m Feature 27.08.2026 (UI-/E-Mail-Texte ausgelagert + 2FA-Gueltigkeitsdauer konfigurierbar)
 

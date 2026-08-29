@@ -2,7 +2,9 @@
 
 **Projektstatus #16**
 
-*Stand: 27. August 2026*
+*Stand: 29. August 2026*
+
+**29.08. (uncommitted): Vorbereitung fünfte Datenbank `subscriptiondb` für ein späteres Abrechnungssystem (mand+cust)** — DDL für 5 Tabellen (`subscriber`, `plan`, `subscription`, `ledger_entry`, `invoice`) ausgeführt, inkl. bewusster FK-Constraints (Projektabweichung), Connection + Base-Model `SubscriptionDbModel` angelegt, Demo-Datensatz eingespielt (Subscriber 30118, drei Verträge). Trigger für Journal-Unveränderbarkeit noch nicht gesetzt, Anwendungslogik bewusst nicht implementiert. Details Abschnitt 4i, Konzept: `docs/Konzept_Abrechnungssystem.md`. Noch UNCOMMITTED, kein Tag.**
 
 **Tag: ui_texte_ausgelagert_ok — 28 UI-/E-Mail-Textstellen (Login-/2FA-Hinweise, Konto-Löschen-/Galerie-entfernen-Warnungen, Upload-Bedingungen, E-Mail-ändern-Erklärung, Spam-Hinweis, Passkey-Prompts, Alias-Erklärung, Pflichtfeld-Nachtrag-Hinweis, Policy-Update-Hinweise, 7 E-Mail-Bodies) nach editierbaren Markdown-Dateien (`storage/app/private/ui-texte/{all,cust,mand,syst}/*.md`, nicht versioniert) ausgelagert — neuer Helper `uiText()`, `renderMarkdownVariant()` um `$vars`-Platzhalter-Mechanismus erweitert. Zusätzlich 2FA-Code-Gültigkeitsdauer zentralisiert (war an zwei Stellen hartcodiert) über neue `config/twofa.php`. Plus zwei `.env`-only-Korrekturen: Mail-Konfiguration auf echtes Postfach (smtps/Alfahosting) umgestellt (vorheriges `starttls` von Symfony Mailer 8.x nicht unterstützt, verursachte 500er bei jedem Mailversand), `BACKSTAGE_PATH` erstmals explizit gesetzt. Commit 2dbeb37 — siehe Abschnitt 4h. Vorheriger Stand (26.08., Tag registration_policy_version_fix_ok): Bugfix — `ds_version`/`upload_terms_version` bei Registrierung lasen bisher einen statischen Config-Wert statt der tatsächlich aktuellen `policy_versions`-Version, wodurch das „Policy geändert"-Popup fälschlich direkt nach der Registrierung erschien. Commit 83c738e — siehe Abschnitt 4g. Davor (26.08., Tag pflichtfelder_erzwingung_ok): neue Middleware `CheckPflichtfelder` erzwingt nachträglich zur Pflicht gewordene, aber noch leere Felder nach dem Login (Redirect zur Konto-Seite mit Amber-Hinweisbox, 60s-Cache); grauer „(optional)"-Hinweis bei Straße/PLZ+Ort ergänzt. Commit 16e81f3 — siehe Abschnitt 4f. Weiter zurück (26.08., Tag pflichtfelder_konfiguration_ok): Konfigurierbare Pflichtfelder für mand/cust (Telefon/Straße+Hausnr./PLZ+Ort/Firma): neue Datei `pflichtfelder.txt` + Helper `istPflichtfeld()`, Registrierung fragt nur Pflichtfelder ab, Konto-Bearbeiten zeigt immer alle Felder dynamisch; begleitende DB-Migration auf echtes NULL statt Platzhalter-String; neue mand-Detailseite je Mitglied + umgebaute Mitgliederliste; syst sieht jetzt zusätzlich mand-Adresse; Pflicht-Sternchen-Bugfix in mandant/konto.blade.php. Commit eef2eed — siehe Abschnitt 4e. Noch weiter zurück (04.08., Tag logout_dialog_close_window_ok): Zwei kleine Fixes: (1) Trusted-Device-Cookie jetzt auch im Passkey-Login-Pfad wirksam (cust+mand), Tag trusted_device_passkey_ok, Commit 268c2b7 — siehe Abschnitt 4d. (2) Logout-Dialog-Button „Zurück" zu „Fenster schließen" umbenannt, window.close()-Versuch mit Dialog-Fallback, Commit 859516d — siehe Abschnitt 4d. Davor (03.08., Tag trusted_device_cust_nofactor_fix_ok): Bugfix cust-Trusted-Device-Cookie im Nicht-2FA-Login-Pfad, siehe Abschnitt 4c. Weiter zurück (31.07., Tag honeypot_login_attacks_log_ok): Sicherheits-Härtung des Logins abgeschlossen: einheitliche IP-basierte Login-Sperre (cust/mand/syst), dynamische Honeypot-Routen + Log-Kanal login_attacks, syst-Login-Pfad über .env konfigurierbar, mand-2FA-Opt-out, Passkey-Hinweistexte ausgelagert. Zusätzlich, weiterhin UNCOMMITTED: syst-Passwort-Policy auf min. 20 Zeichen + Komplexität verschärft, inkl. Login-Hard-Block.**
 
@@ -176,6 +178,24 @@ Details PROJECT_CONTEXT.md Abschnitt 10l.
 
 Details PROJECT_CONTEXT.md Abschnitt 10m.
 
+# 4i. Vorbereitung 28.–29.08.2026 — Fünfte Datenbank subscriptiondb (Abrechnungssystem-Grundlage)
+
+**Vorbereitung einer Schnittstelle/Datenstruktur für ein späteres Abrechnungssystem für `mand` und `cust`.** Neue Datenbank `u14bc1w8_v08_subscriptiondb`, Laravel-Connection `subscriptiondb`, Base-Model `App\Models\SubscriptionDb\SubscriptionDbModel` (minimal, analog den vier bestehenden Base-Models: nur `$connection`).
+
+**Fünf Tabellen per DDL angelegt** (inkl. FK-Constraints — bewusste Ausnahme vom Projektstandard, sonst nur ein einziger echter FK im gesamten Schema): `subscriber` (Vertragspartner, überdauert gelöschte Accounts), `plan` (versionierte Tarife), `subscription` (Vertrag je Nutzer, ein Subscriber kann mehrere Verträge zahlen), `ledger_entry` (unveränderliches Buchungsjournal, fünf Buchungsarten `FO`/`GG`/`ZE`/`ZG`/`ZA`, getrennte Spalten für Geldkonto und Vertragssaldo), `invoice` (Rechnung als Momentaufnahme je Vertrag). Kein Eingriff in bestehende Tabellen — Verknüpfung zu `mand_user`/`cust_user` ausschließlich logisch über `user_type`+`user_id`, analog `passkey`/`trusted_device`.
+
+**Illustrierender Demo-Datensatz eingespielt:** Subscriber 30118 mit drei Verträgen (115, 170, 205), entspricht exakt dem Buchungsbeispiel aus Konzept-Abschnitt 4.2.
+
+**Noch nicht gesetzt:** Trigger für die Unveränderbarkeit des Journals (`BEFORE UPDATE`/`BEFORE DELETE` auf `ledger_entry`).
+
+**Anwendungslogik bewusst NICHT implementiert** — Konzept-Abschnitt 4 beschreibt die Buchungsabläufe (Umlage, FIFO-Ausgleich, Erstattung) als Erweiterungsoption für eine mögliche spätere kommerzielle Nutzung; keine Tabellen-Models/Controller/Views vorhanden.
+
+**Nebenbei behoben:** Die bereits ausgeführte DDL hatte `entry_type` fälschlich mit `'LS'` statt `'ZA'` (Zahlungsausgang) angelegt (Bug, kein bewusster Namenswechsel) — korrigiert per `ALTER TABLE`+`UPDATE`, siehe Inkonsistenzen.md.
+
+Vollständiges Konzept: `docs/Konzept_Abrechnungssystem.md`. Details PROJECT_CONTEXT.md Abschnitt 10n.
+
+**Noch UNCOMMITTED — kein Tag, folgt separat.**
+
 # 5. Datenbankstand (19.07.2026)
 
 | **DB** | **Änderungen seit #12** |
@@ -237,4 +257,4 @@ Details PROJECT_CONTEXT.md Abschnitt 10m.
 
 Alle früheren Tags siehe Projektstatus #12 / PROJECT_CONTEXT Abschnitt 13. **Noch uncommitted, kein Tag:** syst-Passwort-Policy-Verschärfung (min:20) + Login-Hard-Block, Doku-Dateien dieser Aktualisierung.
 
-Fotosite V08 — Projektstatus #16  |  Stand 27.08.2026
+Fotosite V08 — Projektstatus #16  |  Stand 29.08.2026
