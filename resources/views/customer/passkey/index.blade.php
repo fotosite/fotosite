@@ -378,8 +378,11 @@
                 }
             } catch (err) {
                 if (err.name === 'NotAllowedError') return;
+                if (err.name === 'InvalidStateError') {
+                    alert('Für dieses Gerät ist bereits ein Passkey registriert.');
+                    return;
+                }
                 if (
-                    err.name === 'InvalidStateError' ||
                     err.name === 'UnknownError' ||
                     (err.message && err.message.toLowerCase().includes('transient'))
                 ) {

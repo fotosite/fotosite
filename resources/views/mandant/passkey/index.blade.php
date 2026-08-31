@@ -381,8 +381,11 @@
             } catch (e) {
                 console.error('WebAuthn Fehler:', e.name, e.message, e);
                 if (e.name === 'NotAllowedError') return;
+                if (e.name === 'InvalidStateError') {
+                    alert('Für dieses Gerät ist bereits ein Passkey registriert.');
+                    return;
+                }
                 if (
-                    e.name === 'InvalidStateError' ||
                     e.name === 'UnknownError' ||
                     (e.message && e.message.toLowerCase().includes('transient'))
                 ) {

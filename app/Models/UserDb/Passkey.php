@@ -8,7 +8,7 @@
  * CALLS:       —
  *
  * DB ACCESS:   userdb.passkey.pk_id, user_type, user_id, credential_id,
- *              public_key, sign_count, device_name, created_at, last_used_at
+ *              public_key, aaguid, sign_count, device_name, created_at, last_used_at
  */
 
 namespace App\Models\UserDb;
@@ -25,6 +25,7 @@ class Passkey extends UserDbModel
         'user_id',
         'credential_id',
         'public_key',
+        'aaguid',
         'sign_count',
         'device_name',
         'created_at',

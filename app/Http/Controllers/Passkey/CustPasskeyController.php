@@ -84,6 +84,7 @@ use Webauthn\CeremonyStep\CeremonyStepManagerFactory;
 use Webauthn\Denormalizer\WebauthnSerializerFactory;
 use Webauthn\PublicKeyCredential;
 use Webauthn\PublicKeyCredentialCreationOptions;
+use Webauthn\PublicKeyCredentialDescriptor;
 use Webauthn\PublicKeyCredentialParameters;
 use Webauthn\PublicKeyCredentialRpEntity;
 use Webauthn\PublicKeyCredentialSource;
@@ -91,6 +92,9 @@ use Webauthn\PublicKeyCredentialUserEntity;
 
 class CustPasskeyController extends Controller
 {
+    /** Feste AAGUID, mit der Google Password Manager alle Passkeys registriert. */
+    private const GPM_AAGUID = 'ea9b8d66-4d01-1d21-3ce4-b6b48cb575d4';
+
     private SerializerInterface $serializer;
 
     public function __construct(
@@ -171,6 +175,25 @@ class CustPasskeyController extends Controller
             parse_url(config('app.url'), PHP_URL_HOST),
         );
 
+        $existingPasskeys = Passkey::where('user_type', 'cust')
+            ->where('user_id', $custId)
+            ->get();
+
+        $excludeCredentials = $existingPasskeys->map(function ($pk) {
+            try {
+                return PublicKeyCredentialDescriptor::create(
+                    'public-key',
+                    Base64UrlSafe::decode($pk->credential_id)
+                );
+            } catch (\Throwable $e) {
+                throw new \RuntimeException(
+                    "Korrupter credential_id bei passkey.pk_id={$pk->pk_id}: {$e->getMessage()}",
+                    0,
+                    $e
+                );
+            }
+        })->all();
+
         $options = PublicKeyCredentialCreationOptions::create(
             rp:   $rpEntity,
             user: $userEntity,
@@ -184,6 +207,7 @@ class CustPasskeyController extends Controller
                 userVerification:        AuthenticatorSelectionCriteria::USER_VERIFICATION_REQUIREMENT_REQUIRED,
                 residentKey:             AuthenticatorSelectionCriteria::RESIDENT_KEY_REQUIREMENT_REQUIRED,
             ),
+            excludeCredentials: $excludeCredentials,
             timeout: 60000,
         );
 
@@ -238,6 +262,23 @@ class CustPasskeyController extends Controller
                 $host,
             );
 
+            $aaguid = $credentialRecord->aaguid->toRfc4122();
+
+            if ($aaguid === self::GPM_AAGUID) {
+                $existingGpmPasskey = Passkey::where('user_type', 'cust')
+                    ->where('user_id', $custId)
+                    ->where('aaguid', self::GPM_AAGUID)
+                    ->exists();
+
+                if ($existingGpmPasskey) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Für dieses Google-Konto ist bereits ein Passkey registriert. '
+                            . 'Ein neuer Passkey würde den bestehenden ungültig machen.',
+                    ]);
+                }
+            }
+
             $credentialSource = PublicKeyCredentialSource::fromCredentialRecord($credentialRecord);
 
             Passkey::create([
@@ -245,6 +286,7 @@ class CustPasskeyController extends Controller
                 'user_id'       => $custId,
                 'credential_id' => Base64UrlSafe::encodeUnpadded($credentialRecord->publicKeyCredentialId),
                 'public_key'    => $this->serializer->serialize($credentialSource, 'json'),
+                'aaguid'        => $aaguid,
                 'sign_count'    => $credentialRecord->counter,
                 'device_name'   => $request->input('device_name', 'Unbekanntes Gerät'),
                 'created_at'    => now(),
