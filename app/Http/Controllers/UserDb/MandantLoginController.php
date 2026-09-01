@@ -352,7 +352,7 @@ class MandantLoginController extends UserDbController
             if ($credentialSource === null) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Passkey nicht gefunden.',
+                    'message' => 'Dein Passkey wurde nicht gefunden. Bitte prüfe, ob dein Gerät dir alle verfügbaren Passkeys angezeigt hat. Sonst melde dich bitte mit E-Mail und Passwort an und registriere deinen Passkey erneut.',
                 ]);
             }
 
@@ -411,6 +411,8 @@ class MandantLoginController extends UserDbController
             $request->session()->put('_user_type', $sessionData['user_type']);
             $request->session()->put('_mand_id',   $sessionData['mand_id']);
             $request->session()->put('_prompt_passkey', false);
+            $request->session()->put('_passkey_os', detectOsPlatform($request->userAgent()));
+            $request->session()->put('_passkey_browser', detectBrowser($request->userAgent()));
 
             $newSessionId = substr($request->session()->getId(), 0, 128);
 

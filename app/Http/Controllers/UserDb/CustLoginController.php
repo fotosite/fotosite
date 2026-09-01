@@ -606,7 +606,7 @@ class CustLoginController extends UserDbController
             if ($credentialSource === null) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Passkey nicht gefunden.',
+                    'message' => 'Dein Passkey wurde nicht gefunden. Bitte prüfe, ob dein Gerät dir alle verfügbaren Passkeys angezeigt hat. Sonst melde dich bitte mit E-Mail und Passwort an und registriere deinen Passkey erneut.',
                 ]);
             }
 
@@ -673,6 +673,8 @@ class CustLoginController extends UserDbController
             $request->session()->put('_sec_level',     $pcode?->cust_passcode);
             $request->session()->put('_last_activity', time());
             $request->session()->put('_prompt_passkey', false);
+            $request->session()->put('_passkey_os', detectOsPlatform($request->userAgent()));
+            $request->session()->put('_passkey_browser', detectBrowser($request->userAgent()));
 
             $newSessionId = substr($request->session()->getId(), 0, 128);
             $pcodeMandId  = $pcode?->mand_id;

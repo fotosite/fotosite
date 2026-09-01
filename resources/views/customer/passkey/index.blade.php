@@ -45,7 +45,27 @@
 </head>
 
 <body class="min-h-screen bg-gray-50 text-gray-900 antialiased"
-      x-data="{ showNameModal: false, deviceName: '' }">
+      x-data="{
+          showNameModal: false,
+          deviceName: '',
+          suggestedDeviceName() {
+              const osLabels = {
+                  win: 'Windows', andr: 'Android', ios: 'iOS', unknown: 'Unbekannt'
+              };
+              const browserLabels = {
+                  chrome: 'Chrome', firefox: 'Firefox', edge: 'Edge',
+                  safari: 'Safari', samsung: 'Samsung Internet', unknown: 'Unbekannt'
+              };
+              const os = osLabels[@js($passkeyOs)] ?? 'Unbekannt';
+              const browser = browserLabels[@js($passkeyBrowser)] ?? 'Unbekannt';
+              return os + ' – ' + browser;
+          },
+          openNameModal() {
+              this.deviceName = this.suggestedDeviceName();
+              this.showNameModal = true;
+              this.$nextTick(() => this.$refs.deviceNameInput.focus());
+          }
+      }">
 
     @php $cust = \App\Models\UserDb\CustUser::find(session('_cust_id')); @endphp
 
@@ -79,10 +99,10 @@
     {{-- ══════════════════════════════════════════════════════
          MAIN
     ══════════════════════════════════════════════════════ --}}
-    <main class="mx-auto max-w-4xl px-6 pt-14 pb-24">
+    <main class="mx-auto max-w-4xl px-6 pt-4 pb-24">
 
         {{-- Zurück-Link --}}
-        <div class="mt-6 mb-8">
+        <div class="mt-2 mb-4">
             <button type="button"
                     @click="$store.unsavedGuard.requestNav('{{ route('customer.dashboard') }}')"
                     class="inline-flex items-center gap-1.5 min-h-11 py-2 text-sm text-indigo-500
@@ -97,7 +117,7 @@
         </div>
 
         {{-- Seitenüberschrift --}}
-        <div class="mb-8">
+        <div class="mb-4">
             <h1 class="text-xl font-semibold tracking-tight text-gray-800">
                 Meine Passkeys
             </h1>
@@ -106,26 +126,9 @@
             </p>
         </div>
 
-        {{-- Box 1: allgemein, immer sichtbar --}}
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <p class="text-sm font-semibold text-blue-800 mb-2">
-                Passkey einrichten
-            </p>
-            <div class="text-sm text-blue-700">
-                {!! $passkeyAllgemeinHtml !!}
-            </div>
-        </div>
-
-        {{-- Box 2: OS+Browser-spezifisch --}}
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-            <div class="text-sm text-blue-700">
-                {!! $passkeySpezifischHtml !!}
-            </div>
-        </div>
-
         {{-- Neuen Passkey registrieren --}}
         <div class="mt-2 mb-6">
-            <button @click="showNameModal = true"
+            <button @click="openNameModal()"
                     class="inline-flex items-center justify-center gap-2 rounded-lg
                            bg-indigo-600 text-sm font-medium text-white
                            hover:bg-indigo-700 active:bg-indigo-800
@@ -159,6 +162,7 @@
                     (z.B. "iPhone 15", "Windows Büro").
                 </p>
                 <input type="text" x-model="deviceName"
+                       x-ref="deviceNameInput"
                        placeholder="Mein Gerät"
                        class="w-full border rounded-lg px-3 py-2 text-sm mb-4">
                 <div class="flex gap-3 justify-end">
@@ -182,8 +186,8 @@
                 </p>
             </div>
         @else
-            <div class="rounded-xl border border-gray-100 bg-white overflow-hidden">
-                <table class="w-full text-sm">
+            <div class="hidden md:block rounded-xl border border-gray-100 bg-white overflow-hidden">
+                <table class="hidden md:table w-full text-sm">
                     <thead>
                         <tr class="border-b border-gray-100 bg-gray-50">
                             <th class="px-5 py-3 text-left text-xs font-semibold
@@ -281,7 +285,128 @@
                     </tbody>
                 </table>
             </div>
+
+            {{-- Mobile: Detailbereich + senkrechte Tab-Liste (< md) --}}
+            <div class="md:hidden" x-data="{
+                    items: @js($passkeys->map(fn($p) => [
+                        'pk_id' => $p->pk_id,
+                        'name' => $p->device_name ?? '',
+                        'created_at' => optional($p->created_at)->format('d.m.Y H:i') ?? '–',
+                        'last_used_at' => optional($p->last_used_at)->format('d.m.Y H:i') ?? 'Nie',
+                    ])->values()),
+                    editing: false,
+                    select(pkId) {
+                        const idx = this.items.findIndex(i => i.pk_id === pkId);
+                        if (idx > 0) {
+                            const [chosen] = this.items.splice(idx, 1);
+                            this.items.unshift(chosen);
+                        }
+                        this.editing = false;
+                    }
+                }">
+
+                {{-- Detailbereich: ausgewählter Passkey (items[0]) --}}
+                <div class="rounded-xl border border-gray-300 bg-white shadow-sm p-3">
+
+                    {{-- Gerätename --}}
+                    <div class="mb-2">
+                        <span x-show="!editing" x-text="items[0].name"
+                              class="block font-medium text-gray-700 truncate text-center"></span>
+                        <input x-show="editing"
+                               x-model="items[0].name"
+                               x-ref="mobileNameInput"
+                               @input="$store.unsavedGuard.markDirty()"
+                               @keydown.enter="saveRename(items[0].pk_id, items[0].name); editing = false; $store.unsavedGuard.clearDirty()"
+                               @keydown.escape="editing = false; $store.unsavedGuard.clearDirty()"
+                               type="text"
+                               maxlength="100"
+                               class="w-full rounded border border-indigo-300
+                                      px-2 py-1.5 text-sm text-center focus:outline-none
+                                      focus:ring-2 focus:ring-indigo-400" />
+                    </div>
+
+                    {{-- Registriert am / Zuletzt verwendet --}}
+                    <div class="text-sm text-gray-500 mb-2 space-y-0.5 text-center">
+                        <p>Registriert am: <span x-text="items[0].created_at"></span></p>
+                        <p>Zuletzt verwendet: <span x-text="items[0].last_used_at"></span></p>
+                    </div>
+
+                    {{-- Aktionen --}}
+                    <div class="flex items-center justify-center gap-2 pt-1.5 border-t border-gray-100">
+
+                        {{-- Umbenennen / Speichern --}}
+                        <button x-show="!editing"
+                                @click="editing = true; $nextTick(() => $refs.mobileNameInput.focus())"
+                                class="inline-flex items-center min-h-11 py-2 px-2 text-sm text-indigo-500 hover:text-indigo-700
+                                       font-medium transition-colors">
+                            Umbenennen
+                        </button>
+                        <button x-show="editing"
+                                @click="saveRename(items[0].pk_id, items[0].name); editing = false; $store.unsavedGuard.clearDirty()"
+                                class="inline-flex items-center min-h-11 py-2 px-2 text-sm text-green-600 hover:text-green-800
+                                       font-medium transition-colors">
+                            Speichern
+                        </button>
+
+                        <span class="text-gray-200">|</span>
+
+                        {{-- Löschen: pro Passkey vorgerendertes Formular (Route/CSRF
+                             serverseitig, wie Desktop), nur das des aktuell
+                             ausgewählten Passkeys sichtbar --}}
+                        @foreach($passkeys as $passkey)
+                            <form method="POST"
+                                  action="{{ route('customer.passkeys.destroy', $passkey->pk_id) }}"
+                                  class="inline"
+                                  x-show="items[0] && items[0].pk_id === {{ $passkey->pk_id }}"
+                                  onsubmit="return confirm('Passkey «{{ addslashes($passkey->device_name ?? 'Dieser Passkey') }}» wirklich löschen?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit"
+                                        class="inline-flex items-center min-h-11 py-2 px-2 text-sm text-red-400 hover:text-red-600
+                                               font-medium transition-colors">
+                                    Löschen
+                                </button>
+                            </form>
+                        @endforeach
+
+                    </div>
+                </div>
+
+                {{-- Tab-Liste: senkrecht, mind. 3 Zeilen sichtbar, Rest scrollbar --}}
+                <div class="rounded-xl border border-gray-300 bg-white shadow-sm divide-y divide-gray-300
+                            max-h-[132px] overflow-y-auto">
+                    <template x-for="item in items" :key="item.pk_id">
+                        <button type="button"
+                                @click="select(item.pk_id)"
+                                :class="item.pk_id === items[0].pk_id
+                                        ? 'bg-indigo-50 text-indigo-700 font-medium'
+                                        : 'text-gray-600'"
+                                class="block w-full text-left px-4 min-h-11 py-2.5 text-sm truncate
+                                       hover:bg-gray-50 transition-colors">
+                            <span x-text="item.name"></span>
+                        </button>
+                    </template>
+                </div>
+
+            </div>
         @endif
+
+        {{-- Box 1: allgemein, immer sichtbar --}}
+        <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <p class="text-sm font-semibold text-blue-800 mb-2">
+                Passkey einrichten
+            </p>
+            <div class="text-sm text-blue-700">
+                {!! $passkeyAllgemeinHtml !!}
+            </div>
+        </div>
+
+        {{-- Box 2: OS+Browser-spezifisch --}}
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <div class="text-sm text-blue-700">
+                {!! $passkeySpezifischHtml !!}
+            </div>
+        </div>
 
     </main>
 
