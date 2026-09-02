@@ -27,15 +27,20 @@ return Application::configure(basePath: dirname(__DIR__))
         // Pflichtangaben (Telefon/Strasse/PLZOrt/Firma), fehlende Pflichtangaben
         // wiederum haben Vorrang vor der reinen Onboarding-Willkommensseite
         // (siehe CheckWelcome-Docblock und CheckPflichtfelder-Docblock).
-        $middleware->web(append: [
-            \App\Http\Middleware\SessionHijackProtection::class,
-            \App\Http\Middleware\SessionIdleTimeout::class,
-            \App\Http\Middleware\ValidateUserExists::class,
-            \App\Http\Middleware\AutoLoginTrustedDevice::class,
-            \App\Http\Middleware\CheckPolicyVersion::class,
-            \App\Http\Middleware\CheckPflichtfelder::class,
-            \App\Http\Middleware\CheckWelcome::class,
-        ]);
+        $middleware->web(
+            prepend: [
+                \App\Http\Middleware\BlockSamsungBrowser::class,
+            ],
+            append: [
+                \App\Http\Middleware\SessionHijackProtection::class,
+                \App\Http\Middleware\SessionIdleTimeout::class,
+                \App\Http\Middleware\ValidateUserExists::class,
+                \App\Http\Middleware\AutoLoginTrustedDevice::class,
+                \App\Http\Middleware\CheckPolicyVersion::class,
+                \App\Http\Middleware\CheckPflichtfelder::class,
+                \App\Http\Middleware\CheckWelcome::class,
+            ],
+        );
 
         // Named middleware aliases
         $middleware->alias([
