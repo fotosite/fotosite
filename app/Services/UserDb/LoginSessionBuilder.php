@@ -97,11 +97,17 @@ class LoginSessionBuilder
         $uaHash = hash('sha256', $request->userAgent() ?? '');
 
         // "Nie wieder fragen" für dieses Gerät + OS gesetzt?
-        $neverAsk = \App\Models\UserDb\PasskeyDismissed::where('user_type', 'cust')
+        // Auf iOS teilen sich alle Browser den iCloud-Schlüsselbund,
+        // daher dort ua_hash NICHT in den Abgleich einbeziehen.
+        $neverAskQuery = \App\Models\UserDb\PasskeyDismissed::where('user_type', 'cust')
             ->where('user_id', $cust->cust_id)
-            ->where('os', $os)
-            ->where('ua_hash', $uaHash)
-            ->exists();
+            ->where('os', $os);
+
+        if ($os !== 'ios') {
+            $neverAskQuery->where('ua_hash', $uaHash);
+        }
+
+        $neverAsk = $neverAskQuery->exists();
 
         // Prompt setzen
         session([
@@ -153,11 +159,17 @@ class LoginSessionBuilder
         $uaHash = hash('sha256', $request->userAgent() ?? '');
 
         // "Nie wieder fragen" für dieses Gerät + OS gesetzt?
-        $neverAsk = \App\Models\UserDb\PasskeyDismissed::where('user_type', 'mand')
+        // Auf iOS teilen sich alle Browser den iCloud-Schlüsselbund,
+        // daher dort ua_hash NICHT in den Abgleich einbeziehen.
+        $neverAskQuery = \App\Models\UserDb\PasskeyDismissed::where('user_type', 'mand')
             ->where('user_id', $mand->mand_id)
-            ->where('os', $os)
-            ->where('ua_hash', $uaHash)
-            ->exists();
+            ->where('os', $os);
+
+        if ($os !== 'ios') {
+            $neverAskQuery->where('ua_hash', $uaHash);
+        }
+
+        $neverAsk = $neverAskQuery->exists();
 
         // Prompt setzen
         session([

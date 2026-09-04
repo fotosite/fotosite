@@ -64,7 +64,7 @@
                           d="M15.75 19.5 8.25 12l7.5-7.5"/>
                 </svg>
                 Dashboard
-            </a>
+            </button>
         </div>
 
         <div class="mb-8">
@@ -86,7 +86,7 @@
 
         {{-- DS-Version --}}
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-6
-                    flex items-center justify-between gap-4">
+                    flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <h2 class="text-sm font-semibold text-gray-800 tracking-wide mb-1">
                     Datenschutzerklärung
@@ -95,7 +95,7 @@
                     Aktuelle Version: <span class="font-mono font-medium text-gray-800">{{ $dsVersion }}</span>
                 </p>
             </div>
-            <form method="POST" action="{{ route('system.policy.increment-ds') }}">
+            <form method="POST" action="{{ route('system.policy.increment-ds') }}" class="self-start">
                 @csrf
                 <button type="submit"
                         class="px-4 py-2 text-sm font-medium text-amber-700
@@ -108,7 +108,7 @@
 
         {{-- Upload-Version --}}
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6
-                    flex items-center justify-between gap-4">
+                    flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <h2 class="text-sm font-semibold text-gray-800 tracking-wide mb-1">
                     Upload-Bedingungen
@@ -117,7 +117,7 @@
                     Aktuelle Version: <span class="font-mono font-medium text-gray-800">{{ $uploadVersion }}</span>
                 </p>
             </div>
-            <form method="POST" action="{{ route('system.policy.increment-upload') }}">
+            <form method="POST" action="{{ route('system.policy.increment-upload') }}" class="self-start">
                 @csrf
                 <button type="submit"
                         class="px-4 py-2 text-sm font-medium text-amber-700

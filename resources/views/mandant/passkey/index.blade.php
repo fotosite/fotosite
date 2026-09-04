@@ -56,7 +56,11 @@
                   chrome: 'Chrome', firefox: 'Firefox', edge: 'Edge',
                   safari: 'Safari', samsung: 'Samsung Internet', unknown: 'Unbekannt'
               };
-              const os = osLabels[@js($passkeyOs)] ?? 'Unbekannt';
+              const osKey = @js($passkeyOs);
+              const os = osLabels[osKey] ?? 'Unbekannt';
+              if (osKey === 'ios') {
+                  return os;
+              }
               const browser = browserLabels[@js($passkeyBrowser)] ?? 'Unbekannt';
               return os + ' – ' + browser;
           },

@@ -1,11 +1,12 @@
 {{--
     FILE:    resources/views/system/mandanten/index.blade.php
-    VERSION: 1.2.2
-    DATE:    2026-06-25
+    VERSION: 1.4.0
+    DATE:    2026-09-04
 
     DESCRIPTION:
       Mandantenverwaltung overview — invite new mandants, list existing mandants,
-      with status indicator, links to show/edit, and delete action.
+      with status indicator, links to show/edit. Delete action moved to
+      edit.blade.php (only available after grace period since deactivation).
       Light theme matching dashboard.blade.php.
 
     DATA FROM CONTROLLER:
@@ -16,11 +17,17 @@
       POST   system.mandanten.invite   — send invite email
       GET    system.mandanten.show     — view mandant detail
       GET    system.mandanten.edit     — edit mandant settings
-      DELETE system.mandanten.destroy  — delete mandant
       GET    system.dashboard          — back link
       POST   logout                    — Breeze logout
 
-    CHANGES: 1.2.1 (2026-06-25) Android-Touch-Targets vergroessert: Logout-
+    CHANGES: 1.4.0 (2026-09-04) Löschen-Aktion komplett aus dieser Seite entfernt
+             (Desktop-/Mobil-Formular, Lösch-Modal, deleteModal aus body x-data,
+             canDelete-Feld im items-Array); Löschen läuft jetzt ausschließlich
+             über die Bearbeiten-Seite (edit.blade.php).
+             1.3.0 (2026-09-04) Löschen-Button nur noch sichtbar nach Ablauf der
+             Karenzzeit (config('mand_deactivation.grace_days')) seit Deaktivierung;
+             '(inaktiv)'-Suffix beim Namen ergänzt (Desktop + Mobil).
+             1.2.1 (2026-06-25) Android-Touch-Targets vergroessert: Logout-
              Button, Zurueck-Link, Einladung-senden-Button und Tabellen-
              Aktionen (Ansehen/Bearbeiten/Löschen) auf min-h-11 angehoben;
              betroffene text-xs auf text-sm.
@@ -42,7 +49,7 @@
          TOP BAR
     ══════════════════════════════════════════════════════ --}}
     <header class="sticky top-0 z-20 border-b border-gray-200 bg-white shadow-sm">
-        <div class="mx-auto max-w-4xl px-6 h-14
+        <div class="mx-auto max-w-6xl px-6 h-14
                     flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <span class="text-[11px] font-mono tracking-widest
@@ -72,7 +79,7 @@
         </div>
     </header>
 
-    <main class="mx-auto max-w-4xl px-6 pt-14 pb-24">
+    <main class="mx-auto max-w-6xl px-6 pt-14 pb-24">
 
         <div class="mt-4 mb-6">
             <a href="{{ route('system.dashboard') }}"
@@ -151,8 +158,8 @@
                     Galeristen
                 </h2>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
+            <div class="hidden md:block overflow-x-auto">
+                <table class="hidden md:table w-full text-sm">
                     <thead>
                         <tr class="border-b border-gray-100 bg-gray-50">
                             <th class="px-6 py-3 text-left text-xs font-medium
@@ -172,6 +179,9 @@
                             <tr class="hover:bg-gray-50 transition-colors">
                                 <td class="px-6 py-4 text-gray-800 whitespace-nowrap">
                                     {{ $m->mand_firstname }} {{ $m->mand_lastname }}
+                                    @unless($m->active)
+                                        <span class="text-gray-400 font-normal">(inaktiv)</span>
+                                    @endunless
                                 </td>
                                 <td class="px-6 py-4 text-gray-600 whitespace-nowrap">
                                     {{ $m->mand_company }}
@@ -200,17 +210,6 @@
                                                        transition-colors tracking-wide select-none">
                                             Bearbeiten
                                         </button>
-                                        <form method="POST"
-                                              action="{{ route('system.mandanten.destroy', $m->mand_id) }}">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit"
-                                                    x-on:click="if(!confirm('Galerist:in wirklich löschen?')) $event.preventDefault()"
-                                                    class="inline-flex items-center min-h-11 py-2 text-sm text-red-400 hover:text-red-600
-                                                           transition-colors tracking-wide">
-                                                Löschen
-                                            </button>
-                                        </form>
                                     </div>
                                 </td>
                             </tr>
@@ -218,12 +217,87 @@
                     </tbody>
                 </table>
             </div>
+
+            {{-- Mobile: Detailbereich + senkrechte Tab-Liste (< md) --}}
+            <div class="md:hidden p-4" x-data="{
+                    items: @js($mandanten->map(fn($m) => [
+                        'mand_id'      => $m->mand_id,
+                        'name'         => trim($m->mand_firstname . ' ' . $m->mand_lastname),
+                        'company'      => $m->mand_company,
+                        'email'        => $m->mand_email,
+                        'statusLabel'  => ($m->active && ($m->valid_to === null || $m->valid_to->gte(today()))) ? 'Aktiv' : 'Inaktiv',
+                        'statusActive' => (bool) ($m->active && ($m->valid_to === null || $m->valid_to->gte(today()))),
+                        'inactive'     => ! $m->active,
+                    ])->values()),
+                    select(mid) {
+                        const idx = this.items.findIndex(i => i.mand_id === mid);
+                        if (idx > 0) {
+                            const [chosen] = this.items.splice(idx, 1);
+                            this.items.unshift(chosen);
+                        }
+                    }
+                }">
+
+                {{-- Detailbereich: ausgewählter Mandant (items[0]) --}}
+                <div class="rounded-xl border border-gray-300 bg-white shadow-sm p-3 mb-3">
+                    <div class="mb-2 text-center">
+                        <span class="block font-medium text-gray-800 break-words">
+                            <span x-text="items[0].name"></span>
+                            <span x-show="items[0].inactive" class="text-gray-400 font-normal">(inaktiv)</span>
+                        </span>
+                        <span class="block text-sm text-gray-500 break-words" x-text="items[0].company"></span>
+                        <span class="block text-sm text-gray-500 break-all" x-text="items[0].email"></span>
+                        <span class="block text-sm mt-1 font-medium"
+                              :class="items[0].statusActive ? 'text-green-600' : 'text-red-500'"
+                              x-text="items[0].statusLabel"></span>
+                    </div>
+
+                    <div class="flex items-center justify-center gap-3 pt-1.5 border-t border-gray-100">
+                        @foreach($mandanten as $m)
+                            <template x-if="items[0] && items[0].mand_id === {{ $m->mand_id }}">
+                                <div class="flex items-center gap-3">
+                                    <button type="button"
+                                            @click="window.location='{{ route('system.mandanten.show', $m->mand_id) }}'"
+                                            class="inline-flex items-center min-h-11 py-2 text-sm text-indigo-500 hover:text-indigo-700
+                                                   transition-colors tracking-wide">
+                                        Ansehen
+                                    </button>
+                                    <button type="button"
+                                            @click="window.location='{{ route('system.mandanten.edit', $m->mand_id) }}'"
+                                            class="inline-flex items-center min-h-11 py-2 text-sm text-gray-500 hover:text-gray-700
+                                                   transition-colors tracking-wide">
+                                        Bearbeiten
+                                    </button>
+                                </div>
+                            </template>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- Tab-Liste: senkrecht, mind. 3 Zeilen sichtbar, Rest scrollbar --}}
+                <div class="rounded-xl border border-gray-300 bg-white shadow-sm divide-y divide-gray-300
+                            max-h-[132px] overflow-y-auto">
+                    <template x-for="item in items" :key="item.mand_id">
+                        <button type="button"
+                                @click="select(item.mand_id)"
+                                :class="item.mand_id === items[0].mand_id
+                                        ? 'bg-indigo-50 text-indigo-700 font-medium'
+                                        : 'text-gray-600'"
+                                class="block w-full text-left px-4 min-h-11 py-2.5 text-sm truncate
+                                       hover:bg-gray-50 transition-colors">
+                            <span x-text="item.name"></span>
+                        </button>
+                    </template>
+                </div>
+
+            </div>
+
         </div>
 
     </main>
 
     <footer class="fixed bottom-0 inset-x-0 border-t border-gray-200 bg-white shadow-sm">
-        <div class="mx-auto max-w-4xl px-6 h-9
+        <div class="mx-auto max-w-6xl px-6 h-9
                     flex items-center justify-between">
             <span class="text-[10px] font-mono tracking-widest
                          uppercase text-gray-400">

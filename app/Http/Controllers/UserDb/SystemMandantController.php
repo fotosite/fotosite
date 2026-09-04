@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Http/Controllers/UserDb/SystemMandantController.php
- * VERSION:     1.12.0
+ * VERSION:     1.14.0
  *
  * FUNCTIONS:   index()          — Lists all MandUser records ordered by mand_lastname.
  *                                 Reads: userdb.mand_user.*
@@ -11,11 +11,19 @@
  *                                 Reads: userdb.mand_user.*
  *              edit()           — Loads MandUser by $id; returns edit form.
  *                                 Reads: userdb.mand_user.*
- *              update()         — Validates and updates active, valid_to,
- *                                 has_public_content, mand_cust_2fa.
+ *              update()         — Validates and updates valid_to, has_public_content,
+ *                                 mand_cust_2fa. active wird seit 1.14.0 nicht mehr
+ *                                 hier, sondern ausschließlich über toggleActive()
+ *                                 gesteuert.
  *                                 Reads:  userdb.mand_user.mand_id
- *                                 Writes: userdb.mand_user.active, valid_to,
- *                                         has_public_content, mand_cust_2fa
+ *                                 Writes: userdb.mand_user.valid_to, has_public_content,
+ *                                         mand_cust_2fa
+ *              toggleActive()   — Deaktiviert bzw. reaktiviert einen Mandanten (active-
+ *                                 Toggle); setzt oder löscht mand_deactivated_at; sendet
+ *                                 MandDeactivatedMail bzw. MandActivatedMail.
+ *                                 Reads:  userdb.mand_user.mand_id, active, mand_email,
+ *                                         mand_firstname
+ *                                 Writes: userdb.mand_user.active, mand_deactivated_at
  *              destroy()        — Cust-Kaskade (analog MandantCustController@destroy)
  *                                 vor der mand-Löschung: entfernt alle cust_pcode-
  *                                 Einträge dieses Mandanten; verwaiste cust_user
@@ -62,6 +70,8 @@
  *              App\Mail\InviteMail
  *              App\Mail\CustAccountDeletedMail
  *              App\Mail\MandAccountDeletedMail
+ *              App\Mail\MandDeactivatedMail
+ *              App\Mail\MandActivatedMail
  *              Illuminate\Support\Facades\Hash::make()
  *              Illuminate\Support\Facades\Mail::to()->send()
  *              Illuminate\Support\Str::random()
@@ -71,6 +81,7 @@
  *              mand_street+nr, mand_postcode+city, mand_prefstat,
  *              mand_cust_2fa, active, has_public_content, valid_to,
  *              ds_accepted_at, ds_version, upload_terms_accepted_at, upload_terms_version
+ *              mand_deactivated_at
  *              userdb.invite.*
  *              userdb.syst_user.syst_id, syst_uname
  *              userdb.cust_pcode.pcode_id, mand_id, cust_id (DELETE)
@@ -79,7 +90,13 @@
  *              userdb.passkey_dismissed.pd_id, user_type, user_id (DELETE)
  *              sessiondb.cust_invite.invite_id, mand_id (DELETE)
  *
- * CHANGES:     1.12.0 (2026-08-26) handleRegister() — ds_version/
+ * CHANGES:     1.14.0 (2026-09-04) update() — active aus validate() und
+ *              $mandant->update()-Array entfernt (Checkbox in edit.blade.php
+ *              entfernt); Steuerung von active läuft jetzt ausschließlich über
+ *              toggleActive().
+ *              1.13.0 (2026-09-04) toggleActive() ergänzt: Galerist deaktivieren/aktivieren
+ *              mit E-Mail-Benachrichtigung und Karenzzeit-Zeitstempel.
+ *              1.12.0 (2026-08-26) handleRegister() — ds_version/
  *              upload_terms_version beim MandUser::create() lesen jetzt
  *              PolicyVersion::get('ds_version') bzw.
  *              PolicyVersion::get('upload_version') (userdb.policy_versions,
@@ -124,6 +141,8 @@ namespace App\Http\Controllers\UserDb;
 
 use App\Mail\CustAccountDeletedMail;
 use App\Mail\MandAccountDeletedMail;
+use App\Mail\MandActivatedMail;
+use App\Mail\MandDeactivatedMail;
 use App\Mail\InviteMail;
 use App\Models\SessionDb\CustInvite;
 use App\Models\UserDb\CustPcode;
@@ -219,14 +238,12 @@ class SystemMandantController extends UserDbController
         }
 
         $request->validate([
-            'active'             => ['required', 'boolean'],
             'valid_to'           => ['nullable', 'date'],
             'has_public_content' => ['required', 'boolean'],
             'mand_cust_2fa'      => ['required', 'boolean'],
         ]);
 
         $mandant->update($request->only([
-            'active',
             'valid_to',
             'has_public_content',
             'mand_cust_2fa',
@@ -234,6 +251,32 @@ class SystemMandantController extends UserDbController
 
         return redirect()->route('system.mandanten.show', $id)
             ->with('status', 'Einstellungen gespeichert.');
+    }
+
+    public function toggleActive(Request $request, int $id): RedirectResponse
+    {
+        $mandant = MandUser::findOrFail($id);
+        $mandName = $mandant->mand_firstname;
+
+        if ($mandant->active) {
+            $mandant->update([
+                'active'               => false,
+                'mand_deactivated_at'  => now(),
+            ]);
+            Mail::to($mandant->mand_email)->send(new MandDeactivatedMail($mandName));
+            $status = 'Galerist:in wurde deaktiviert.';
+        } else {
+            $mandant->update([
+                'active'               => true,
+                'mand_deactivated_at'  => null,
+            ]);
+            Mail::to($mandant->mand_email)->send(new MandActivatedMail($mandName));
+            $status = 'Galerist:in wurde wieder aktiviert.';
+        }
+
+        return redirect()
+            ->route('system.mandanten.edit', $mandant->mand_id)
+            ->with('status', $status);
     }
 
     public function destroy(Request $request, int $id): RedirectResponse

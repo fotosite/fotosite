@@ -197,8 +197,8 @@
                 </h2>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
+            <div class="hidden md:block overflow-x-auto">
+                <table class="hidden md:table w-full text-sm">
                     <thead>
                         <tr class="border-b border-gray-100 bg-gray-50">
                             <th class="px-6 py-3 text-left text-xs font-medium
@@ -267,6 +267,82 @@
                         @endforeach
                     </tbody>
                 </table>
+            </div>
+
+            {{-- Mobile: Detailbereich + senkrechte Tab-Liste (< md) --}}
+            <div class="md:hidden p-4" x-data="{
+                    items: @js($users->map(fn($u) => [
+                        'syst_id'    => $u->syst_id,
+                        'name'       => trim($u->syst_firstname . ' ' . $u->syst_lastname),
+                        'uname'      => $u->syst_uname,
+                        'email'      => $u->syst_email,
+                        'canDelete'  => (bool) (session('_is_primary') && ! $u->is_primary && $u->syst_id !== $currentSystId),
+                    ])->values()),
+                    select(sid) {
+                        const idx = this.items.findIndex(i => i.syst_id === sid);
+                        if (idx > 0) {
+                            const [chosen] = this.items.splice(idx, 1);
+                            this.items.unshift(chosen);
+                        }
+                    }
+                }">
+
+                {{-- Detailbereich: ausgewählter Nutzer (items[0]) --}}
+                <div class="rounded-xl border border-gray-300 bg-white shadow-sm p-3 mb-3">
+                    <div class="mb-2 text-center">
+                        <span class="block font-medium text-gray-800 break-words" x-text="items[0].name"></span>
+                        <span class="block text-sm text-gray-500 break-all" x-text="items[0].uname"></span>
+                        <span class="block text-sm text-gray-500 break-all" x-text="items[0].email"></span>
+                    </div>
+
+                    <div class="flex items-center justify-center gap-3 pt-1.5 border-t border-gray-100">
+                        @foreach($users as $user)
+                            <form method="POST"
+                                  action="{{ route('system.users.password-reset', $user->syst_id) }}"
+                                  x-show="items[0] && items[0].syst_id === {{ $user->syst_id }}">
+                                @csrf
+                                <button type="submit"
+                                        x-on:click="if(!confirm('Reset-Mail senden?')) $event.preventDefault()"
+                                        class="inline-flex items-center min-h-11 py-2 text-sm text-gray-500 hover:text-amber-600
+                                               transition-colors tracking-wide">
+                                    Passwort-Reset senden
+                                </button>
+                            </form>
+
+                            @if(session('_is_primary') && ! $user->is_primary && $user->syst_id !== session('_syst_id'))
+                                <form method="POST"
+                                      action="{{ route('system.users.destroy', $user->syst_id) }}"
+                                      x-show="items[0] && items[0].syst_id === {{ $user->syst_id }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                            x-on:click="if(!confirm('System-User wirklich löschen?')) $event.preventDefault()"
+                                            class="inline-flex items-center min-h-11 py-2 text-sm text-red-400 hover:text-red-600
+                                                   transition-colors tracking-wide">
+                                        Löschen
+                                    </button>
+                                </form>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- Tab-Liste: senkrecht, mind. 3 Zeilen sichtbar, Rest scrollbar --}}
+                <div class="rounded-xl border border-gray-300 bg-white shadow-sm divide-y divide-gray-300
+                            max-h-[132px] overflow-y-auto">
+                    <template x-for="item in items" :key="item.syst_id">
+                        <button type="button"
+                                @click="select(item.syst_id)"
+                                :class="item.syst_id === items[0].syst_id
+                                        ? 'bg-indigo-50 text-indigo-700 font-medium'
+                                        : 'text-gray-600'"
+                                class="block w-full text-left px-4 min-h-11 py-2.5 text-sm truncate
+                                       hover:bg-gray-50 transition-colors">
+                            <span x-text="item.name"></span>
+                        </button>
+                    </template>
+                </div>
+
             </div>
 
         </div>

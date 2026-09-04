@@ -1,7 +1,7 @@
 {{--
     FILE:    resources/views/system/mandanten/edit.blade.php
-    VERSION: 1.2.0
-    DATE:    2026-08-26
+    VERSION: 1.3.0
+    DATE:    2026-09-04
 
     DESCRIPTION:
       Mandant settings edit — read-only profile card + editable settings card.
@@ -16,7 +16,11 @@
       GET    system.mandanten.show    — back link
       POST   logout                   — Breeze logout
 
-    CHANGES: 1.2.0 (2026-08-26) Straße und Hausnummer / PLZ und Ort als neue
+    CHANGES: 1.3.0 (2026-09-04) Lösch-Aktion von der Liste hierher verschoben:
+             neuer 'Konto endgültig löschen'-Button in der Konto-Status-Karte (nur nach
+             Ablauf der Karenzzeit sichtbar), inkl. Lösch-Bestätigungsmodal und
+             deleteModal im body x-data (1:1 aus index.blade.php übernommen).
+             1.2.0 (2026-08-26) Straße und Hausnummer / PLZ und Ort als neue
              dt/dd-Paare ergänzt (mand_street+nr, mand_postcode+city); Feld-
              Reihenfolge im Profildaten-Block auf Benutzername/E-Mail/Vorname/
              Nachname/Straße/PLZ+Ort/Telefon/Firma umgestellt; alle vier
@@ -36,7 +40,10 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="min-h-screen bg-gray-50 text-gray-900 antialiased">
+<body class="min-h-screen bg-gray-50 text-gray-900 antialiased"
+      x-data="{
+          deleteModal: { open: false, name: '', formId: null }
+      }">
 
     <header class="sticky top-0 z-20 border-b border-gray-200 bg-white shadow-sm">
         <div class="mx-auto max-w-4xl px-6 h-14
@@ -161,6 +168,61 @@
                 </dl>
             </div>
 
+            {{-- Konto-Status: aktivieren/deaktivieren --}}
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-6">
+                <h2 class="text-sm font-semibold text-gray-800 tracking-wide mb-3">
+                    Konto-Status
+                </h2>
+                <p class="text-sm text-gray-600 mb-4">
+                    @if($mandant->active)
+                        Status: <span class="font-medium text-green-600">Aktiv</span>
+                    @else
+                        Status: <span class="font-medium text-red-500">Inaktiv</span>
+                        @if($mandant->mand_deactivated_at)
+                            <span class="text-gray-400">
+                                (seit {{ $mandant->mand_deactivated_at->format('d.m.Y H:i') }})
+                            </span>
+                        @endif
+                    @endif
+                </p>
+                <form method="POST"
+                      action="{{ route('system.mandanten.toggle-active', $mandant->mand_id) }}">
+                    @csrf
+                    <button type="submit"
+                            x-on:click="if(!confirm('{{ $mandant->active ? 'Willst du dieses Konto deaktivieren? Der Galerist erhält eine E-Mail, die ihn darüber informiert.' : 'Willst du dieses Konto wieder aktivieren? Der Galerist erhält eine E-Mail, die ihn darüber informiert.' }}')) $event.preventDefault()"
+                            class="px-4 py-2 min-h-11 text-sm font-medium rounded-lg
+                                   border transition-colors
+                                   @if($mandant->active)
+                                       text-red-700 bg-red-50 border-red-200 hover:bg-red-100
+                                   @else
+                                       text-green-700 bg-green-50 border-green-200 hover:bg-green-100
+                                   @endif">
+                        @if($mandant->active)
+                            Konto deaktivieren
+                        @else
+                            Konto aktivieren
+                        @endif
+                    </button>
+                </form>
+
+                @if(!$mandant->active && $mandant->mand_deactivated_at && $mandant->mand_deactivated_at->diffInDays(now()) >= config('mand_deactivation.grace_days'))
+                    <form method="POST"
+                          id="delete-form-mandant"
+                          action="{{ route('system.mandanten.destroy', $mandant->mand_id) }}"
+                          class="mt-3">
+                        @csrf
+                        @method('DELETE')
+                        <button type="button"
+                                x-on:click="deleteModal = { open: true, name: {{ \Illuminate\Support\Js::from(trim($mandant->mand_firstname . ' ' . $mandant->mand_lastname)) }}, formId: 'delete-form-mandant' }"
+                                class="px-4 py-2 min-h-11 text-sm font-medium rounded-lg
+                                       border transition-colors
+                                       text-red-700 bg-red-50 border-red-200 hover:bg-red-100">
+                            Konto endgültig löschen
+                        </button>
+                    </form>
+                @endif
+            </div>
+
             {{-- ── Einstellungen bearbeiten ── --}}
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
                 <h2 class="text-sm font-semibold text-gray-800 tracking-wide mb-5">
@@ -173,19 +235,6 @@
                     @method('PATCH')
 
                     <div class="space-y-4">
-
-                        {{-- active --}}
-                        <div class="flex items-center gap-3">
-                            <input type="hidden" name="active" value="0">
-                            <input type="checkbox" id="active" name="active" value="1"
-                                   {{ old('active', $mandant->active) ? 'checked' : '' }}
-                                   class="rounded border-gray-300 text-amber-600
-                                          focus:ring-amber-500">
-                            <label for="active"
-                                   class="text-sm font-medium text-gray-700">
-                                Aktiv
-                            </label>
-                        </div>
 
                         {{-- valid_to --}}
                         <div>
@@ -259,6 +308,34 @@
             <span class="text-[10px] text-gray-400">Session aktiv</span>
         </div>
     </footer>
+
+    {{-- Lösch-Bestätigung Galerist --}}
+    <div x-show="deleteModal.open" x-cloak
+         class="fixed inset-0 bg-black bg-opacity-50
+                flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl p-6 max-w-2xl w-full shadow-xl"
+             @click.outside="deleteModal.open = false">
+            <p class="text-base font-semibold text-gray-800 mb-4">
+                Galerist:in <span x-text="deleteModal.name" class="font-bold"></span> wirklich löschen?
+            </p>
+            <div class="text-sm text-gray-600 mb-6 prose prose-sm max-w-none">
+                {!! uiText('syst', 's_mand_delete_warnung') !!}
+            </div>
+            <div class="flex gap-3 justify-end">
+                <button type="button"
+                        @click="deleteModal.open = false"
+                        class="min-h-11 py-2 px-3 text-sm text-gray-500 hover:text-gray-700">
+                    Abbrechen
+                </button>
+                <button type="button"
+                        @click="document.getElementById(deleteModal.formId).submit(); deleteModal.open = false"
+                        class="px-4 py-2 min-h-11 bg-red-600 text-white text-sm rounded-lg
+                               hover:bg-red-700 transition-colors">
+                    Endgültig löschen
+                </button>
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>

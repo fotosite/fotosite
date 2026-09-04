@@ -1,7 +1,7 @@
 <?php
 /**
  * FILE:        app/Models/UserDb/MandUser.php
- * VERSION:     1.6.0
+ * VERSION:     1.7.0
  *
  * FUNCTIONS:   passcodes()     — hasMany CustPcode via mand_id
  *
@@ -14,9 +14,12 @@
  *              mand_cust_2fa (integer) — Ab welcher Sicherheitsstufe (0–6) 2FA
  *              für Mitglieder erzwungen wird. 0=nie, 7=immer, Standard=3
  *              ds_accepted_at, ds_version,
- *              upload_terms_accepted_at, upload_terms_version, show_welcome
+ *              upload_terms_accepted_at, upload_terms_version, show_welcome,
+ *              mand_deactivated_at
  *
- * CHANGES:     1.6.0 (2026-06-20) show_welcome ergänzt (Willkommensseite
+ * CHANGES:     1.7.0 (2026-09-04) mand_deactivated_at ergänzt (fillable +
+ *              datetime-Cast) für SystemMandantController@toggleActive
+ *              1.6.0 (2026-06-20) show_welcome ergänzt (Willkommensseite
  *              beim ersten Login, siehe CheckWelcome-Middleware)
  *              1.5.0 (2026-06-16) ds_accepted_at, ds_version, upload_terms_accepted_at,
  *              upload_terms_version ergänzt (Datenschutz-Feature)
@@ -48,6 +51,7 @@ class MandUser extends UserDbModel
         'active',
         'has_public_content',
         'valid_to',
+        'mand_deactivated_at',
         'ds_accepted_at',
         'ds_version',
         'upload_terms_accepted_at',
@@ -61,6 +65,7 @@ class MandUser extends UserDbModel
         'mand_2fa_opt_in'         => 'boolean',
         'has_public_content'      => 'boolean',
         'valid_to'                => 'date',
+        'mand_deactivated_at'     => 'datetime',
         'ds_accepted_at'          => 'datetime',
         'upload_terms_accepted_at'=> 'datetime',
         'show_welcome'            => 'boolean',

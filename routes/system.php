@@ -27,6 +27,7 @@
  *   GET    /system/mandanten/{id}                → SystemMandantController@show
  *   GET    /system/mandanten/{id}/edit           → SystemMandantController@edit
  *   PATCH  /system/mandanten/{id}                → SystemMandantController@update
+ *   POST   /system/mandanten/{id}/toggle-active  → SystemMandantController@toggleActive
  *   DELETE /system/mandanten/{id}                → SystemMandantController@destroy
  *   GET    /system/policy-versionen               → SystemPolicyController@index
  *   POST   /system/policy-versionen/ds            → SystemPolicyController@incrementDs
@@ -86,6 +87,8 @@ Route::middleware(['web', 'role:syst'])
             ->name('mandanten.edit');
         Route::patch('/mandanten/{id}', [SystemMandantController::class, 'update'])
             ->name('mandanten.update');
+        Route::post('/mandanten/{id}/toggle-active', [SystemMandantController::class, 'toggleActive'])
+            ->name('mandanten.toggle-active');
         Route::delete('/mandanten/{id}', [SystemMandantController::class, 'destroy'])
             ->name('mandanten.destroy');
 
