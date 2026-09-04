@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Erstellungszeit: 27. Aug 2026 um 19:43
+-- Erstellungszeit: 04. Sep 2026 um 20:23
 -- Server-Version: 10.11.10-MariaDB-cll-lve
 -- PHP-Version: 8.3.11
 

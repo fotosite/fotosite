@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Erstellungszeit: 27. Aug 2026 um 19:43
+-- Erstellungszeit: 04. Sep 2026 um 20:23
 -- Server-Version: 10.11.10-MariaDB-cll-lve
 -- PHP-Version: 8.3.11
 
@@ -38,16 +38,6 @@ CREATE TABLE `cust_invite` (
   `expires_at` datetime NOT NULL,
   `used` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
-
---
--- Daten für Tabelle `cust_invite`
---
-
-INSERT INTO `cust_invite` (`invite_id`, `mand_id`, `cust_email`, `cust_alias`, `sec_level`, `token`, `created_at`, `expires_at`, `used`) VALUES
-(999907, 28, 'harburg_bergfex@alpenjodel.de', 'bfex', 2, 'DnvrcF1E7kuo4LwoHF2bzDkHMW8FzJN8MXM202oi1l24xFmkVgqlwiJ0PGOIxQxR', '2026-08-26 10:17:44', '2026-08-28 10:17:44', 1),
-(999908, 36, 'foto6@keemail.me', 'F6', 2, 'sbUEnq5IfMkDacbhJdPf8ubC3DY6iymIgpqNzgKV27JLdjls3ILbk1FAKgIsI995', '2026-08-26 10:58:14', '2026-08-28 10:58:14', 1),
-(999910, 41, 'foto6@keemail.me', 'Foto Sechs', 2, 'bH8bW8i7sJKQZz9WZkp275P9cFy6PVQ54vMF30vH5NdeD4mIf3T1ghJrcQT3K6pq', '2026-08-26 15:04:27', '2026-08-28 15:04:27', 1),
-(999911, 28, 'hntr2@mail.de', 'hntr2@mail.de', 2, 'OdTe5jZ7HBszZpBPlJnmyc6sihyxKQN9rJzhH93jzNukzwRj9uPeVYXIjD99nFqa', '2026-08-26 17:17:28', '2026-08-28 17:17:28', 1);
 
 -- --------------------------------------------------------
 
@@ -109,8 +99,8 @@ CREATE TABLE `session` (
 --
 
 INSERT INTO `session` (`sess_id`, `sess_token`, `payload`, `user_type`, `syst_id`, `mand_id`, `cust_id`, `cust_passcode`, `ip_hash`, `ua_hash`, `created_at`, `last_activity`, `expires_at`) VALUES
-(3122, 'twDEYiNXTpQb0hKpAqKSxJGBETSwsXFWywx1HnGN', '{\"_token\":\"R9Bfg1MrMhXhjiAvSNyme2EOAXA46yNeb9AfvdUu\",\"_ip_hash\":\"0aa4814b9244a2b433eddef3973c6a38c0fd966985a2dc64bd57af81ed702651\",\"_ua_hash\":\"bbd29a6729e692e7cda2301a3c563617abaeb45e0877b9267804cfb12e754b0f\",\"_last_activity\":1787851956,\"_flash\":{\"old\":[],\"new\":[]}}', 'anon', NULL, NULL, NULL, 0, '0aa4814b9244a2b433eddef3973c6a38c0fd966985a2dc64bd57af81ed702651', 'bbd29a6729e692e7cda2301a3c563617abaeb45e0877b9267804cfb12e754b0f', '2026-08-27 17:32:36', '2026-08-27 17:32:36', '2026-08-27 19:32:36'),
-(3124, 'qyqSIvd7efznMSNw3hGZXhiV3y4eALoDAlcKezyI', '{\"_token\":\"mHVFCPbauVaI5njnVhYpA5fqibrUu8o5NV5PprYl\",\"_flash\":{\"old\":[],\"new\":[]},\"_ip_hash\":\"06ae84cc1ce3fe2bcd9db63ac44c8bbd6c91bd815191ef5161757e6b6c9e5f2c\",\"_ua_hash\":\"2e91c7de4f0f00b7f98eb6f1f5fd9ce72726e7b922b4415dbc20978a36fb132c\",\"_last_activity\":1787852186,\"_previous\":{\"url\":\"https:\\/\\/fotos.martinwagner.de\",\"route\":\"home\"}}', 'anon', NULL, NULL, NULL, 0, '06ae84cc1ce3fe2bcd9db63ac44c8bbd6c91bd815191ef5161757e6b6c9e5f2c', '2e91c7de4f0f00b7f98eb6f1f5fd9ce72726e7b922b4415dbc20978a36fb132c', '2026-08-27 17:36:25', '2026-08-27 17:36:26', '2026-08-27 19:36:26');
+(3639, 'ewxFcjJACIHyAkgGGpZrhHbxonTZy1od2mwQjtDR', '{\"_token\":\"GS0roolNE0gUcDJeuI6ITE4tj7b6ro5ysZPh4TgE\",\"_previous\":{\"url\":\"https:\\/\\/fotos.martinwagner.de\\/system\\/mandanten\",\"route\":\"system.mandanten.index\"},\"_flash\":{\"old\":[],\"new\":[]},\"_ip_hash\":\"a0f2cb3652a00ee7730c263cd25d73da9b2af3697752567f9436d5e081499a24\",\"_ua_hash\":\"0b5bf65a3c87672ee6bd66722063c699806278ae67c8a7fac1ccf6083917e6cf\",\"_last_activity\":1788540304,\"_user_type\":\"syst\",\"_syst_id\":7,\"_is_primary\":true}', 'syst', 7, NULL, NULL, 0, 'a0f2cb3652a00ee7730c263cd25d73da9b2af3697752567f9436d5e081499a24', '0b5bf65a3c87672ee6bd66722063c699806278ae67c8a7fac1ccf6083917e6cf', '2026-09-04 16:44:35', '2026-09-04 16:45:04', '2026-09-04 18:45:04'),
+(3643, '8rhjjJuLPLyjGS9pjOdoO9kd4BzdqBd70lFvLuhk', '{\"_token\":\"lXiSlueJVt91MghA5DrcfwJY400eHWtnEqrTk93O\",\"_previous\":{\"url\":\"https:\\/\\/fotos.martinwagner.de\\/system\\/mandanten\\/41\",\"route\":\"system.mandanten.show\"},\"_flash\":{\"old\":[],\"new\":[]},\"_ip_hash\":\"18c2acf3514260c2e840410b77f0bf116e38057e8212fa1151bc87fe188cfa14\",\"_ua_hash\":\"2e91c7de4f0f00b7f98eb6f1f5fd9ce72726e7b922b4415dbc20978a36fb132c\",\"_last_activity\":1788545656,\"_user_type\":\"syst\",\"_syst_id\":1,\"_is_primary\":true}', 'syst', 1, NULL, NULL, 0, '18c2acf3514260c2e840410b77f0bf116e38057e8212fa1151bc87fe188cfa14', '2e91c7de4f0f00b7f98eb6f1f5fd9ce72726e7b922b4415dbc20978a36fb132c', '2026-09-04 18:06:26', '2026-09-04 18:14:16', '2026-09-04 20:14:16');
 
 -- --------------------------------------------------------
 
@@ -178,9 +168,10 @@ CREATE TABLE `twofa_code` (
 --
 
 INSERT INTO `twofa_code` (`tfa_id`, `user_type`, `user_id`, `tfa_purpose`, `tfa_code_hash`, `tfa_expires_at`, `tfa_used`, `created_at`) VALUES
-(999951, 'mand', 40, 'login', '$2y$12$htCxbbpZLtMobEI39xM/R.yUGanDArWG0hUce1s9KHYFQNY52IXLa', '2026-08-27 17:19:01', 1, '2026-08-27 17:17:01'),
-(999952, 'cust', 40, 'login', '$2y$12$xh.X7xjv5l5.h2neNJ/1r.wS3Vq5cyChozP6KDSUX7iGhVr/8wYyC', '2026-08-27 17:18:26', 1, '2026-08-27 17:16:26'),
-(999953, 'syst', 1, 'login', '$2y$12$H8RQ4f/XLLaGQ6Ayu1naFO062zuKSIltaYgvtAkWJp2icAdM/ylUe', '2026-08-27 17:38:00', 1, '2026-08-27 17:36:00');
+(999965, 'mand', 44, 'login', '$2y$12$XK6j/t3EmN8Z3INdIFwDUOLZdsO5lkXo0VAd2bDhc1/UHczUGog7C', '2026-09-04 16:53:03', 1, '2026-09-04 16:43:03'),
+(999966, 'syst', 7, 'login', '$2y$12$CO3nPAi.Ob.iBZ.0cUDavOpaF0BdOms/Xtp8/OpkkoRENjoB70aKO', '2026-09-04 16:54:04', 1, '2026-09-04 16:44:04'),
+(999967, 'syst', 11, 'login', '$2y$12$akwsPmAdNBMeSSLBogZBr.utvUn0esDdQoaOL8ihCatn6oXHs3X7O', '2026-09-04 16:56:50', 1, '2026-09-04 16:46:50'),
+(999968, 'syst', 1, 'login', '$2y$12$cSXNFYB2ky8QLk/wTYfg8eQBT6wQve6bZwom2z4O7uwgO/QqZ0KYK', '2026-09-04 18:16:02', 1, '2026-09-04 18:06:02');
 
 --
 -- Indizes der exportierten Tabellen
@@ -242,7 +233,7 @@ ALTER TABLE `twofa_code`
 -- AUTO_INCREMENT für Tabelle `cust_invite`
 --
 ALTER TABLE `cust_invite`
-  MODIFY `invite_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=999912;
+  MODIFY `invite_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=999921;
 
 --
 -- AUTO_INCREMENT für Tabelle `pw_list`
@@ -254,7 +245,7 @@ ALTER TABLE `pw_list`
 -- AUTO_INCREMENT für Tabelle `session`
 --
 ALTER TABLE `session`
-  MODIFY `sess_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3125;
+  MODIFY `sess_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3644;
 
 --
 -- AUTO_INCREMENT für Tabelle `share_link`
@@ -266,13 +257,13 @@ ALTER TABLE `share_link`
 -- AUTO_INCREMENT für Tabelle `trusted_device`
 --
 ALTER TABLE `trusted_device`
-  MODIFY `td_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=999925;
+  MODIFY `td_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=999940;
 
 --
 -- AUTO_INCREMENT für Tabelle `twofa_code`
 --
 ALTER TABLE `twofa_code`
-  MODIFY `tfa_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=999954;
+  MODIFY `tfa_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=999969;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

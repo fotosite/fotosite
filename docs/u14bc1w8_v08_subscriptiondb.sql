@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Erstellungszeit: 29. Aug 2026 um 12:56
+-- Erstellungszeit: 04. Sep 2026 um 20:22
 -- Server-Version: 10.11.10-MariaDB-cll-lve
 -- PHP-Version: 8.3.11
 
@@ -47,7 +47,7 @@ CREATE TABLE `ledger_entry` (
   `le_id` bigint(20) UNSIGNED NOT NULL,
   `sr_id` bigint(20) UNSIGNED NOT NULL,
   `sb_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `entry_type` enum('FO','GG','ZE','ZG','LS') NOT NULL,
+  `entry_type` enum('FO','GG','ZE','ZG','ZA') NOT NULL,
   `context_le_id` bigint(20) UNSIGNED DEFAULT NULL,
   `money_amount` decimal(10,2) DEFAULT NULL,
   `amount` decimal(10,2) DEFAULT NULL,
@@ -59,6 +59,21 @@ CREATE TABLE `ledger_entry` (
   `description` varchar(255) DEFAULT NULL,
   `booked_at` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Daten für Tabelle `ledger_entry`
+--
+
+INSERT INTO `ledger_entry` (`le_id`, `sr_id`, `sb_id`, `entry_type`, `context_le_id`, `money_amount`, `amount`, `currency`, `pl_code`, `pl_version`, `period_from`, `period_to`, `description`, `booked_at`) VALUES
+(49, 30118, 115, 'FO', NULL, NULL, -25.00, 'EUR', 'BASIS', 'A1', '2026-02-01', '2026-02-28', NULL, '2026-02-01 06:00:00'),
+(50, 30118, 170, 'FO', NULL, NULL, -35.00, 'EUR', 'PLUS', 'A1', '2026-02-01', '2026-02-28', NULL, '2026-02-01 06:00:00'),
+(51, 30118, 205, 'FO', NULL, NULL, -40.00, 'EUR', 'PREMIUM', 'A1', '2026-02-01', '2026-02-28', NULL, '2026-02-01 06:00:00'),
+(52, 30118, 205, 'GG', NULL, NULL, 10.00, 'EUR', 'PREMIUM', 'A1', '2026-02-01', '2026-02-28', 'Rabatt', '2026-02-03 09:15:00'),
+(53, 30118, NULL, 'ZE', NULL, 110.00, NULL, 'EUR', NULL, NULL, NULL, NULL, 'Zahlungseingang, 3 Rechnungen', '2026-02-10 08:30:00'),
+(54, 30118, 115, 'ZG', 53, NULL, 25.00, 'EUR', NULL, NULL, NULL, NULL, 'Umlage aus Buchung 53', '2026-02-10 08:31:00'),
+(55, 30118, 170, 'ZG', 53, NULL, 35.00, 'EUR', NULL, NULL, NULL, NULL, 'Umlage aus Buchung 53', '2026-02-10 08:31:00'),
+(56, 30118, 205, 'ZG', 53, NULL, 40.00, 'EUR', NULL, NULL, NULL, NULL, 'Umlage aus Buchung 53', '2026-02-10 08:31:00'),
+(57, 30118, 205, 'ZA', NULL, -10.00, -10.00, 'EUR', NULL, NULL, NULL, NULL, 'Auszahlung Ende aller Vertraege', '2026-03-01 11:00:00');
 
 -- --------------------------------------------------------
 
@@ -78,6 +93,15 @@ CREATE TABLE `plan` (
   `valid_to` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Daten für Tabelle `plan`
+--
+
+INSERT INTO `plan` (`pl_id`, `pl_code`, `pl_version`, `pl_label`, `price`, `currency`, `billing_interval`, `valid_from`, `valid_to`) VALUES
+(1, 'BASIS', 'A1', 'Basis-Tarif', 25.00, 'EUR', 'monatlich', '2026-01-01', NULL),
+(2, 'PLUS', 'A1', 'Plus-Tarif', 35.00, 'EUR', 'monatlich', '2026-01-01', NULL),
+(3, 'PREMIUM', 'A1', 'Premium-Tarif', 40.00, 'EUR', 'monatlich', '2026-01-01', NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -89,6 +113,13 @@ CREATE TABLE `subscriber` (
   `sr_name` varchar(255) NOT NULL,
   `created_at` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Daten für Tabelle `subscriber`
+--
+
+INSERT INTO `subscriber` (`sr_id`, `sr_name`, `created_at`) VALUES
+(30118, 'Demo-Subscriber (Beispiel aus Konzeptdoku)', '2026-01-15 10:00:00');
 
 -- --------------------------------------------------------
 
@@ -107,6 +138,15 @@ CREATE TABLE `subscription` (
   `valid_from` date NOT NULL,
   `valid_to` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Daten für Tabelle `subscription`
+--
+
+INSERT INTO `subscription` (`sb_id`, `sr_id`, `user_type`, `user_id`, `pl_code`, `pl_version_current`, `sb_status`, `valid_from`, `valid_to`) VALUES
+(115, 30118, 'mand', 28, 'BASIS', 'A1', 'expired', '2026-02-01', '2026-02-28'),
+(170, 30118, 'cust', 38, 'PLUS', 'A1', 'expired', '2026-02-01', '2026-02-28'),
+(205, 30118, 'cust', 44, 'PREMIUM', 'A1', 'expired', '2026-02-01', '2026-02-28');
 
 --
 -- Indizes der exportierten Tabellen
@@ -171,25 +211,25 @@ ALTER TABLE `invoice`
 -- AUTO_INCREMENT für Tabelle `ledger_entry`
 --
 ALTER TABLE `ledger_entry`
-  MODIFY `le_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `le_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
 
 --
 -- AUTO_INCREMENT für Tabelle `plan`
 --
 ALTER TABLE `plan`
-  MODIFY `pl_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `pl_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT für Tabelle `subscriber`
 --
 ALTER TABLE `subscriber`
-  MODIFY `sr_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `sr_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30119;
 
 --
 -- AUTO_INCREMENT für Tabelle `subscription`
 --
 ALTER TABLE `subscription`
-  MODIFY `sb_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `sb_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=206;
 
 --
 -- Constraints der exportierten Tabellen
